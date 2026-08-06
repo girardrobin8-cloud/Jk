@@ -2,6 +2,7 @@ import "./index.css";
 import { Composition } from "remotion";
 import { Cafeine, DUREE_TOTALE } from "./Cafeine";
 import { S1Titre } from "./Cafeine/scenes/S1Titre";
+import { S8Energisante } from "./Cafeine/scenes/S8Energisante";
 import { HelloWorld, myCompSchema } from "./HelloWorld";
 import { Logo, myCompSchema2 } from "./HelloWorld/Logo";
 
@@ -10,6 +11,17 @@ import { Logo, myCompSchema2 } from "./HelloWorld/Logo";
 export const RemotionRoot: React.FC = () => {
   return (
     <>
+      {/* Étiquette d'une boisson énergisante, format vertical.
+          npx remotion render Energisante */}
+      <Composition
+        id="Energisante"
+        component={S8Energisante}
+        durationInFrames={355}
+        fps={30}
+        width={1080}
+        height={1920}
+      />
+
       {/* Scène d'ouverture seule, au format vertical TikTok / Reels.
           npx remotion render CafeineTitreVertical */}
       <Composition
