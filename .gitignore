@@ -6,3 +6,6 @@ build
 
 # Ignore the output video from Git but not videos you import into src/.
 out
+
+# Rushes filmés : média source, hors dépôt (les remettre dans public/rushes/)
+public/rushes/*.mp4

@@ -3,6 +3,9 @@ import { Composition } from "remotion";
 import { Cafeine, DUREE_TOTALE } from "./Cafeine";
 import { S1Titre } from "./Cafeine/scenes/S1Titre";
 import { S8Energisante } from "./Cafeine/scenes/S8Energisante";
+import { Adaptation } from "./Metabolisme/Adaptation";
+import { Montage, MONTAGE_FRAMES } from "./Metabolisme/Montage";
+import { ANIM_FIN, s as sec } from "./Metabolisme/reperes";
 import { HelloWorld, myCompSchema } from "./HelloWorld";
 import { Logo, myCompSchema2 } from "./HelloWorld/Logo";
 
@@ -11,6 +14,27 @@ import { Logo, myCompSchema2 } from "./HelloWorld/Logo";
 export const RemotionRoot: React.FC = () => {
   return (
     <>
+      {/* Montage complet « Pourquoi ta perte de poids stagne ».
+          npx remotion render Metabolisme */}
+      <Composition
+        id="Metabolisme"
+        component={Montage}
+        durationInFrames={MONTAGE_FRAMES}
+        fps={30}
+        width={1080}
+        height={1920}
+      />
+
+      {/* L'animation seule, pour la régler sans relire les rushes */}
+      <Composition
+        id="MetabolismeAnimation"
+        component={Adaptation}
+        durationInFrames={sec(ANIM_FIN)}
+        fps={30}
+        width={1080}
+        height={1920}
+      />
+
       {/* Étiquette d'une boisson énergisante, format vertical.
           npx remotion render Energisante */}
       <Composition
