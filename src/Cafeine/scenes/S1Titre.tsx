@@ -1,53 +1,62 @@
-import { AbsoluteFill, useCurrentFrame } from "remotion";
+import { AbsoluteFill, useCurrentFrame, useVideoConfig } from "remotion";
 import { Backdrop } from "../components/Backdrop";
 import { Molecule } from "../components/Molecule";
+import { Tasse, Vapeur } from "../components/Tasse";
 import { Etiquette, Rise, Texte, Titre } from "../components/Type";
 import { COLORS } from "../theme";
-import { rand, ramp, toPath } from "../utils";
+import { rand, ramp } from "../utils";
 
-/** Volute de vapeur : sinusoïde qui ondule et monte avec le temps. */
-const Vapeur: React.FC<{ x: number; frame: number; seed: number }> = ({
-  x,
-  frame,
-  seed,
-}) => {
-  const drift = (frame * 0.9 + seed * 40) % 220;
-  const pts = [];
-  const len = 210;
-  for (let i = 0; i <= 24; i++) {
-    const t = i / 24;
-    pts.push({
-      x: x + Math.sin(t * 4.2 + frame * 0.07 + seed) * (10 + t * 26),
-      y: 405 - t * len - drift * 0.35,
-    });
-  }
-  return (
-    <path
-      d={toPath(pts)}
-      fill="none"
-      stroke={COLORS.text}
-      strokeWidth={3}
-      strokeLinecap="round"
-      opacity={0.16 - seed * 0.02}
-    />
-  );
+/**
+ * Deux mises en page pour un même contenu.
+ *
+ * En portrait (TikTok, Reels), la zone réellement visible est plus étroite que
+ * le cadre : l'interface de l'application recouvre le haut, le bas et la
+ * colonne de droite. La tasse et le texte sont donc resserrés entre y = 300 et
+ * y = 1430 pour ne jamais passer sous les boutons ni sous la légende.
+ */
+const PAYSAGE = {
+  vb: { w: 1920, h: 1080 },
+  tasse: "translate(960 428) scale(1)",
+  vapeurs: [-55, 0, 55],
+  bas: 118,
+  titre: 104,
+  lignes: ["La caféine dans le corps"],
+  sousTitre: 34,
+  legende: "Ce qu’il se passe vraiment, minute après minute, après une tasse.",
+  largeur: 1080,
+};
+
+const PORTRAIT = {
+  vb: { w: 1080, h: 1920 },
+  tasse: "translate(540 700) scale(1.5)",
+  vapeurs: [-82, 0, 82],
+  bas: 500,
+  titre: 78,
+  // Sur deux lignes : une seule ligne passerait sous la colonne de boutons.
+  lignes: ["La caféine", "dans le corps"],
+  sousTitre: 30,
+  legende: "Ce qu’il se passe vraiment, minute après minute.",
+  largeur: 700,
 };
 
 export const S1Titre: React.FC = () => {
   const frame = useCurrentFrame();
+  const { width, height } = useVideoConfig();
+  const L = height > width ? PORTRAIT : PAYSAGE;
+
   const grow = ramp(frame, 0, 30);
 
   return (
     <Backdrop tint={COLORS.cafeine}>
       <AbsoluteFill>
-        <svg viewBox="0 0 1920 1080" width="100%" height="100%">
+        <svg viewBox={`0 0 ${L.vb.w} ${L.vb.h}`} width="100%" height="100%">
           {/* Molécules qui dérivent en arrière-plan */}
           {new Array(9).fill(0).map((_, i) => {
-            const px = 180 + rand(i + 1) * 1560;
-            const py = 140 + rand(i + 21) * 800;
-            const drift = Math.sin(frame * 0.02 + i) * 22;
+            const px = L.vb.w * (0.09 + rand(i + 1) * 0.82);
+            const py = L.vb.h * (0.13 + rand(i + 21) * 0.74);
+            const derive = Math.sin(frame * 0.02 + i) * 22;
             return (
-              <g key={i} transform={`translate(${px} ${py + drift})`}>
+              <g key={i} transform={`translate(${px} ${py + derive})`}>
                 <Molecule
                   kind={i % 3 === 0 ? "adenosine" : "cafeine"}
                   size={9 + rand(i + 41) * 7}
@@ -57,44 +66,11 @@ export const S1Titre: React.FC = () => {
             );
           })}
 
-          <g opacity={grow}>
-            {new Array(3).fill(0).map((_, i) => (
-              <Vapeur key={i} x={905 + i * 55} frame={frame} seed={i} />
+          <g opacity={grow} transform={L.tasse}>
+            {L.vapeurs.map((d, i) => (
+              <Vapeur key={i} decalage={d} frame={frame} seed={i} />
             ))}
-
-            {/* Tasse */}
-            <ellipse
-              cx={960}
-              cy={600}
-              rx={172}
-              ry={26}
-              fill={COLORS.cafeine}
-              fillOpacity={0.1}
-            />
-            <path
-              d="M 862 428 L 884 556 Q 890 578 912 578 L 1008 578 Q 1030 578 1036 556 L 1058 428 Z"
-              fill={COLORS.bgLift}
-              stroke={COLORS.cafeineSoft}
-              strokeWidth={4}
-              strokeLinejoin="round"
-            />
-            <path
-              d="M 1060 452 Q 1132 456 1128 502 Q 1124 546 1046 540"
-              fill="none"
-              stroke={COLORS.cafeineSoft}
-              strokeWidth={4}
-              strokeLinecap="round"
-            />
-            <ellipse
-              cx={960}
-              cy={428}
-              rx={99}
-              ry={21}
-              fill={COLORS.cafeine}
-              fillOpacity={0.85}
-              stroke={COLORS.cafeineSoft}
-              strokeWidth={4}
-            />
+            <Tasse />
           </g>
         </svg>
       </AbsoluteFill>
@@ -103,7 +79,9 @@ export const S1Titre: React.FC = () => {
         style={{
           alignItems: "center",
           justifyContent: "flex-end",
-          paddingBottom: 118,
+          paddingBottom: L.bas,
+          paddingLeft: 60,
+          paddingRight: 60,
           textAlign: "center",
         }}
       >
@@ -111,11 +89,15 @@ export const S1Titre: React.FC = () => {
           <Etiquette color={COLORS.cafeine}>Physiologie · en une minute</Etiquette>
         </Rise>
         <Rise at={32}>
-          <Titre size={104}>La caféine dans le corps</Titre>
+          <Titre size={L.titre}>
+            {L.lignes.map((ligne, i) => (
+              <div key={i}>{ligne}</div>
+            ))}
+          </Titre>
         </Rise>
         <Rise at={48} style={{ marginTop: 22 }}>
-          <Texte size={34} maxWidth={1080}>
-            Ce qu’il se passe vraiment, minute après minute, après une tasse.
+          <Texte size={L.sousTitre} maxWidth={L.largeur}>
+            {L.legende}
           </Texte>
         </Rise>
       </AbsoluteFill>

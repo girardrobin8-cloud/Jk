@@ -26,7 +26,7 @@ export const Backdrop: React.FC<{
         {/* Halo coloré très diffus, teinté selon le propos de la scène */}
         <AbsoluteFill
           style={{
-            background: `radial-gradient(1100px 720px at 50% 42%, ${tint}1F 0%, transparent 68%)`,
+            background: `radial-gradient(58% 66% at 50% 42%, ${tint}1F 0%, transparent 68%)`,
           }}
         />
         {/* Grille discrète, pour donner une profondeur de « planche scientifique » */}
@@ -36,7 +36,7 @@ export const Backdrop: React.FC<{
             backgroundSize: "120px 120px",
             opacity: 0.35,
             maskImage:
-              "radial-gradient(900px 600px at 50% 50%, black 10%, transparent 75%)",
+              "radial-gradient(47% 55% at 50% 50%, black 10%, transparent 75%)",
           }}
         />
 

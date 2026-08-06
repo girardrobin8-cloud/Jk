@@ -1,6 +1,7 @@
 import "./index.css";
 import { Composition } from "remotion";
 import { Cafeine, DUREE_TOTALE } from "./Cafeine";
+import { S1Titre } from "./Cafeine/scenes/S1Titre";
 import { HelloWorld, myCompSchema } from "./HelloWorld";
 import { Logo, myCompSchema2 } from "./HelloWorld/Logo";
 
@@ -9,6 +10,17 @@ import { Logo, myCompSchema2 } from "./HelloWorld/Logo";
 export const RemotionRoot: React.FC = () => {
   return (
     <>
+      {/* Scène d'ouverture seule, au format vertical TikTok / Reels.
+          npx remotion render CafeineTitreVertical */}
+      <Composition
+        id="CafeineTitreVertical"
+        component={S1Titre}
+        durationInFrames={150}
+        fps={30}
+        width={1080}
+        height={1920}
+      />
+
       {/* npx remotion render Cafeine */}
       <Composition
         id="Cafeine"
