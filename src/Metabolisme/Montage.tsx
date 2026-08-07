@@ -1,12 +1,13 @@
 import {
   AbsoluteFill,
+  Audio,
   interpolate,
   OffthreadVideo,
   Sequence,
   staticFile,
   useCurrentFrame,
 } from "remotion";
-import { Adaptation } from "./Adaptation";
+import { Adaptation, MARCHES } from "./Adaptation";
 import {
   ANIM_FIN,
   BANDEAU_BLOC3,
@@ -31,6 +32,27 @@ export const MONTAGE_FRAMES = A_FRAMES + B_FRAMES;
 const FONDU = 5; // bascule visuelle rush ↔ animation
 
 const CLAMP = { extrapolateLeft: "clamp", extrapolateRight: "clamp" } as const;
+
+/**
+ * Bruitages, en secondes depuis le début du rush B.
+ *
+ * Ils ne ponctuent que l'animation : la tête parlante reste sans habillage
+ * sonore. Les volumes sont bas (0,16 à 0,34) pour que la voix passe toujours
+ * devant — ce sont des ponctuations, pas une couche sonore.
+ *
+ * Les fichiers sont synthétisés par `scripts/bruitages.py`.
+ */
+const BRUITAGES: { fichier: string; t: number; volume: number }[] = [
+  { fichier: "whoosh-in.wav", t: 0.0, volume: 0.3 }, // bascule vers l'animation
+  { fichier: "apparition.wav", t: 0.36, volume: 0.26 }, // le graphique se pose
+  { fichier: "pop.wav", t: 4.73, volume: 0.2 }, // silhouette
+  { fichier: "pop.wav", t: 6.0, volume: 0.2 }, // thermomètre
+  ...MARCHES.map((t) => ({ fichier: "marche.wav", t, volume: 0.34 })),
+  { fichier: "clic.wav", t: 7.2, volume: 0.75 }, // « Thermogenèse adaptative »
+  { fichier: "carillon.wav", t: 8.85, volume: 0.28 }, // bandeau final
+  { fichier: "whoosh-out.wav", t: 12.45, volume: 0.26 }, // retour au visage
+  { fichier: "clic.wav", t: 13.4, volume: 0.6 }, // incrustation du bloc 3
+];
 
 /** L'animation, fondue en entrée et en sortie pour éviter une bascule sèche. */
 const Surimpression: React.FC = () => {
@@ -103,6 +125,15 @@ export const Montage: React.FC = () => {
           <Sequence durationInFrames={s(ANIM_FIN)} name="Animation — bloc 2">
             <Surimpression />
           </Sequence>
+
+          {BRUITAGES.map((b, i) => (
+            <Sequence key={`${b.fichier}-${i}`} from={s(b.t)} name={`SFX ${b.fichier}`}>
+              {/* Volume constant pour chaque bruitage : pas d'automation à
+                  faire, donc pas besoin de la callback conseillée par la règle. */}
+              {/* eslint-disable-next-line @remotion/volume-callback */}
+              <Audio src={staticFile(`sfx/${b.fichier}`)} volume={b.volume} />
+            </Sequence>
+          ))}
 
           <Sequence
             from={s(BANDEAU_BLOC3.debut)}

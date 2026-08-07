@@ -43,14 +43,34 @@ const kcal = (w: number): number => {
   return 2060;
 };
 
-/** Avancée du tracé, calée sur ce que dit le narrateur. */
+// Avancée du tracé, calée sur ce que dit le narrateur.
+const SEUILS_T = [B.parole, 2.2, B.neat, B.thyroide, B.survie, 11.0];
+const SEUILS_W = [0, 2.0, 2.0, 3.4, 7.0, SEMAINES];
+
 const semaineAtteinte = (t: number) =>
-  interpolate(
-    t,
-    [B.parole, 2.2, B.neat, B.thyroide, B.survie, 11.0],
-    [0, 2.0, 2.0, 3.4, 7.0, SEMAINES],
-    { extrapolateLeft: "clamp", extrapolateRight: "clamp" },
-  );
+  interpolate(t, SEUILS_T, SEUILS_W, {
+    extrapolateLeft: "clamp",
+    extrapolateRight: "clamp",
+  });
+
+/** Réciproque : à quel instant la courbe atteint la semaine `w`. */
+const instantDe = (w: number): number => {
+  for (let i = 1; i < SEUILS_W.length; i++) {
+    if (w <= SEUILS_W[i] && SEUILS_W[i] > SEUILS_W[i - 1]) {
+      const u = (w - SEUILS_W[i - 1]) / (SEUILS_W[i] - SEUILS_W[i - 1]);
+      return SEUILS_T[i - 1] + u * (SEUILS_T[i] - SEUILS_T[i - 1]);
+    }
+  }
+  return SEUILS_T[SEUILS_T.length - 1];
+};
+
+/**
+ * Instants des trois marches franchies par la courbe. Dérivés du tracé lui-même
+ * pour que les bruitages suivent automatiquement si le calage change.
+ * (La 4e marche, à w = 7.05, tombe sur le carillon du bandeau : on la laisse
+ * muette pour ne pas empiler deux sons.)
+ */
+export const MARCHES = [4.45, 5.45, 6.45].map(instantDe);
 
 const trace = (wMax: number) => {
   const pts: string[] = [];
