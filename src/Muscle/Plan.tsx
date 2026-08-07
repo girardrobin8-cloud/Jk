@@ -1,24 +1,32 @@
 import { AbsoluteFill, interpolate, useCurrentFrame, useVideoConfig } from "remotion";
 
-/** Fond clair, contraste net avec les plans filmés. */
+/**
+ * Thème sombre à dominante verte, dans la continuité des scènes caféine :
+ * fond profond, grille discrète, halo coloré, accents verts.
+ *
+ * Les clés de couleur sont restées celles de la première version pour que les
+ * scènes n'aient pas à changer ; seules les valeurs ont basculé en vert.
+ */
 export const M = {
-  fond: "#EFEFEA",
-  fondCase: "#E2E2DA",
-  noir: "#16160F",
-  gris: "#8A8A80",
-  bleu: "#2B6BE4",
-  bleuClair: "#7FA9F2",
-  rouge: "#A32334",
-  rose: "#F0709A",
-  vert: "#2FA35E",
+  fond: "#070B09",
+  fondCase: "#111A15",
+  /** Ancien « noir » : sur fond sombre, c'est un cadre vert profond. */
+  noir: "#1E3A2C",
+  gris: "#8A9A91",
+  texte: "#EDF3EF",
+
+  bleu: "#2FBF71", // accent principal, désormais vert
+  bleuClair: "#7FE3AE",
+  vert: "#2FBF71",
+  rouge: "#E0655A",
+  rose: "#E8B62C",
   jaune: "#E8B62C",
+  corail: "#E0655A",
+  ambre: "#E8B62C",
+
+  grille: "rgba(127, 227, 174, 0.10)",
 };
 
-/**
- * Faute de police pixel/gaming installée, on prend la sans-serif la plus
- * grasse disponible avec un chasse serrée. À remplacer par une police
- * pixelisée pour coller pleinement à la direction artistique.
- */
 export const TITRE_FONT =
   '"Liberation Sans", "DejaVu Sans", Helvetica, Arial, sans-serif';
 
@@ -29,7 +37,7 @@ export const cadre = (frame: number, fps: number) =>
   });
 
 /**
- * Gabarit d'un plan de motion design : fond uni, zone graphique au centre,
+ * Gabarit d'un plan de motion design : fond sombre, zone graphique au centre,
  * mot-clé en bas. Le texte reste au-dessus de y = 1440 pour ne pas passer
  * sous la légende de l'application.
  */
@@ -50,6 +58,20 @@ export const Plan: React.FC<{
 
   return (
     <AbsoluteFill style={{ backgroundColor: M.fond }}>
+      <AbsoluteFill
+        style={{
+          background: `radial-gradient(58% 44% at 50% 42%, rgba(47,191,113,0.13) 0%, transparent 70%)`,
+        }}
+      />
+      <AbsoluteFill
+        style={{
+          backgroundImage: `linear-gradient(${M.grille} 1px, transparent 1px), linear-gradient(90deg, ${M.grille} 1px, transparent 1px)`,
+          backgroundSize: "120px 120px",
+          maskImage:
+            "radial-gradient(52% 40% at 50% 44%, black 10%, transparent 78%)",
+        }}
+      />
+
       <svg viewBox="0 0 1080 1920" width="100%" height="100%">
         {children}
       </svg>
@@ -89,5 +111,5 @@ export const Plan: React.FC<{
 /** Mot mis en couleur dans le titre. */
 export const Cle: React.FC<{ children: React.ReactNode; c?: string }> = ({
   children,
-  c = M.bleu,
+  c = M.vert,
 }) => <span style={{ color: c }}>{children}</span>;

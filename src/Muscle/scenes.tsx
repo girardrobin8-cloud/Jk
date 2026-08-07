@@ -1,19 +1,18 @@
 import { interpolate, spring, useCurrentFrame, useVideoConfig } from "remotion";
 import { Cle, M, Plan, TITRE_FONT } from "./Plan";
 import {
-  BATIMENT,
-  CERVEAU,
-  CHERCHEUR,
-  COCHE,
-  CROIX,
-  ETOILE,
-  GROUPE,
-  HALTERE,
-  INTERRO,
-  MUSCLE,
-  Pixels,
-  SILHOUETTE,
-} from "./pixels";
+  Batiment,
+  Cerveau,
+  Chercheur,
+  Coche,
+  Croix,
+  Etoile,
+  Groupe,
+  Haltere,
+  Interro,
+  Muscle,
+  Silhouette,
+} from "./icones";
 
 /**
  * Un plan par bloc de voix off. Chaque scène reçoit un temps local qui démarre
@@ -61,9 +60,9 @@ const Noyaux: React.FC<{ montrer: number[]; taille?: number; opacity?: number }>
       if (v <= 0) return null;
       return (
         <g key={i} transform={`translate(${p[0] * taille} ${p[1] * taille}) scale(${v})`}>
-          <rect x={-17} y={-17} width={34} height={34} fill={M.noir} />
-          <rect x={-12} y={-12} width={24} height={24} fill={M.bleuClair} />
-          <rect x={-6} y={-6} width={12} height={12} fill="#FFFFFF" />
+          <circle r={30} fill={M.ambre} opacity={0.18} />
+          <circle r={16} fill={M.fond} stroke={M.ambre} strokeWidth={5} />
+          <circle r={6} fill={M.ambre} />
         </g>
       );
     })}
@@ -141,10 +140,10 @@ export const B3: React.FC = () => {
       }
     >
       <g transform={`translate(300 ${CENTRE_Y}) scale(${cerveau})`}>
-        <Pixels art={CERVEAU} px={20} />
+        <Cerveau />
       </g>
       <g transform={`translate(790 ${CENTRE_Y}) scale(${muscle})`}>
-        <Pixels art={MUSCLE} px={17} />
+        <Muscle />
       </g>
       {new Array(nPoints).fill(0).map((_, i) => {
         const p = (i + 1) / (nPoints + 1);
@@ -183,7 +182,7 @@ export const B4: React.FC = () => {
       }
     >
       <g transform={`translate(540 ${CENTRE_Y}) scale(${muscle * 1.5})`}>
-        <Pixels art={MUSCLE} px={17} />
+        <Muscle />
       </g>
       <g transform={`translate(540 ${CENTRE_Y}) scale(1.5)`}>
         <Noyaux montrer={montrer} />
@@ -214,13 +213,13 @@ export const B5: React.FC = () => {
         const lig = Math.floor(i / 4);
         return (
           <g key={i} transform={`translate(${300 + col * 160} ${360 + lig * 130})`}>
-            <Pixels art={HALTERE} px={9} />
+            <Haltere />
           </g>
         );
       })}
 
       <g transform={`translate(540 760) scale(${silhouette * 1.1})`}>
-        <Pixels art={SILHOUETTE} px={13} />
+        <Silhouette />
       </g>
 
       {/* Un pointillé par noyau, tracé du personnage vers sa cible. */}
@@ -233,13 +232,13 @@ export const B5: React.FC = () => {
             {new Array(5).fill(0).map((__, k) => {
               const u = (k + 1) / 6;
               return (
-                <rect
+                <circle
                   key={k}
-                  x={540 + (cibleX - 540) * u - 7}
-                  y={890 + (cibleY - 890) * u - 7}
-                  width={14}
-                  height={14}
-                  fill={M.gris}
+                  cx={540 + (cibleX - 540) * u}
+                  cy={890 + (cibleY - 890) * u}
+                  r={7}
+                  fill={M.bleuClair}
+                  opacity={0.55}
                 />
               );
             })}
@@ -248,7 +247,7 @@ export const B5: React.FC = () => {
       })}
 
       <g transform={`translate(540 1130) scale(1.15)`}>
-        <Pixels art={MUSCLE} px={17} />
+        <Muscle />
         <Noyaux montrer={NOYAUX.map((_, i) => (fleches > i + 1 ? 1 : 0))} />
       </g>
     </Plan>
@@ -274,7 +273,7 @@ export const B6: React.FC = () => {
       }
     >
       <g transform={`translate(540 ${CENTRE_Y}) scale(${muscle * 1.45})`}>
-        <Pixels art={MUSCLE} px={17} />
+        <Muscle />
         <Noyaux montrer={[1, 1, 1, 1, 1]} />
       </g>
 
@@ -346,7 +345,7 @@ export const B9: React.FC = () => {
       }
     >
       <g transform={`translate(540 ${CENTRE_Y}) scale(${taille})`}>
-        <Pixels art={MUSCLE} px={17} />
+        <Muscle />
         <Noyaux montrer={[1, 1, 1, 1, 1]} opacity={eclat} />
       </g>
     </Plan>
@@ -369,7 +368,7 @@ export const B10: React.FC = () => {
       }
     >
       <g transform={`translate(540 ${CENTRE_Y})`}>
-        <Pixels art={MUSCLE} px={17} opacity={0.35} />
+        <Muscle opacity={0.35} />
       </g>
       <g transform={`translate(540 ${CENTRE_Y}) scale(${pulse})`}>
         <Noyaux montrer={[1, 1, 1, 1, 1]} />
@@ -394,10 +393,10 @@ export const B11: React.FC = () => {
       }
     >
       <g transform={`translate(540 620) scale(1.15)`}>
-        <Pixels art={CERVEAU} px={20} />
+        <Cerveau />
       </g>
       <g transform={`translate(540 1090) scale(1.05)`}>
-        <Pixels art={MUSCLE} px={17} />
+        <Muscle />
         <Noyaux montrer={[1, 1, 1, 1, 1]} />
       </g>
       {new Array(4).fill(0).map((_, i) => {
@@ -443,11 +442,11 @@ export const B12: React.FC = () => {
     >
       <line x1={540} y1={560} x2={540} y2={1060} stroke={M.gris} strokeWidth={5} />
       <g transform={`translate(300 ${CENTRE_Y}) scale(${g * 1.05})`}>
-        <Pixels art={MUSCLE} px={15} />
+        <Muscle echelle={0.88} />
         <Noyaux montrer={[1, 1, 1, 1, 1]} taille={0.9} />
       </g>
       <g transform={`translate(790 ${CENTRE_Y}) scale(${d * 1.05})`}>
-        <Pixels art={MUSCLE} px={15} opacity={0.4} />
+        <Muscle echelle={0.88} opacity={0.4} />
       </g>
       <Etiquette x={300} txt="DÉJÀ ENTRAÎNÉ" c={M.bleu} />
       <Etiquette x={790} txt="PREMIÈRE FOIS" c={M.gris} />
@@ -472,16 +471,16 @@ export const B13: React.FC = () => {
       }
     >
       <g transform={`translate(330 720) scale(${c * 2.4})`}>
-        <Pixels art={COCHE} px={9} />
+        <Coche />
       </g>
       <g transform={`translate(760 720) scale(${x * 2.0})`}>
-        <Pixels art={CROIX} px={9} />
+        <Croix />
       </g>
       {new Array(3).fill(0).map((_, i) => {
         const e = interpolate(t, [0.9 + i * 0.18, 1.1 + i * 0.18], [0, 1], CLAMP);
         return (
           <g key={i} transform={`translate(${330 + (i - 1) * 120} 1010) scale(${e * 1.5})`}>
-            <Pixels art={ETOILE} px={8} />
+            <Etoile />
           </g>
         );
       })}
@@ -548,13 +547,13 @@ export const B16: React.FC = () => {
       }
     >
       <g transform={`translate(600 640) scale(${bat * 1.5})`}>
-        <Pixels art={BATIMENT} px={16} />
+        <Batiment />
       </g>
       <g transform={`translate(360 ${960 + flotte}) scale(${perso * 1.7})`}>
-        <Pixels art={CHERCHEUR} px={14} />
+        <Chercheur />
       </g>
       <g transform={`translate(720 ${940 - flotte}) scale(${perso * 1.4})`}>
-        <Pixels art={INTERRO} px={14} />
+        <Interro />
       </g>
     </Plan>
   );
@@ -647,7 +646,7 @@ export const B17: React.FC = () => {
       }
     >
       <g transform={`translate(300 480) scale(${groupe * 1.6})`}>
-        <Pixels art={GROUPE} px={13} />
+        <Groupe />
       </g>
       {/* Jauge verticale */}
       <g transform="translate(620 480)">
@@ -657,7 +656,7 @@ export const B17: React.FC = () => {
         <rect x={-46} y={114} width={92} height={12} fill={M.noir} />
       </g>
       <g transform={`translate(810 480) scale(${0.9 + jauge * 0.5})`}>
-        <Pixels art={MUSCLE} px={12} />
+        <Muscle echelle={0.7} />
       </g>
 
       <Frise premiere={premiere} pause={pause} seconde={0} />
