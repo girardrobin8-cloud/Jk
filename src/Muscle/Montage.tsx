@@ -1,7 +1,8 @@
 import { AbsoluteFill, Audio, Sequence, staticFile } from "remotion";
 import { M, TITRE_FONT } from "./Plan";
-import { BLOCS, FENETRES, s, VOIX_DUREE } from "./reperes";
+import { BLOCS, COUPES, FENETRES, s, VOIX_DUREE } from "./reperes";
 import * as P from "./scenes";
+import type { Duree } from "./scenes";
 
 /**
  * Montage complet, calé sur l'enregistrement voix.
@@ -19,30 +20,49 @@ export const MONTAGE_FRAMES = s(VOIX_DUREE);
  */
 const BRUITAGES: { f: string; t: number; v: number }[] = [
   // Coupes franches visage ↔ motion design
-  { f: "whoosh-in.wav", t: 8.2, v: 0.28 },
-  { f: "whoosh-out.wav", t: 33.0, v: 0.26 },
-  { f: "whoosh-in.wav", t: 38.75, v: 0.28 },
-  { f: "whoosh-out.wav", t: 57.2, v: 0.26 },
-  { f: "whoosh-in.wav", t: 60.4, v: 0.28 },
-  // Badges 1 puis 2
-  { f: "pop.wav", t: 8.35, v: 0.2 },
-  { f: "pop.wav", t: 10.05, v: 0.24 },
-  // Les cinq myonoyaux qui apparaissent
-  ...[0, 1, 2, 3, 4].map((i) => ({
+  ...COUPES.map((t) => ({ f: "whoosh-in.wav", t, v: 0.3 })),
+
+  // Un souffle léger à chaque changement de plan, pour lier les enchaînements
+  ...BLOCS.filter((b) => b.type === "md").map((b) => ({
     f: "clic.wav",
-    t: 17.12 + i * 0.35,
-    v: 0.4,
+    t: b.debut,
+    v: 0.3,
   })),
+
+  // Badges 1 puis 2
+  { f: "pop.wav", t: 8.8, v: 0.24 },
+  { f: "pop.wav", t: 10.26, v: 0.3 },
+  // Le trait cerveau → muscle
+  { f: "apparition.wav", t: 13.36, v: 0.2 },
+  // Les cinq myonoyaux
+  ...[0, 1, 2, 3, 4].map((i) => ({
+    f: "pop.wav",
+    t: 15.9 + i * 0.35,
+    v: 0.22,
+  })),
+  // Les pointillés qui descendent vers le muscle
+  { f: "apparition.wav", t: 19.0, v: 0.2 },
+  // Le plafond qui pulse
+  { f: "marche.wav", t: 22.4, v: 0.26 },
+  // La grille de séances qui se remplit
+  ...[0, 1, 2, 3].map((i) => ({ f: "clic.wav", t: 24.6 + i * 0.5, v: 0.26 })),
+  // Le muscle qui rétrécit
+  { f: "whoosh-out.wav", t: 33.7, v: 0.24 },
   // Coche puis croix
-  { f: "pop.wav", t: 53.35, v: 0.26 },
-  { f: "marche.wav", t: 53.65, v: 0.26 },
-  // Frise qui se dessine, puis la chute
-  { f: "apparition.wav", t: 64.44, v: 0.22 },
-  { f: "apparition.wav", t: 72.72, v: 0.24 },
-  { f: "carillon.wav", t: 76.83, v: 0.32 },
+  { f: "pop.wav", t: 43.15, v: 0.3 },
+  { f: "marche.wav", t: 43.45, v: 0.28 },
+  // Les barres « plus rapide »
+  { f: "apparition.wav", t: 44.57, v: 0.24 },
+  // La frise qui se dessine
+  { f: "apparition.wav", t: 50.7, v: 0.24 },
+  { f: "marche.wav", t: 54.8, v: 0.22 },
+  { f: "apparition.wav", t: 59.24, v: 0.26 },
+  // La chute
+  { f: "whoosh-in.wav", t: 61.9, v: 0.26 },
+  { f: "carillon.wav", t: 62.37, v: 0.34 },
 ];
 
-const PLANS: { [id: string]: React.FC } = {
+const PLANS: { [id: string]: React.FC<Duree> } = {
   B2: P.B2,
   B3: P.B3,
   B4: P.B4,
@@ -151,7 +171,7 @@ export const Montage: React.FC = () => (
                   durationInFrames={s(fin) - s(d)}
                   name={`${b.id} — ${b.dit}`}
                 >
-                  <Composant />
+                  <Composant duree={s(fin) - s(d)} />
                 </Sequence>
               );
             })}

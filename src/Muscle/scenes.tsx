@@ -19,6 +19,8 @@ import {
  * à 0 au début de son plan ; le mot-clé apparaît sur le mot prononcé.
  */
 
+export type Duree = { duree: number };
+
 const CLAMP = { extrapolateLeft: "clamp", extrapolateRight: "clamp" } as const;
 
 /** Petit rebond utilisé pour toutes les apparitions. */
@@ -70,7 +72,7 @@ const Noyaux: React.FC<{ montrer: number[]; taille?: number; opacity?: number }>
 );
 
 // ── B2 · deux choses ─────────────────────────────────────────────────────
-export const B2: React.FC = () => {
+export const B2: React.FC<Duree> = ({ duree }) => {
   const un = useRebond(0.15);
   const deux = useRebond(1.3);
   const t = useT();
@@ -107,6 +109,7 @@ export const B2: React.FC = () => {
 
   return (
     <Plan
+      duree={duree}
       titreAt={1.6}
       titre={
         <>
@@ -121,7 +124,7 @@ export const B2: React.FC = () => {
 };
 
 // ── B3 · connexion cerveau ↔ muscle ──────────────────────────────────────
-export const B3: React.FC = () => {
+export const B3: React.FC<Duree> = ({ duree }) => {
   const t = useT();
   const cerveau = useRebond(0.1);
   const muscle = useRebond(0.3);
@@ -130,6 +133,7 @@ export const B3: React.FC = () => {
 
   return (
     <Plan
+      duree={duree}
       titreAt={1.2}
       titre={
         <>
@@ -164,7 +168,7 @@ export const B3: React.FC = () => {
 };
 
 // ── B4 · les myonoyaux apparaissent ──────────────────────────────────────
-export const B4: React.FC = () => {
+export const B4: React.FC<Duree> = ({ duree }) => {
   const t = useT();
   const muscle = useRebond(0.1);
   const montrer = NOYAUX.map((_, i) =>
@@ -172,6 +176,7 @@ export const B4: React.FC = () => {
   );
   return (
     <Plan
+      duree={duree}
       titreAt={1.5}
       titre={
         <>
@@ -192,7 +197,7 @@ export const B4: React.FC = () => {
 };
 
 // ── B5 · centres de contrôle ─────────────────────────────────────────────
-export const B5: React.FC = () => {
+export const B5: React.FC<Duree> = ({ duree }) => {
   const t = useT();
   const grille = interpolate(t, [0.1, 0.9], [0, 8], CLAMP);
   const silhouette = useRebond(1.0);
@@ -200,6 +205,7 @@ export const B5: React.FC = () => {
 
   return (
     <Plan
+      duree={duree}
       titreAt={1.9}
       titre={
         <>
@@ -255,7 +261,7 @@ export const B5: React.FC = () => {
 };
 
 // ── B6 · capacité limitée ────────────────────────────────────────────────
-export const B6: React.FC = () => {
+export const B6: React.FC<Duree> = ({ duree }) => {
   const t = useT();
   const muscle = useRebond(0.1);
   const battement = 1 + Math.sin(t * 5) * 0.05 * interpolate(t, [1.0, 1.4], [0, 1], CLAMP);
@@ -263,6 +269,7 @@ export const B6: React.FC = () => {
 
   return (
     <Plan
+      duree={duree}
       titreAt={2.0}
       titre={
         <>
@@ -300,12 +307,13 @@ export const B6: React.FC = () => {
 };
 
 // ── B7 · séance après séance ─────────────────────────────────────────────
-export const B7: React.FC = () => {
+export const B7: React.FC<Duree> = ({ duree }) => {
   const t = useT();
   const total = 28;
   const combien = interpolate(t, [0.2, 2.3], [0, total], CLAMP);
   return (
     <Plan
+      duree={duree}
       titreAt={1.7}
       titre={
         <>
@@ -331,12 +339,13 @@ export const B7: React.FC = () => {
 };
 
 // ── B9 · le volume baisse ────────────────────────────────────────────────
-export const B9: React.FC = () => {
+export const B9: React.FC<Duree> = ({ duree }) => {
   const t = useT();
   const taille = interpolate(t, [0.2, 1.4], [1.5, 1.0], CLAMP);
   const eclat = interpolate(t, [0.2, 1.4], [1, 0.35], CLAMP);
   return (
     <Plan
+      duree={duree}
       titreAt={0.5}
       titre={
         <>
@@ -353,11 +362,12 @@ export const B9: React.FC = () => {
 };
 
 // ── B10 · les myonoyaux restent ──────────────────────────────────────────
-export const B10: React.FC = () => {
+export const B10: React.FC<Duree> = ({ duree }) => {
   const t = useT();
   const pulse = 1 + Math.sin(t * 4.5) * 0.07;
   return (
     <Plan
+      duree={duree}
       titreAt={0.9}
       titre={
         <>
@@ -378,11 +388,12 @@ export const B10: React.FC = () => {
 };
 
 // ── B11 · le cerveau se souvient ─────────────────────────────────────────
-export const B11: React.FC = () => {
+export const B11: React.FC<Duree> = ({ duree }) => {
   const t = useT();
   const va = (Math.sin(t * 2.6) + 1) / 2;
   return (
     <Plan
+      duree={duree}
       titreAt={0.5}
       titre={
         <>
@@ -413,7 +424,7 @@ export const B11: React.FC = () => {
 };
 
 // ── B12 · rien à voir avec la première fois ──────────────────────────────
-export const B12: React.FC = () => {
+export const B12: React.FC<Duree> = ({ duree }) => {
   const g = useRebond(0.2);
   const d = useRebond(0.45);
   const Etiquette: React.FC<{ x: number; txt: string; c: string }> = ({ x, txt, c }) => (
@@ -431,6 +442,7 @@ export const B12: React.FC = () => {
   );
   return (
     <Plan
+      duree={duree}
       titreAt={1.4}
       titre={
         <>
@@ -455,12 +467,13 @@ export const B12: React.FC = () => {
 };
 
 // ── B13 · plus efficace ──────────────────────────────────────────────────
-export const B13: React.FC = () => {
+export const B13: React.FC<Duree> = ({ duree }) => {
   const t = useT();
   const c = useRebond(0.15);
   const x = useRebond(0.45);
   return (
     <Plan
+      duree={duree}
       titreAt={0.7}
       titre={
         <>
@@ -489,7 +502,7 @@ export const B13: React.FC = () => {
 };
 
 // ── B14 · plus rapide ────────────────────────────────────────────────────
-export const B14: React.FC = () => {
+export const B14: React.FC<Duree> = ({ duree }) => {
   const t = useT();
   const rapide = interpolate(t, [0.15, 0.65], [0, 1], CLAMP);
   const lent = interpolate(t, [0.15, 1.7], [0, 1], CLAMP);
@@ -516,6 +529,7 @@ export const B14: React.FC = () => {
   );
   return (
     <Plan
+      duree={duree}
       titreAt={0.5}
       titre={
         <>
@@ -532,13 +546,14 @@ export const B14: React.FC = () => {
 };
 
 // ── B16 · une étude ──────────────────────────────────────────────────────
-export const B16: React.FC = () => {
+export const B16: React.FC<Duree> = ({ duree }) => {
   const t = useT();
   const bat = useRebond(0.1);
   const perso = useRebond(0.35);
   const flotte = Math.sin(t * 3) * 8;
   return (
     <Plan
+      duree={duree}
       titreAt={0.6}
       titre={
         <>
@@ -628,7 +643,7 @@ const Frise: React.FC<{
 );
 
 // ── B17 · 20 semaines, puis pause ────────────────────────────────────────
-export const B17: React.FC = () => {
+export const B17: React.FC<Duree> = ({ duree }) => {
   const t = useT();
   const groupe = useRebond(0.1);
   const premiere = interpolate(t, [0.9, 4.2], [0, 1], CLAMP);
@@ -636,6 +651,7 @@ export const B17: React.FC = () => {
   const jauge = premiere;
   return (
     <Plan
+      duree={duree}
       titreAt={4.4}
       titre={
         <>
@@ -678,11 +694,12 @@ export const B17: React.FC = () => {
 };
 
 // ── B18 · 6 semaines ─────────────────────────────────────────────────────
-export const B18: React.FC = () => {
+export const B18: React.FC<Duree> = ({ duree }) => {
   const t = useT();
   const seconde = interpolate(t, [1.4, 2.2], [0, 1], CLAMP);
   return (
     <Plan
+      duree={duree}
       titreAt={2.2}
       titre={
         <>
@@ -720,7 +737,7 @@ export const B18: React.FC = () => {
 };
 
 // ── B19 · trois fois plus vite ───────────────────────────────────────────
-export const B19: React.FC = () => {
+export const B19: React.FC<Duree> = ({ duree }) => {
   const frame = useCurrentFrame();
   const { fps } = useVideoConfig();
   const punch = spring({
@@ -731,6 +748,7 @@ export const B19: React.FC = () => {
   const taille = interpolate(punch, [0, 1], [2.6, 1], { extrapolateRight: "clamp" });
   return (
     <Plan
+      duree={duree}
       titreAt={0.9}
       titre={
         <>

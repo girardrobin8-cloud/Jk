@@ -1,3 +1,4 @@
+import { useCurrentFrame, useVideoConfig } from "remotion";
 import { M } from "./Plan";
 
 /**
@@ -12,31 +13,80 @@ type Ic = { echelle?: number; opacity?: number; couleur?: string };
 const T = 5; // épaisseur de trait commune
 
 /**
- * Bras fléchi : bras horizontal, avant-bras vertical, renflement du biceps,
- * poing.
+ * Bras fléchi.
  *
- * Les quatre formes se chevauchent, et tracer chacune donnerait un fouillis de
- * jonctions. On dessine donc le contour épais D'ABORD, puis on le recouvre par
- * l'intérieur rempli : seule la silhouette d'ensemble reste visible.
+ * Un membre est avant tout un trait épais à bouts ronds : le bras est donc
+ * tracé comme une polyligne en L (bras horizontal, puis avant-bras vertical),
+ * dont les extrémités arrondies forment l'épaule et le poing. Le biceps est
+ * une ellipse posée dessus. Cette construction ne peut pas dégénérer, là où un
+ * contour dessiné point par point produisait des formes molles.
+ *
+ * `flex` (0 → 1) gonfle le biceps : c'est ce qu'on anime pour que le muscle
+ * respire au lieu de rester figé.
  */
-const Formes: React.FC<Record<string, unknown>> = (props) => (
-  <>
-    <rect x={-140} y={22} width={172} height={76} rx={38} {...props} />
-    <rect x={-14} y={-124} width={76} height={194} rx={38} {...props} />
-    <ellipse cx={-42} cy={20} rx={86} ry={64} {...props} />
-    <circle cx={24} cy={-124} r={42} {...props} />
-  </>
-);
+const EPAISSEUR = 78;
 
-export const Muscle: React.FC<Ic> = ({ echelle = 1, opacity = 1, couleur = M.corail }) => (
-  <g transform={`scale(${echelle})`} opacity={opacity}>
-    <Formes fill={couleur} stroke={couleur} strokeWidth={T * 2} strokeLinejoin="round" />
-    <Formes fill={M.fond} />
+const Corps: React.FC<{
+  flex: number;
+  fill: string;
+  stroke?: string;
+  extra?: number;
+}> = ({ flex, fill, stroke, extra = 0 }) => {
+  const b = 26 * flex;
+  return (
+    <>
+      <path
+        d="M -132 60 L 26 60 L 26 -112"
+        fill="none"
+        stroke={stroke ?? fill}
+        strokeWidth={EPAISSEUR + extra * 2}
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+      <circle cx={26} cy={-118} r={48 + extra} fill={stroke ?? fill} />
+      <ellipse
+        cx={-50}
+        cy={38 - b * 0.6}
+        rx={90 + extra}
+        ry={50 + b + extra}
+        fill={stroke ?? fill}
+      />
+    </>
+  );
+};
+
+export const Muscle: React.FC<Ic & { flex?: number }> = ({
+  echelle = 1,
+  opacity = 1,
+  couleur = M.corail,
+  flex: impose,
+}) => {
+  // Sans consigne, le muscle se contracte et se relâche en boucle : c'est ce
+  // qui l'empêche d'avoir l'air d'un pictogramme figé.
+  const frame = useCurrentFrame();
+  const { fps } = useVideoConfig();
+  const flex =
+    impose ?? 0.34 + 0.3 * (0.5 + 0.5 * Math.sin((frame / fps) * 2.3));
+  return (
+  <g transform={`scale(${echelle}) rotate(${-2.5 * flex})`} opacity={opacity}>
+    {/* Contour d'abord, recouvert ensuite : seule la silhouette ressort. */}
+    <Corps flex={flex} fill={couleur} extra={T} />
+    <Corps flex={flex} fill={M.fond} />
     <g opacity={0.18}>
-      <Formes fill={couleur} />
+      <Corps flex={flex} fill={couleur} />
     </g>
-  </g>
-);
+    {/* Sillon du biceps, qui se marque à la contraction */}
+    <path
+      d={`M -104 ${18 - flex * 8} C -74 ${-14 - flex * 20} -6 ${-18 - flex * 22} 14 ${6 - flex * 10}`}
+      fill="none"
+      stroke={couleur}
+      strokeWidth={T - 1}
+      strokeLinecap="round"
+      opacity={0.25 + flex * 0.35}
+    />
+    </g>
+  );
+};
 
 /** Cerveau : ovale et circonvolutions. */
 export const Cerveau: React.FC<Ic> = ({ echelle = 1, opacity = 1, couleur = M.vert }) => (

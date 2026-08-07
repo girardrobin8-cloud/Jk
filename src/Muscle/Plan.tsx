@@ -45,9 +45,26 @@ export const Plan: React.FC<{
   children: React.ReactNode;
   titre?: React.ReactNode;
   titreAt?: number;
-}> = ({ children, titre, titreAt = 0.25 }) => {
+  /** Durée du plan, en frames : sert à caler la sortie. */
+  duree?: number;
+}> = ({ children, titre, titreAt = 0.25, duree }) => {
   const frame = useCurrentFrame();
   const { fps } = useVideoConfig();
+
+  // Entrée et sortie communes à tous les plans : les enchaînements se
+  // répondent au lieu de se remplacer sèchement.
+  const E = 7;
+  const entree = interpolate(frame, [0, E], [0, 1], {
+    extrapolateLeft: "clamp",
+    extrapolateRight: "clamp",
+  });
+  const sortie = duree
+    ? interpolate(frame, [duree - E, duree], [1, 0], {
+        extrapolateLeft: "clamp",
+        extrapolateRight: "clamp",
+      })
+    : 1;
+  const passage = Math.min(entree, sortie);
 
   const apparition = interpolate(
     frame,
@@ -72,9 +89,16 @@ export const Plan: React.FC<{
         }}
       />
 
-      <svg viewBox="0 0 1080 1920" width="100%" height="100%">
-        {children}
-      </svg>
+      <AbsoluteFill
+        style={{
+          opacity: passage,
+          transform: `scale(${0.965 + passage * 0.035})`,
+        }}
+      >
+        <svg viewBox="0 0 1080 1920" width="100%" height="100%">
+          {children}
+        </svg>
+      </AbsoluteFill>
 
       {titre ? (
         <AbsoluteFill
@@ -84,7 +108,7 @@ export const Plan: React.FC<{
             paddingBottom: 480,
             paddingLeft: 70,
             paddingRight: 70,
-            opacity: apparition,
+            opacity: apparition * passage,
             transform: `translateY(${(1 - apparition) * 14}px)`,
           }}
         >
