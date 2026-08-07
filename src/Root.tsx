@@ -6,6 +6,7 @@ import { S8Energisante } from "./Cafeine/scenes/S8Energisante";
 import { Adaptation } from "./Metabolisme/Adaptation";
 import { Montage, MONTAGE_FRAMES } from "./Metabolisme/Montage";
 import { ANIM_FIN, s as sec } from "./Metabolisme/reperes";
+import { Montage as MuscleMontage, MONTAGE_FRAMES as MUSCLE_FRAMES } from "./Muscle/Montage";
 import { HelloWorld, myCompSchema } from "./HelloWorld";
 import { Logo, myCompSchema2 } from "./HelloWorld/Logo";
 
@@ -14,6 +15,17 @@ import { Logo, myCompSchema2 } from "./HelloWorld/Logo";
 export const RemotionRoot: React.FC = () => {
   return (
     <>
+      {/* « La mémoire musculaire » — motion design calé sur la voix.
+          npx remotion render MemoireMusculaire */}
+      <Composition
+        id="MemoireMusculaire"
+        component={MuscleMontage}
+        durationInFrames={MUSCLE_FRAMES}
+        fps={30}
+        width={1080}
+        height={1920}
+      />
+
       {/* Montage complet « Pourquoi ta perte de poids stagne ».
           npx remotion render Metabolisme */}
       <Composition
