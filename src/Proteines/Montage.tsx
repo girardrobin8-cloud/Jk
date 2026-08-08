@@ -12,33 +12,51 @@ export const MONTAGE_FRAMES = s(VOIX_DUREE);
 
 /** Bruitages, en secondes absolues (banque de `scripts/bruitages.py`). */
 const BRUITAGES: { f: string; t: number; v: number }[] = [
-  { f: "whoosh-in.wav", t: COUPE_1, v: 0.3 },
-  { f: "whoosh-out.wav", t: COUPE_2, v: 0.28 },
+  // Niveaux mesurés après rendu : cette voix est nettement plus forte que
+  // celle des montages précédents, si bien que les volumes d'alors tombaient
+  // 10 dB trop bas et passaient inaperçus. Ils visent ici -8 à -4 dB sous la
+  // voix. Le clic, trop bref pour porter, est remplacé par le pop partout où
+  // il doit s'entendre.
+  { f: "whoosh-in.wav", t: COUPE_1, v: 1.0 },
+  { f: "whoosh-out.wav", t: COUPE_2, v: 1.0 },
+
   // Frise : le curseur avance, la croix tombe, « MYTHE » s'incruste
-  { f: "apparition.wav", t: 6.7, v: 0.24 },
-  ...[0, 1, 2, 3].map((i) => ({ f: "clic.wav", t: 7.5 + i * 0.5, v: 0.22 })),
-  { f: "marche.wav", t: 9.9, v: 0.32 },
-  { f: "carillon.wav", t: 12.4, v: 0.2 },
-  // Révélation du total
-  { f: "whoosh-in.wav", t: 16.5, v: 0.24 },
-  { f: "carillon.wav", t: 16.9, v: 0.3 },
-  { f: "clic.wav", t: 19.0, v: 0.26 },
-  // Assiettes
-  ...[0, 1, 2].map((i) => ({ f: "pop.wav", t: 20.2 + i * 0.3, v: 0.2 })),
-  ...[0, 1, 2].map((i) => ({ f: "pop.wav", t: 21.3 + i * 0.3, v: 0.2 })),
+  { f: "apparition.wav", t: 6.7, v: 0.85 },
+  ...[0, 1, 2, 3, 4].map((i) => ({ f: "pop.wav", t: 7.5 + i * 0.42, v: 0.6 })),
+  { f: "marche.wav", t: 9.9, v: 1.0 },
+  { f: "whoosh-in.wav", t: 12.25, v: 0.7 },
+  { f: "carillon.wav", t: 12.4, v: 0.8 },
+
+  // Bascule vers le total quotidien
+  { f: "whoosh-in.wav", t: 16.4, v: 0.9 },
+  { f: "carillon.wav", t: 16.9, v: 1.0 },
+  { f: "pop.wav", t: 19.0, v: 0.8 },
+
+  // Assiettes : trois, puis six
+  ...[0, 1, 2].map((i) => ({ f: "pop.wav", t: 20.2 + i * 0.28, v: 0.7 })),
+  ...[0, 1, 2, 3, 4, 5].map((i) => ({ f: "pop.wav", t: 21.3 + i * 0.16, v: 0.55 })),
+
   // Deux clients
-  { f: "apparition.wav", t: 23.95, v: 0.26 },
-  { f: "marche.wav", t: 25.9, v: 0.26 }, // « même entraînement » barré
-  { f: "clic.wav", t: 27.0, v: 0.26 },
+  { f: "whoosh-in.wav", t: 23.85, v: 0.7 },
+  { f: "apparition.wav", t: 23.95, v: 0.85 },
+  { f: "marche.wav", t: 25.9, v: 0.95 }, // « même entraînement » barré
+  { f: "pop.wav", t: 27.0, v: 0.8 },
+  { f: "pop.wav", t: 27.25, v: 0.8 },
+
   // Graphique
-  { f: "apparition.wav", t: 28.6, v: 0.24 },
-  { f: "apparition.wav", t: 30.7, v: 0.22 },
-  { f: "apparition.wav", t: 34.6, v: 0.24 },
-  { f: "carillon.wav", t: 36.1, v: 0.3 },
+  { f: "apparition.wav", t: 28.6, v: 0.8 },
+  { f: "whoosh-in.wav", t: 30.6, v: 0.6 },
+  { f: "apparition.wav", t: 30.7, v: 0.85 },
+  { f: "whoosh-in.wav", t: 34.5, v: 0.6 },
+  { f: "apparition.wav", t: 34.6, v: 0.85 },
+  { f: "carillon.wav", t: 36.1, v: 0.95 },
+
   // Retour de la frise, puis la chute
-  { f: "whoosh-in.wav", t: 38.3, v: 0.26 },
-  { f: "clic.wav", t: 39.3, v: 0.24 },
-  { f: "carillon.wav", t: 40.7, v: 0.34 },
+  { f: "whoosh-in.wav", t: 38.3, v: 0.9 },
+  { f: "pop.wav", t: 39.3, v: 0.7 },
+  { f: "pop.wav", t: 39.6, v: 0.7 },
+  { f: "marche.wav", t: 40.55, v: 0.7 },
+  { f: "carillon.wav", t: 40.7, v: 1.0 },
 ];
 
 const mmss = (t: number) =>
