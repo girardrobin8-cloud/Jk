@@ -116,7 +116,7 @@ export const Animation: React.FC = () => {
   const chiffreHaut = ramp(t, 23.2, 24.2);
   const chiffreY = interpolate(chiffreHaut, [0, 1], [820, 360]);
   const chiffreEch = interpolate(chiffreHaut, [0, 1], [1, 0.34]);
-  const chiffreOut = ramp(t, 41.6, 42.4);
+  const chiffreOut = ramp(t, 37.9, 38.7);
 
   // ── Comparaison (23,9 → 33,8) ─────────────────────────────────────────
   const perso = spring({ frame: frame - (23.9 - COUPE_1) * fps, fps, config: { damping: 13, mass: 0.7 } });
@@ -319,19 +319,40 @@ export const Animation: React.FC = () => {
               />
             ) : null}
 
+            {/* Légende : sans elle, on ne sait pas quelle courbe est laquelle. */}
+            {c1 > 0 ? (
+              <g opacity={ramp(t, 31.0, 31.6)}>
+                <line x1={210} y1={706} x2={274} y2={706} stroke={M.vert} strokeWidth={7} strokeLinecap="round" />
+                <Texte x={290} y={718} taille={30} couleur={M.vert} ancre="start">
+                  3 REPAS
+                </Texte>
+              </g>
+            ) : null}
+            {c2 > 0 ? (
+              <g opacity={ramp(t, 34.8, 35.4)}>
+                <line
+                  x1={210}
+                  y1={758}
+                  x2={274}
+                  y2={758}
+                  stroke={M.ambre}
+                  strokeWidth={7}
+                  strokeLinecap="round"
+                  strokeDasharray="16 12"
+                />
+                <Texte x={290} y={770} taille={30} couleur={M.ambre} ancre="start">
+                  6 REPAS
+                </Texte>
+              </g>
+            ) : null}
+
             {identique > 0.01 ? (
               <g opacity={Math.min(1, identique)}>
-                <line
-                  x1={hx(13.5)}
-                  y1={AY1 + 150}
-                  x2={hx(13.5)}
-                  y2={AY1 - courbe(TROIS, AMP3, 13.5) * (AY1 - AY0) - 14}
-                  stroke={M.gris}
-                  strokeWidth={4}
-                  strokeDasharray="9 9"
-                />
-                <Texte x={540} y={AY1 + 210} taille={44} couleur={M.vert}>
+                <Texte x={540} y={AY1 + 200} taille={44} couleur={M.vert}>
                   QUASI IDENTIQUE SUR 24 H
+                </Texte>
+                <Texte x={540} y={AY1 + 252} taille={32} couleur={M.gris}>
+                  MÊME TOTAL, MÊME RÉSULTAT
                 </Texte>
               </g>
             ) : null}
@@ -346,27 +367,39 @@ export const Animation: React.FC = () => {
               const repas = i === 0 ? TROIS : SIX;
               return (
                 <g key={i}>
-                  <line x1={FX0} y1={y} x2={FX1} y2={y} stroke={M.gris} strokeWidth={5} />
+                  {/* Le trait s'arrête avant la pastille : sinon il traverse
+                      le chiffre, qui devient illisible. */}
+                  <line x1={FX0} y1={y} x2={FX1 - 168} y2={y} stroke={M.gris} strokeWidth={5} />
                   <Texte x={FX0} y={y - 34} taille={30} couleur={COULEURS[i]} ancre="start">
                     {i === 0 ? "3 REPAS" : "6 REPAS"}
                   </Texte>
                   {/* Repères intermédiaires, qui s'effacent */}
                   <g opacity={1 - effacer}>
                     {repas.map((r) => (
-                      <circle key={r} cx={FX0 + (r / 24) * (FX1 - FX0 - 120)} cy={y} r={13} fill={COULEURS[i]} />
+                      <circle
+                        key={r}
+                        cx={FX0 + (r / 24) * (FX1 - FX0 - 230)}
+                        cy={y}
+                        r={13}
+                        fill={COULEURS[i]}
+                      />
                     ))}
                   </g>
                   {/* Total de fin de journée, entouré */}
-                  <g transform={`translate(${FX1 - 46} ${y})`}>
+                  <g transform={`translate(${FX1 - 78} ${y})`}>
+                    <circle r={76} fill={M.fond} />
                     <circle
-                      r={58 * Math.min(1, entoure)}
+                      r={76 * Math.min(1, entoure)}
                       fill="none"
                       stroke={M.vert}
-                      strokeWidth={6}
+                      strokeWidth={7}
                       opacity={entoure}
                     />
-                    <Texte x={0} y={14} taille={40} couleur={M.vert}>
+                    <Texte x={0} y={-6} taille={52} couleur={M.vert}>
                       160
+                    </Texte>
+                    <Texte x={0} y={36} taille={24} couleur={M.gris}>
+                      TOTAL
                     </Texte>
                   </g>
                 </g>
