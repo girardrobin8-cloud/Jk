@@ -13,6 +13,7 @@ import {
   Montage as PresentationMontage,
   MONTAGE_FRAMES as PRESENTATION_FRAMES,
 } from "./Presentation/Montage";
+import { Plage, PLAGE_FRAMES } from "./Plage/Plage";
 import { HelloWorld, myCompSchema } from "./HelloWorld";
 import { Logo, myCompSchema2 } from "./HelloWorld/Logo";
 
@@ -21,6 +22,18 @@ import { Logo, myCompSchema2 } from "./HelloWorld/Logo";
 export const RemotionRoot: React.FC = () => {
   return (
     <>
+      {/* Une personne marche au bord de l'eau, au crépuscule. Entièrement
+          calculé : cycle de marche procédural, marée qui efface les empreintes.
+          npx remotion render Plage */}
+      <Composition
+        id="Plage"
+        component={Plage}
+        durationInFrames={PLAGE_FRAMES}
+        fps={30}
+        width={1080}
+        height={1920}
+      />
+
       {/* « Bonjour, je m'appelle Robin » — présentation calée sur une voix
           TÉMOIN synthétique (scripts/voix_hors_ligne.py), en attendant la
           prise ElevenLabs. Voir src/Presentation/Montage.tsx pour la
