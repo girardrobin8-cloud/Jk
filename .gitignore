@@ -4,6 +4,10 @@ build
 .DS_Store
 .env
 
+# Cache de compilation Python (scripts/)
+__pycache__/
+*.pyc
+
 # Ignore the output video from Git but not videos you import into src/.
 out
 
