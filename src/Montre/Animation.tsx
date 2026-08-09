@@ -190,8 +190,24 @@ export const Animation: React.FC<{ depart: number }> = ({ depart }) => {
   const nuageOut = r(t, 44.6, 45.2);
 
   // ── Beat 9 · l'objet et son prix ──
+  // Le beat tient l'écran 7,4 s, jusqu'au bout de la phrase du prix. Il est
+  // découpé sur les creux relevés dans la voix : la montre arrive sur la
+  // proposition 45,43–46,92, le prix sur celle de 47,39–51,22, et la mention
+  // sur les derniers mots, 51,37–52,47.
   const objet = sp(45.6, 14, 0.9);
-  const prix = sp(46.8, 12, 0.7);
+  const prix = sp(47.5, 12, 0.7);
+  const mention = sp(51.4, 12, 0.6);
+  // Le prix se compose au lieu de s'afficher d'un bloc : c'est ce qui occupe
+  // l'écran pendant que la phrase se déroule. Un anneau autour de la montre
+  // avait été essayé d'abord, mais à un rayon suffisant pour dégager le
+  // boîtier il traversait la frise d'icônes restée en en-tête.
+  const compte = Math.round(r(t, 47.6, 49.6) * 48) * 25;
+  // Trait qui se tire sous le prix et amène la mention finale.
+  const trait = r(t, 49.9, 51.3);
+  // Respiration : la montre n'est jamais tout à fait immobile.
+  const vie = Math.min(1, objet);
+  const souffle = Math.sin((t - 45.6) * 1.15) * 0.012 * vie;
+  const derive = Math.sin((t - 45.6) * 0.8) * 6 * vie;
 
   const entete = badgeHaut; // les frises se rangent sous le badge
 
@@ -443,16 +459,39 @@ export const Animation: React.FC<{ depart: number }> = ({ depart }) => {
         {/* ── Beat 9 · l'objet et son prix ── */}
         {objet > 0.01 ? (
           <g opacity={Math.min(1, objet)}>
-            <g transform={`translate(540 700) scale(${Math.min(objet, 1.04) * 3.4})`}>
+            <g
+              transform={`translate(540 ${700 + derive}) scale(${
+                (Math.min(objet, 1.04) + souffle) * 3.4
+              })`}
+            >
               <Montre c={M.gris} />
             </g>
+
             {/* Le prix est posé sous la montre, pas incrusté dessus : par-dessus
                 le boîtier, il se confondait avec le tracé de l'objet. */}
             <g transform={`translate(540 1150) scale(${Math.min(prix, 1.08)})`} opacity={Math.min(1, prix)}>
               <Txt x={0} y={0} taille={150} couleur={M.vert}>
-                1200 €
+                {`${compte} €`}
               </Txt>
-              <Txt x={0} y={62} taille={34}>
+            </g>
+
+            {/* Le trait tient les 40 px libres entre le pied des chiffres et le
+                haut de la mention : il ne touche ni l'un ni l'autre. */}
+            {trait > 0 ? (
+              <line
+                x1={540 - 250 * trait}
+                x2={540 + 250 * trait}
+                y1={1190}
+                y2={1190}
+                stroke={M.vert}
+                strokeWidth={5}
+                strokeLinecap="round"
+                opacity={0.55}
+              />
+            ) : null}
+
+            <g transform={`translate(540 1245) scale(${Math.min(mention, 1.08)})`} opacity={Math.min(1, mention)}>
+              <Txt x={0} y={0} taille={34}>
                 ET TOUJOURS PAS EXACT
               </Txt>
             </g>

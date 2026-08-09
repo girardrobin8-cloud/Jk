@@ -19,7 +19,7 @@ const BRUITAGES: { f: string; t: number; v: number }[] = [
   { f: "whoosh-in.wav", t: 4.14, v: 0.95 },
   { f: "whoosh-out.wav", t: 32.58, v: 0.9 },
   { f: "whoosh-in.wav", t: 37.13, v: 0.95 },
-  { f: "whoosh-out.wav", t: 50.0, v: 0.9 },
+  { f: "whoosh-out.wav", t: 52.82, v: 0.9 },
 
   { f: "apparition.wav", t: 4.5, v: 0.8 },
   { f: "carillon.wav", t: 6.7, v: 0.8 }, // le badge se pose
@@ -48,9 +48,11 @@ const BRUITAGES: { f: string; t: number; v: number }[] = [
     v: 0.4,
   })),
 
-  // L'objet et son prix
+  // L'objet et son prix : la montre, le prix, puis la mention sur les
+  // derniers mots — trois appuis pour tenir les 7,4 s du beat.
   { f: "whoosh-in.wav", t: 45.5, v: 0.8 },
-  { f: "carillon.wav", t: 46.9, v: 1.0 },
+  { f: "carillon.wav", t: 47.6, v: 1.0 },
+  { f: "marche.wav", t: 51.45, v: 0.85 },
 ];
 
 const mmss = (t: number) =>
