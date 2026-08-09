@@ -14,6 +14,7 @@ import {
   MONTAGE_FRAMES as PRESENTATION_FRAMES,
 } from "./Presentation/Montage";
 import { Plage, PLAGE_FRAMES } from "./Plage/Plage";
+import { Carte, CARTE_FRAMES } from "./Carte/Carte";
 import { HelloWorld, myCompSchema } from "./HelloWorld";
 import { Logo, myCompSchema2 } from "./HelloWorld/Logo";
 
@@ -22,6 +23,19 @@ import { Logo, myCompSchema2 } from "./HelloWorld/Logo";
 export const RemotionRoot: React.FC = () => {
   return (
     <>
+      {/* « Grande-Bretagne, Royaume-Uni, Îles Britanniques » — trois
+          définitions emboîtées sur une carte réelle (Natural Earth).
+          Tracés préparés par `node scripts/carte.mjs`.
+          npx remotion render Carte */}
+      <Composition
+        id="Carte"
+        component={Carte}
+        durationInFrames={CARTE_FRAMES}
+        fps={30}
+        width={1080}
+        height={1920}
+      />
+
       {/* Une personne marche au bord de l'eau, au crépuscule. Entièrement
           calculé : cycle de marche procédural, marée qui efface les empreintes.
           npx remotion render Plage */}
