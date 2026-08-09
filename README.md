@@ -37,6 +37,9 @@ npx remotion render
 npx remotion upgrade
 ```
 
+Toutes les commandes du projet (compositions à rendre, bruitages, voix off) sont
+détaillées dans [CLI.md](./CLI.md).
+
 ## Docs
 
 Get started with Remotion by reading the [fundamentals page](https://www.remotion.dev/docs/the-fundamentals).
