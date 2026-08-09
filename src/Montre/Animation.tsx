@@ -367,7 +367,9 @@ export const Animation: React.FC<{ depart: number }> = ({ depart }) => {
               </g>
             ))}
             <line x1={230} y1={1190} x2={850} y2={1190} stroke={M.gris} strokeWidth={4} />
-            <Txt x={540} y={720} taille={34} opacity={barreAnnonce > 0.9 ? 1 : 0} couleur={M.corail}>
+            {/* Sous les libellés : posé plus haut, il passait derrière la
+                barre « annoncé » une fois celle-ci montée. */}
+            <Txt x={540} y={1350} taille={44} opacity={barreAnnonce > 0.9 ? 1 : 0} couleur={M.corail}>
               PRESQUE LE DOUBLE
             </Txt>
           </g>
@@ -441,15 +443,16 @@ export const Animation: React.FC<{ depart: number }> = ({ depart }) => {
         {/* ── Beat 9 · l'objet et son prix ── */}
         {objet > 0.01 ? (
           <g opacity={Math.min(1, objet)}>
-            <g transform={`translate(540 830) scale(${Math.min(objet, 1.04) * 4.2})`}>
+            <g transform={`translate(540 700) scale(${Math.min(objet, 1.04) * 3.4})`}>
               <Montre c={M.gris} />
             </g>
-            <g transform={`translate(540 830) scale(${Math.min(prix, 1.08)})`} opacity={Math.min(1, prix)}>
-              <rect x={-230} y={-92} width={460} height={184} rx={20} fill={M.fond} fillOpacity={0.86} />
-              <Txt x={0} y={16} taille={140} couleur={M.vert}>
+            {/* Le prix est posé sous la montre, pas incrusté dessus : par-dessus
+                le boîtier, il se confondait avec le tracé de l'objet. */}
+            <g transform={`translate(540 1150) scale(${Math.min(prix, 1.08)})`} opacity={Math.min(1, prix)}>
+              <Txt x={0} y={0} taille={150} couleur={M.vert}>
                 1200 €
               </Txt>
-              <Txt x={0} y={72} taille={30}>
+              <Txt x={0} y={62} taille={34}>
                 ET TOUJOURS PAS EXACT
               </Txt>
             </g>
