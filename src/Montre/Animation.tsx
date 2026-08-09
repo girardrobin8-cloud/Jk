@@ -157,41 +157,41 @@ export const Animation: React.FC<{ depart: number }> = ({ depart }) => {
     spring({ frame: frame - (at - depart) * fps, fps, config: { damping, mass } });
 
   // ── Beat 2 · compteur puis badge qui se miniaturise ──
-  const compteur = r(t, 5.1, 5.6);
-  const compteurOut = r(t, 6.9, 7.4);
-  const badge = sp(7.0);
-  const badgeHaut = r(t, 8.9, 9.8); // se réduit et monte en en-tête
+  const compteur = r(t, 4.4, 4.9);
+  const compteurOut = r(t, 6.3, 6.8);
+  const badge = sp(6.6);
+  const badgeHaut = r(t, 8.4, 9.3); // se réduit et monte en en-tête
   const badgeY = interpolate(badgeHaut, [0, 1], [780, 250]);
   const badgeEch = interpolate(badgeHaut, [0, 1], [1.5, 0.42]);
 
   // ── Beat 3 · le chiffre choc ──
-  const choc = sp(10.1, 14, 0.9);
-  const chocOut = r(t, 12.6, 13.2);
+  const choc = sp(10.2, 14, 0.9);
+  const chocOut = r(t, 13.5, 14.1);
 
   // ── Beat 4 · empilement des appareils, puis frise ──
-  const pileA = APPAREILS.map((_, i) => sp(13.2 + i * 0.42, 11, 0.5));
-  const friseA = r(t, 16.8, 17.8);
+  const pileA = APPAREILS.map((_, i) => sp(14.5 + i * 0.42, 11, 0.5));
+  const friseA = r(t, 18.0, 19.0);
 
   // ── Beat 5 · empilement des activités, puis frise ──
-  const pileB = ACTIVITES.map((_, i) => sp(18.2 + i * 0.42, 11, 0.5));
-  const friseB = r(t, 21.4, 22.3);
-  const suspens = sp(22.2, 12, 0.7);
-  const suspensOut = r(t, 23.2, 23.7);
+  const pileB = ACTIVITES.map((_, i) => sp(19.9 + i * 0.42, 11, 0.5));
+  const friseB = r(t, 23.6, 24.5);
+  const suspens = sp(24.6, 12, 0.7);
+  const suspensOut = r(t, 25.6, 26.1);
 
   // ── Beat 6 · comparaison ──
-  const barreReel = r(t, 23.5, 26.0);
-  const barreAnnonce = r(t, 27.0, 29.4);
-  const compOut = r(t, 29.4, 30.0);
+  const barreReel = r(t, 26.4, 28.6);
+  const barreAnnonce = r(t, 29.2, 31.4);
+  const compOut = r(t, 31.9, 32.5);
 
   // ── Beat 8 · nuage de complexité ──
-  const montreCentre = sp(36.2, 13, 0.7);
-  const mesurees = [0, 1, 2, 3].map((i) => sp(36.9 + i * 0.45, 11, 0.5));
-  const nuage = r(t, 40.0, 45.6);
-  const nuageOut = r(t, 45.8, 46.4);
+  const montreCentre = sp(37.5, 13, 0.7);
+  const mesurees = [0, 1, 2, 3].map((i) => sp(38.1 + i * 0.45, 11, 0.5));
+  const nuage = r(t, 40.5, 44.4);
+  const nuageOut = r(t, 44.6, 45.2);
 
   // ── Beat 9 · l'objet et son prix ──
-  const objet = sp(46.2, 14, 0.9);
-  const prix = sp(47.4, 12, 0.7);
+  const objet = sp(45.6, 14, 0.9);
+  const prix = sp(46.8, 12, 0.7);
 
   const entete = badgeHaut; // les frises se rangent sous le badge
 
@@ -284,7 +284,7 @@ export const Animation: React.FC<{ depart: number }> = ({ depart }) => {
                 </g>
               );
             })}
-            <g opacity={friseA * (1 - r(t, 29.6, 30.0))}>
+            <g opacity={friseA * (1 - r(t, 32.0, 32.5))}>
               {/* Libellé sous la frise : posé à sa hauteur, il recouvrait
                   les icônes. */}
               <Txt x={314} y={492} taille={24}>
