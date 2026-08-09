@@ -31,7 +31,7 @@ const lire = (f) =>
   JSON.parse(readFileSync(join(RACINE, "node_modules", "sane-topojson", "dist", f)));
 
 const monde50 = lire("world_50m.json");
-const monde110 = lire("world_110m.json");
+
 
 const pays50 = feature(monde50, monde50.objects.countries).features;
 const trouver = (id) => {
@@ -49,6 +49,11 @@ const polygones = (f) =>
     : f.geometry.coordinates;
 
 const cadre = (anneaux) => {
+  // Le jeu 50m contient quelques polygones sans anneau : sans ce garde-fou,
+  // l'un d'eux fait échouer tout le script.
+  if (!anneaux || !anneaux[0] || !anneaux[0].length) {
+    return { x0: 0, y0: 0, x1: 0, y1: 0, aire: 0 };
+  }
   let x0 = 180;
   let y0 = 90;
   let x1 = -180;
@@ -93,10 +98,14 @@ const projection = geoMercator().fitExtent(
 );
 const chemin = geoPath(projection);
 
-/** Terres alentour, en 110m : c'est un fond de carte, il n'a pas besoin de détail. */
+/**
+ * Terres alentour. En 50m comme les strates : la caméra se rapproche jusqu'à
+ * doubler l'échelle, et un fond en 110m s'y réduit à des taches informes juste
+ * à côté de côtes détaillées.
+ */
 const fenetre = { x0: -24, y0: 42, x1: 20, y1: 68 };
-const terres110 = feature(monde110, monde110.objects.land).features;
-const fond = terres110
+const terres = feature(monde50, monde50.objects.land).features;
+const fond = terres
   .flatMap((f) => polygones(f))
   .filter((p) => {
     const c = cadre(p);
@@ -108,11 +117,18 @@ const donnees = {
   hauteur: HAUTEUR,
   source: "Natural Earth (domaine public) via sane-topojson",
   fond: chemin(enFeature(fond)),
-  strates: strates.map((s) => ({
-    id: s.id,
-    titre: s.titre,
-    d: chemin(enFeature(s.parts)),
-  })),
+  // L'emprise projetée de chaque strate : c'est elle que la caméra vise, donc
+  // le cadrage de chaque plan se déduit de la géographie et non d'un réglage
+  // à la main qui serait à refaire à chaque changement de sujet.
+  strates: strates.map((s) => {
+    const [[x0, y0], [x1, y1]] = chemin.bounds(enFeature(s.parts));
+    return {
+      id: s.id,
+      titre: s.titre,
+      d: chemin(enFeature(s.parts)),
+      emprise: { x0, y0, x1, y1 },
+    };
+  }),
 };
 
 mkdirSync(dirname(SORTIE), { recursive: true });
@@ -120,6 +136,10 @@ writeFileSync(SORTIE, JSON.stringify(donnees));
 
 console.log(`Écrit ${SORTIE}`);
 for (const s of donnees.strates) {
-  console.log(`  ${s.titre.padEnd(22)} ${s.d.length} caractères de tracé`);
+  const e = s.emprise;
+  console.log(
+    `  ${s.titre.padEnd(22)} ${String(s.d.length).padStart(6)} car.  ` +
+      `emprise ${Math.round(e.x1 - e.x0)}×${Math.round(e.y1 - e.y0)}`,
+  );
 }
 console.log(`  ${"fond de carte".padEnd(22)} ${donnees.fond.length} caractères`);
