@@ -8,6 +8,7 @@ import { Montage, MONTAGE_FRAMES } from "./Metabolisme/Montage";
 import { ANIM_FIN, s as sec } from "./Metabolisme/reperes";
 import { Montage as MuscleMontage, MONTAGE_FRAMES as MUSCLE_FRAMES } from "./Muscle/Montage";
 import { Montage as ProtMontage, MONTAGE_FRAMES as PROT_FRAMES } from "./Proteines/Montage";
+import { Montage as MontreMontage, MONTAGE_FRAMES as MONTRE_FRAMES } from "./Montre/Montage";
 import { HelloWorld, myCompSchema } from "./HelloWorld";
 import { Logo, myCompSchema2 } from "./HelloWorld/Logo";
 
@@ -16,6 +17,18 @@ import { Logo, myCompSchema2 } from "./HelloWorld/Logo";
 export const RemotionRoot: React.FC = () => {
   return (
     <>
+      {/* « Ta montre surestime tes calories » — motion design en beats,
+          sans audio (la voix n'est pas encore enregistrée).
+          npx remotion render Montre */}
+      <Composition
+        id="Montre"
+        component={MontreMontage}
+        durationInFrames={MONTRE_FRAMES}
+        fps={30}
+        width={1080}
+        height={1920}
+      />
+
       {/* « Seul le total quotidien compte » — animation d'un seul tenant.
           npx remotion render Proteines */}
       <Composition
