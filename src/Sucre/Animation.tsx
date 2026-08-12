@@ -28,22 +28,26 @@ const rd = (t: number, a: number, b: number) => doux(r(t, a, b));
 
 // ── Repères de temps, en secondes absolues ───────────────────────────────
 const T = {
-  entree: 5.0,
-  courbe: 6.2,
-  foie: 7.5,
-  vaisseaux: 8.7,
-  frise: 10.6, // les trois effets se rangent en en-tête
-  pile: 12.0, // le jeton sucre devient la première ligne
-  gras: 15.0,
-  sel: 16.4,
-  additifs: 18.4,
-  phrase: 20.6, // l'empilement se resserre en phrase plein cadre
-  entete: 23.4, // la phrase se range en en-tête
-  rose: 24.4,
-  bleu: 28.0,
-  verdict: 32.2,
-  identique: 35.6,
-  fin: 38.0,
+  entree: 6.4, // « Trop de sucre… » : le jeton entre, seul et grand
+  courbe: 8.3, // « …grimper ta glycémie en flèche »
+  foie: 9.9, // « …stresse ton foie »
+  vaisseaux: 11.9, // « …abîme tes vaisseaux sanguins »
+  // Le rangement en frise tombe sur la fin de phrase : les trois effets sont
+  // classés au moment même où la voix passe à autre chose.
+  frise: 12.95,
+  // Le jeton descend APRÈS le rangement. Simultanés, les effets qui montent
+  // traversaient la ligne qui descend, exactement à la même hauteur.
+  pile: 13.5,
+  gras: 14.5,
+  sel: 15.4,
+  additifs: 16.6, // « Cette combinaison… »
+  phrase: 18.0, // « …conçue pour te faire manger plus »
+  entete: 21.5,
+  rose: 23.0, // « Deux groupes, même surplus… »
+  bleu: 26.6, // « …l'autre en aliments qu'on appelle sains »
+  verdict: 29.9, // « Le poids pris ? »
+  identique: 30.8, // « Quasiment identique »
+  fin: 34.98,
 };
 
 const CX = 540;
@@ -54,7 +58,7 @@ const PILE_PAS = 132;
 const PILE_L = 560;
 
 const LIGNES = [
-  { cle: "sucre", texte: "SUCRE", couleur: M.ambre, t: T.pile },
+  { cle: "sucre", texte: "SUCRE", couleur: M.ambre, t: T.entree },
   { cle: "gras", texte: "+ GRAS", couleur: M.corail, t: T.gras },
   { cle: "sel", texte: "+ SEL", couleur: M.gris, t: T.sel },
   { cle: "additifs", texte: "+ ADDITIFS", couleur: M.vert, t: T.additifs },
@@ -118,19 +122,34 @@ const Groupe: React.FC<{
   legende: string;
   depart: number;
   t: number;
-  /** Rapprochement des deux groupes à la fin : 0 = en place, 1 = resserrés. */
-  serrage: number;
-}> = ({ cx, couleur, legende, depart, t, serrage }) => {
+  /**
+   * Effacement des libellés quand le verdict prend la parole.
+   *
+   * Une version précédente rapprochait les deux groupes sur la fin. Les deux
+   * « SURPLUS CALORIQUE » se chevauchaient alors mot pour mot : le rappel de
+   * l'égalité passait par un télescopage illisible. Les groupes restent donc en
+   * place et ce sont leurs libellés, devenus redondants, qui s'effacent.
+   */
+  retrait: number;
+}> = ({ cx, couleur, legende, depart, t, retrait }) => {
   const entree = rd(t, depart, depart + 0.5);
-  const x = cx + (CX - cx) * serrage * 0.34;
+  const x = cx;
   const largeur = (COLONNES - 1) * GRILLE_PAS_X;
 
   return (
     <g opacity={entree}>
-      <Txt x={x} y={860} taille={30} couleur={M.gris}>
+      <Txt x={x} y={860} taille={30} couleur={M.gris} opacity={1 - retrait}>
         SURPLUS CALORIQUE
       </Txt>
-      <rect x={x - largeur / 2 - 22} y={886} width={largeur + 44} height={5} rx={3} fill={couleur} />
+      <rect
+        x={x - largeur / 2 - 22}
+        y={886}
+        width={largeur + 44}
+        height={5}
+        rx={3}
+        fill={couleur}
+        opacity={1 - retrait}
+      />
       {Array.from({ length: COLONNES * RANGS }, (_, i) => {
         // Les silhouettes se posent une à une : le groupe se constitue sous les
         // yeux au lieu d'apparaître déjà formé.
@@ -184,7 +203,7 @@ export const Animation: React.FC = () => {
   const rangementPhrase = rd(t, T.entete, T.entete + 0.7);
 
   // ── Le verdict, puis le mot seul ───────────────────────────────────────
-  const serrage = rd(t, T.identique - 0.6, T.identique + 0.3);
+  const retrait = rd(t, T.verdict - 0.2, T.verdict + 0.4);
   const verdict = rd(t, T.verdict, T.verdict + 0.55);
   const identique = rd(t, T.identique, T.identique + 0.6);
 
@@ -324,14 +343,14 @@ export const Animation: React.FC = () => {
 
         {/* ── Les deux groupes ─────────────────────────────────────────── */}
         {t > T.rose - 0.6 ? (
-          <g opacity={1 - identique}>
+          <g opacity={1 - 0.72 * identique}>
             <Groupe
               cx={288}
               couleur={M.ambre}
               legende="sucreries"
               depart={T.rose}
               t={t}
-              serrage={serrage}
+              retrait={retrait}
             />
             <Groupe
               cx={792}
@@ -339,7 +358,7 @@ export const Animation: React.FC = () => {
               legende="aliments « sains »"
               depart={T.bleu}
               t={t}
-              serrage={serrage}
+              retrait={retrait}
             />
 
             {/* Verdict, posé entre les deux grilles. */}
@@ -387,12 +406,16 @@ export const Animation: React.FC = () => {
       ) : null}
 
       {/* ── Le mot final ──────────────────────────────────────────────── */}
+      {/* Posé dans la bande libre entre l'en-tête et les grilles : au centre de
+          l'écran, il barrait les silhouettes qu'il commente. */}
       {identique > 0.001 ? (
-        <AbsoluteFill style={{ alignItems: "center", justifyContent: "center" }}>
+        <AbsoluteFill
+          style={{ alignItems: "center", justifyContent: "flex-start", paddingTop: 520 }}
+        >
           <div
             style={{
               fontFamily: TITRE_FONT,
-              fontSize: 156,
+              fontSize: 146,
               fontWeight: 700,
               letterSpacing: -6,
               color: M.vert,

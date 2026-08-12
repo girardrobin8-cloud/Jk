@@ -6,8 +6,8 @@ import { Beat, BEATS, DUREE, s } from "./reperes";
 /**
  * Montage complet — « Le sucre n'est pas (que) le problème », 50 s.
  *
- * ⚠️ SANS VOIX : l'enregistrement n'existe pas encore. Les bornes viennent du
- * brief, qui les donne comme estimations, à recaler sur la vraie prise.
+ * Calé sur la prise réelle (45,56 s) : les bornes de reperes.ts sont relevées
+ * sur l'enveloppe sonore, plus estimées d'après le brief.
  *
  * Contrainte du brief : la voix est continue et n'est jamais recoupée. Les
  * plans se posent par-dessus, et l'animation lit le temps ABSOLU du montage —
@@ -17,8 +17,13 @@ import { Beat, BEATS, DUREE, s } from "./reperes";
 
 export const MONTAGE_FRAMES = s(DUREE);
 
-/** Fichier voix, à poser ici une fois la prise enregistrée. */
-// const VOIX = "voix/sucre.mp4";
+/**
+ * Piste voix, telle qu'enregistrée.
+ *
+ * Le flux d'origine est copié sans réencodage : le brief interdit de toucher à
+ * l'audio, et un simple transcodage suffirait à en changer le rendu.
+ */
+const VOIX = "voix/sucre.mp4";
 
 /**
  * Bruitages, en secondes absolues (banque de `scripts/bruitages.py`).
@@ -28,23 +33,23 @@ export const MONTAGE_FRAMES = s(DUREE);
  * non plus des apparitions, puisque plus rien n'apparaît sans venir d'ailleurs.
  */
 const BRUITAGES: { f: string; t: number; v: number }[] = [
-  { f: "apparition.wav", t: 5.0, v: 0.5 },
-  { f: "clic.wav", t: 6.2, v: 0.6 },
-  { f: "pop.wav", t: 7.5, v: 0.5 },
-  { f: "pop.wav", t: 8.7, v: 0.5 },
-  { f: "whoosh-out.wav", t: 10.5, v: 0.45 }, // les effets se rangent
-  { f: "marche.wav", t: 12.0, v: 0.5 }, // le jeton se pose dans la pile
-  { f: "marche.wav", t: 15.0, v: 0.5 },
-  { f: "marche.wav", t: 16.4, v: 0.5 },
-  { f: "marche.wav", t: 18.4, v: 0.55 },
-  { f: "whoosh-in.wav", t: 20.5, v: 0.5 }, // la pile se referme
-  { f: "impact.wav", t: 20.95, v: 0.75 },
-  { f: "whoosh-out.wav", t: 23.3, v: 0.45 }, // la phrase se range
-  ...[0, 1, 2, 3].map((i) => ({ f: "clic.wav", t: 24.8 + i * 0.25, v: 0.35 })),
-  ...[0, 1, 2, 3].map((i) => ({ f: "clic.wav", t: 28.4 + i * 0.25, v: 0.35 })),
-  { f: "carillon.wav", t: 32.3, v: 0.45 },
-  { f: "whoosh-in.wav", t: 35.4, v: 0.5 },
-  { f: "impact.wav", t: 35.7, v: 0.8 },
+  { f: "apparition.wav", t: 6.4, v: 0.5 },
+  { f: "clic.wav", t: 8.3, v: 0.6 },
+  { f: "pop.wav", t: 9.9, v: 0.5 },
+  { f: "pop.wav", t: 11.9, v: 0.5 },
+  { f: "whoosh-out.wav", t: 12.85, v: 0.45 }, // les effets se rangent
+  { f: "marche.wav", t: 13.5, v: 0.5 }, // le jeton se pose dans la pile
+  { f: "marche.wav", t: 14.5, v: 0.5 },
+  { f: "marche.wav", t: 15.4, v: 0.5 },
+  { f: "marche.wav", t: 16.6, v: 0.55 },
+  { f: "whoosh-in.wav", t: 17.9, v: 0.5 }, // la pile se referme
+  { f: "impact.wav", t: 18.35, v: 0.75 },
+  { f: "whoosh-out.wav", t: 21.4, v: 0.45 }, // la phrase se range
+  ...[0, 1, 2, 3].map((i) => ({ f: "clic.wav", t: 23.4 + i * 0.25, v: 0.32 })),
+  ...[0, 1, 2, 3].map((i) => ({ f: "clic.wav", t: 27.0 + i * 0.25, v: 0.32 })),
+  { f: "carillon.wav", t: 30.0, v: 0.42 },
+  { f: "whoosh-in.wav", t: 30.6, v: 0.5 },
+  { f: "impact.wav", t: 30.9, v: 0.78 },
 ];
 
 /**
@@ -95,7 +100,7 @@ const Reserve: React.FC<{ beat: Beat }> = ({ beat }) => {
 
 export const Montage: React.FC = () => (
   <AbsoluteFill style={{ backgroundColor: M.fond }}>
-    {/* <Audio src={staticFile(VOIX)} /> — à décommenter avec la prise */}
+    <Audio src={staticFile(VOIX)} />
 
     {BRUITAGES.map((b, i) => (
       <Sequence key={`${b.f}-${i}`} from={s(b.t)} name={`SFX ${b.f}`}>
