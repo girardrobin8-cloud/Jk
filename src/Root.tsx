@@ -16,6 +16,10 @@ import {
 import { Plage, PLAGE_FRAMES } from "./Plage/Plage";
 import { Carte, CARTE_FRAMES } from "./Carte/Carte";
 import {
+  Montage as SucreMontage,
+  MONTAGE_FRAMES as SUCRE_FRAMES,
+} from "./Sucre/Montage";
+import {
   Montage as SaintBarthMontage,
   MONTAGE_FRAMES as SAINTBARTH_FRAMES,
 } from "./SaintBarth/Montage";
@@ -27,6 +31,18 @@ import { Logo, myCompSchema2 } from "./HelloWorld/Logo";
 export const RemotionRoot: React.FC = () => {
   return (
     <>
+      {/* « Le sucre n'est pas (que) le problème » — 50 s, pixel-art sur fond
+          clair. SANS VOIX : bornes du brief, à recaler (src/Sucre/reperes.ts).
+          npx remotion render Sucre */}
+      <Composition
+        id="Sucre"
+        component={SucreMontage}
+        durationInFrames={SUCRE_FRAMES}
+        fps={30}
+        width={1080}
+        height={1920}
+      />
+
       {/* « L'île la plus riche du monde » — Saint-Barthélemy, 32 s.
           SANS VOIX : la prise n'est pas enregistrée, les bornes viennent du
           brief et sont à recaler dessus (voir src/SaintBarth/reperes.ts).

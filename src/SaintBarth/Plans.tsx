@@ -404,46 +404,90 @@ export const Histoire: React.FC<{ duree: number }> = ({ duree }) => {
 };
 
 /**
- * Plan tête caméra à insérer, avec sa fenêtre et sa réplique.
+ * Fenêtre tête caméra : la réplique en plein cadre, sur fond de silhouette.
  *
- * Même gabarit que les autres montages du dépôt : le plan filmé n'existe pas
- * encore, la réserve tient sa place et rappelle ce qui doit y être dit.
+ * Un carton de réserve à bordure pointillée tenait la place jusqu'ici. Mais
+ * douze des trente-deux secondes passent dans ces trois fenêtres, et autant de
+ * cartons techniques empêchaient de juger le film. La réplique est donc
+ * affichée pour de bon, dans la typographie du montage — la vidéo se regarde
+ * d'un bout à l'autre, et un repère discret en haut rappelle que le plan filmé
+ * vient se substituer ici.
  */
 const mmss = (t: number) => `0:${String(Math.floor(t)).padStart(2, "0")}`;
+
+const SILHOUETTE = cheminFixe(GEO.blm) ?? "";
 
 export const Reserve: React.FC<{ beat: Beat }> = ({ beat }) => {
   const frame = useCurrentFrame();
   const { fps } = useVideoConfig();
-  const a = arrivee(frame, fps, 0.05);
+  const total = beat.fin - beat.debut;
+  const a = arrivee(frame, fps, 0.12);
+
+  // Respiration très lente du fond : un plan fixe pendant quatre secondes
+  // paraît figé, même quand le texte, lui, vient d'arriver.
+  const souffle = 1 + Math.sin((frame / fps) * 0.7) * 0.02;
+  const sortie = interpolate(frame / fps, [total - 0.4, total - 0.05], [1, 0], {
+    extrapolateLeft: "clamp",
+    extrapolateRight: "clamp",
+  });
 
   return (
-    <AbsoluteFill
-      style={{
-        backgroundColor: "#0B0F0D",
-        alignItems: "center",
-        justifyContent: "center",
-        padding: "0 80px",
-        textAlign: "center",
-        fontFamily: FONT,
-        opacity: a,
-      }}
-    >
-      <div
+    <AbsoluteFill style={{ backgroundColor: P.fond, opacity: sortie }}>
+      <AbsoluteFill
         style={{
-          border: `6px dashed ${P.gris}`,
-          borderRadius: 24,
-          padding: "70px 50px",
-          width: "100%",
+          background: `radial-gradient(64% 42% at 50% 46%, rgba(242,176,30,0.14) 0%, transparent 72%)`,
+        }}
+      />
+
+      {/* Contour de l'île, très en retrait : il tient le fond sans se
+          disputer la lecture avec la réplique. */}
+      <AbsoluteFill style={{ alignItems: "center", justifyContent: "center" }}>
+        <svg width="1080" height="1920" viewBox="0 0 1080 1920" style={{ opacity: 0.1 }}>
+          <g transform={`translate(540 960) scale(${5.4 * souffle}) translate(-540 -640)`}>
+            <path d={SILHOUETTE} fill="none" stroke={P.or} strokeWidth={1.4} />
+          </g>
+        </svg>
+      </AbsoluteFill>
+
+      <AbsoluteFill
+        style={{
+          alignItems: "center",
+          justifyContent: "center",
+          padding: "0 90px",
+          textAlign: "center",
         }}
       >
-        <div style={{ fontSize: 32, letterSpacing: 6, color: P.or, marginBottom: 26 }}>
-          PLAN TÊTE CAMÉRA À INSÉRER
+        <div
+          style={{
+            fontFamily: FONT,
+            fontSize: 62,
+            fontWeight: 700,
+            lineHeight: 1.24,
+            color: P.texte,
+            letterSpacing: -1,
+            opacity: a,
+            transform: `translateY(${(1 - a) * 26}px)`,
+          }}
+        >
+          {beat.dit}
         </div>
-        <div style={{ fontSize: 58, fontWeight: 700, color: P.texte, marginBottom: 34 }}>
-          {mmss(beat.debut)} → {mmss(beat.fin)}
+      </AbsoluteFill>
+
+      <AbsoluteFill
+        style={{ alignItems: "center", justifyContent: "flex-start", paddingTop: 120 }}
+      >
+        <div
+          style={{
+            fontFamily: FONT,
+            fontSize: 25,
+            letterSpacing: 5,
+            color: P.gris,
+            opacity: a * 0.75,
+          }}
+        >
+          {mmss(beat.debut)}–{mmss(beat.fin)} · PLAN TÊTE CAMÉRA
         </div>
-        <div style={{ fontSize: 33, lineHeight: 1.45, color: P.gris }}>« {beat.dit} »</div>
-      </div>
+      </AbsoluteFill>
     </AbsoluteFill>
   );
 };
