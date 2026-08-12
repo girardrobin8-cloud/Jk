@@ -84,24 +84,8 @@ export const BEATS: Beat[] = [
 export const s = (secondes: number) => Math.round(secondes * FPS);
 
 /**
- * Palette claire, à l'inverse des autres montages du dépôt.
- *
- * La référence pose son personnage sur fond blanc et fait vivre les icônes
- * autour : sur fond sombre, les mêmes aplats de couleur vireraient au néon et
- * le pixel-art perdrait son air de jeu ancien.
+ * Ni palette ni police ici : ce montage reprend la charte du dépôt, définie
+ * dans src/Muscle/Plan.tsx. Une première version posait un pixel-art sur fond
+ * blanc, d'après la référence ; mais on n'emprunte à celle-ci que la fluidité
+ * de ses enchaînements, pas son habillage.
  */
-export const C = {
-  fond: "#F4F1E8",
-  fondCreux: "#E7E2D4",
-  encre: "#1E2430",
-  gris: "#7C8493",
-  rouge: "#E0483C",
-  vert: "#2FA84F",
-  rose: "#E86A9A",
-  bleu: "#4E86D8",
-  sucre: "#D9A441",
-  ombre: "#D8D2C2",
-};
-
-export const FONT =
-  '"Liberation Sans", "DejaVu Sans", Helvetica, Arial, sans-serif';
