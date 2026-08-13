@@ -6,10 +6,8 @@ import { Beat, BEATS, DUREE, s } from "./reperes";
 /**
  * Montage complet — « Le sommeil décide si tu perds du gras ou du muscle », 55 s.
  *
- * ⚠️ SANS VOIX : la prise n'existe pas encore. Les bornes de reperes.ts sont
- * celles du brief, données comme estimations. Quand la prise arrivera, elles
- * seront relevées sur l'enveloppe sonore comme pour le montage sucre — et rien
- * d'autre ne bougera, l'animation lisant le temps absolu.
+ * Calé sur la prise réelle (51,80 s) : les bornes de reperes.ts sont relevées
+ * sur l'enveloppe sonore, plus estimées d'après le brief.
  *
  * Contrainte du brief : la voix est continue et n'est jamais recoupée. Les
  * plans se posent par-dessus, et l'animation lit le temps ABSOLU du montage —
@@ -19,36 +17,19 @@ import { Beat, BEATS, DUREE, s } from "./reperes";
 
 export const MONTAGE_FRAMES = s(DUREE);
 
-/** Piste voix, à poser ici une fois la prise enregistrée. */
-// const VOIX = "voix/sommeil.mp4";
+/**
+ * Piste voix, telle qu'enregistrée.
+ *
+ * Le flux d'origine est copié sans réencodage : le brief interdit de toucher à
+ * l'audio, et un simple transcodage suffirait à en changer le rendu.
+ */
+const VOIX = "voix/sommeil.mp4";
 
 /**
- * Bruitages, en secondes absolues (banque de `scripts/bruitages.py`).
- *
- * Volumes bas : ils passeront sous une voix, pas devant elle. Les souffles
- * accompagnent les déplacements — mise en frise, contraction de la pile — et
- * non plus des apparitions, puisque plus rien n'apparaît sans venir d'ailleurs.
+ * AUCUN BRUITAGE sur ce montage — demande explicite : le sound design sera
+ * ajouté à la main. La bande son ne porte donc que la voix, telle quelle.
  */
-const BRUITAGES: { f: string; t: number; v: number }[] = [
-  { f: "apparition.wav", t: 5.1, v: 0.5 }, // le soleil
-  { f: "whoosh-out.wav", t: 6.3, v: 0.4 }, // il se referme en lune
-  { f: "whoosh-in.wav", t: 8.0, v: 0.42 }, // la lune monte en racine
-  { f: "clic.wav", t: 9.05, v: 0.55 },
-  { f: "clic.wav", t: 9.45, v: 0.55 },
-  { f: "pop.wav", t: 10.5, v: 0.45 },
-  { f: "marche.wav", t: 12.3, v: 0.45 }, // la colonne 8h30 se pose
-  ...[0, 1, 2, 3, 4].map((i) => ({ f: "clic.wav", t: 13.1 + i * 0.14, v: 0.3 })),
-  { f: "marche.wav", t: 15.3, v: 0.45 }, // la colonne 5h30
-  ...[0, 1, 2, 3, 4].map((i) => ({ f: "clic.wav", t: 16.0 + i * 0.14, v: 0.3 })),
-  { f: "whoosh-in.wav", t: 18.2, v: 0.45 }, // les barres poussent
-  { f: "carillon.wav", t: 20.7, v: 0.4 }, // « ≈ 3 kg »
-  { f: "whoosh-out.wav", t: 26.2, v: 0.45 }, // la barre se scinde
-  { f: "impact.wav", t: 26.6, v: 0.6 },
-  { f: "pop.wav", t: 29.1, v: 0.45 },
-  { f: "pop.wav", t: 29.45, v: 0.45 },
-  { f: "whoosh-in.wav", t: 37.3, v: 0.5 }, // le bandeau « +60 % »
-  { f: "impact.wav", t: 37.7, v: 0.78 },
-];
+
 
 /**
  * Fenêtre tête caméra : rush brut à venir.
@@ -98,14 +79,8 @@ const Reserve: React.FC<{ beat: Beat }> = ({ beat }) => {
 
 export const Montage: React.FC = () => (
   <AbsoluteFill style={{ backgroundColor: M.fond }}>
-    {/* <Audio src={staticFile(VOIX)} /> — à décommenter avec la prise */}
+    <Audio src={staticFile(VOIX)} />
 
-    {BRUITAGES.map((b, i) => (
-      <Sequence key={`${b.f}-${i}`} from={s(b.t)} name={`SFX ${b.f}`}>
-        {/* eslint-disable-next-line @remotion/volume-callback */}
-        <Audio src={staticFile(`sfx/${b.f}`)} volume={b.v} />
-      </Sequence>
-    ))}
 
     {/* Montée sur toute la durée : c'est ce qui lui donne le temps absolu. */}
     <Animation />

@@ -29,22 +29,22 @@ const rd = (t: number, a: number, b: number) => doux(r(t, a, b));
 
 // ── Repères de temps, en secondes absolues ───────────────────────────────
 const T = {
-  soleil: 5.1,
-  lune: 6.3, // le soleil se referme en lune
-  racine: 8.0, // la lune monte et devient la racine de l'arbre
-  branches: 9.0,
-  conditions: 10.4, // assiette + lune au bout de chaque branche
-  colonneA: 12.2, // les extrémités deviennent les en-têtes de colonne
-  grilleA: 13.0,
-  colonneB: 15.2,
-  grilleB: 15.9,
-  barres: 18.4, // les deux barres grises poussent
-  troisKg: 20.6,
-  scission: 26.4, // la barre grise se scinde en gras + muscle
-  chiffres: 29.0,
-  surbrillance: 36.4, // le muscle du groupe court dormeur
-  soixante: 37.6,
-  fin: 44.0,
+  soleil: 9.5, // « Pendant 14 jours… »
+  lune: 10.7,
+  racine: 12.2,
+  branches: 13.2, // « …en déficit calorique modéré… »
+  conditions: 14.6, // « …deux conditions de sommeil différentes »
+  colonneA: 16.1, // « 8h30 de sommeil pour le premier groupe »
+  grilleA: 16.7,
+  colonneB: 18.24, // « 5h30 pour le second »
+  grilleB: 18.85,
+  barres: 22.0, // « Le poids total perdu ? »
+  troisKg: 24.9, // « …environ 3 kilos »
+  scission: 26.9, // « regarde ce qui compose cette perte »
+  chiffres: 28.7, // « 1,4 kilo de gras perdu »
+  surbrillance: 32.7, // « le groupe qui dort peu »
+  soixante: 34.4, // « 60 % de muscle en plus »
+  fin: 39.3,
 };
 
 // ── Bandes horizontales réservées ────────────────────────────────────────
