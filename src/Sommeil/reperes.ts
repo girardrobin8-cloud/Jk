@@ -1,7 +1,15 @@
 /**
  * Repères de montage — « Le sommeil décide si tu perds du gras ou du muscle ».
  *
- * Bornes relevées sur la prise réelle (48,87 s).
+ * Bornes relevées sur la prise réelle (48,87 s), et CONFIRMÉES depuis par le
+ * brief : hook 0:00–0:08, animation 0:08–0:37, conclusion 0:37–0:42, CTA
+ * 0:42–0:48. Les quatre valeurs mesurées ici — 8,60 / 37,72 / 42,28 / 48,87 —
+ * tombent toutes à moins d'une demi-seconde de ces bornes.
+ *
+ * Le brief laisse en revanche le sous-découpage du bloc animation à affiner sur
+ * la piste : ses valeurs y sont proportionnelles, les miennes sont relevées
+ * phrase par phrase, et elles divergent de plusieurs secondes au milieu — la
+ * mesure fait foi. Voir les fenêtres citées dans Animation.tsx.
  *
  * Ce qui compte visuellement, ce sont les DEUX bascules entre plan filmé et
  * animation : B1→B2 et B6→B7. Les frontières internes à l'animation, elles, ne

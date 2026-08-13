@@ -46,10 +46,14 @@ const rd = (t: number, a: number, b: number) => doux(r(t, a, b));
 const T = {
   debut: 8.6, // le hook est fini ; l'animation peut entrer
   soleil: 8.78, // « Pendant quatorze jours »          [8,71 → 9,64]
-  lune: 9.9, // « des chercheurs ont mis… »            [9,77 → 12,89]
-  racine: 11.0,
-  branches: 11.6, // « …en déficit calorique modéré »
-  conditions: 13.1, // « avec deux conditions… »       [13,01 → 14,97]
+  // La bascule jour/nuit se consomme sur « Pendant quatorze jours », et l'arbre
+  // se déploie pendant l'énoncé du protocole. Le brief veut le morphe achevé
+  // vers 0:10 : en partant à 9,9 il se terminait à 11,25, soit une seconde trop
+  // tard, et empiétait sur le déploiement des branches.
+  lune: 9.25, // « …quatorze jours »                   [8,71 → 9,64]
+  racine: 10.5, // « des chercheurs ont mis… »          [9,77 → 12,89]
+  branches: 11.15, // « …en déficit calorique modéré »
+  conditions: 13.05, // « avec deux conditions… »       [13,01 → 14,97]
   colonneA: 15.25, // « huit heures trente… »          [15,20 → 17,03]
   grilleA: 15.8,
   colonneB: 17.3, // « cinq heures trente… »           [17,26 → 18,65]
