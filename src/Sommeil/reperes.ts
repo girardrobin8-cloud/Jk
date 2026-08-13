@@ -34,7 +34,7 @@ export const BEATS: Beat[] = [
     type: "visage",
     debut: 0,
     fin: 5,
-    dit: "Deux groupes, même régime, même déficit calorique. Une seule différence : leurs heures de sommeil. Le résultat va te surprendre.",
+    dit: "Deux personnes peuvent perdre exactement le même poids… et pourtant, l'une perd surtout du gras, l'autre perd surtout du muscle. La différence tient en une seule variable.",
   },
   {
     id: "B2",

@@ -49,17 +49,26 @@ const T = {
 
 // ── Bandes horizontales réservées ────────────────────────────────────────
 /**
- * Le découpage vertical qui garantit l'absence de chevauchement. Aucun élément
- * ne doit sortir de sa bande ; deux éléments d'une même bande ne doivent pas
- * coexister — c'est le cas de l'arbre et du bandeau « +60 % », séparés dans le
- * temps de plus de vingt secondes.
+ * Le découpage vertical qui garantit l'absence de chevauchement.
+ *
+ * Aucun élément ne sort de sa bande, et deux éléments d'une même bande ne
+ * coexistent jamais — c'est le cas de l'arbre et du bandeau « +60 % », séparés
+ * dans le temps de plus de vingt secondes.
+ *
+ * Les bandes ne se touchent pas : GOUTTIERE les sépare. Le brief ne demande pas
+ * seulement l'absence de recouvrement mais une marge VISIBLE entre les blocs —
+ * des bandes jointives satisfaisaient la lettre de la règle et pas son intention,
+ * les éléments se retrouvant collés bord à bord.
  */
-const BANDES = {
-  enTete: { haut: 250, bas: 520 }, // soleil/lune, arbre, puis bandeau « +60 % »
-  colonnes: { haut: 560, bas: 960 }, // libellés et grilles de silhouettes
-  barres: { haut: 1000, bas: 1400 }, // les barres, poussant depuis leur socle
-  socle: { haut: 1400, bas: 1560 }, // libellés d'axe sous le socle
-};
+const GOUTTIERE = 74;
+
+const BANDES = (() => {
+  const enTete = { haut: 240, bas: 496 }; // soleil/lune, arbre, puis « +60 % »
+  const colonnes = { haut: enTete.bas + GOUTTIERE, bas: enTete.bas + GOUTTIERE + 322 };
+  const barres = { haut: colonnes.bas + GOUTTIERE, bas: colonnes.bas + GOUTTIERE + 410 };
+  const socle = { haut: barres.bas, bas: barres.bas + 284 };
+  return { enTete, colonnes, barres, socle };
+})();
 
 const CX = 540;
 const GA = 296; // colonne 8h30
@@ -194,7 +203,7 @@ export const Animation: React.FC = () => {
 
   const nuit = rd(t, T.lune, T.lune + 1.0);
   const monte = rd(t, T.racine, T.racine + 0.9);
-  const astreY = 700 - (700 - 330) * monte;
+  const astreY = 700 - (700 - 300) * monte;
   const astreR = 96 - 54 * monte;
 
   const tronc = rd(t, T.branches, T.branches + 0.5);
@@ -211,8 +220,10 @@ export const Animation: React.FC = () => {
   const soixante = rd(t, T.soixante, T.soixante + 0.6);
   const halo = rd(t, T.surbrillance, T.surbrillance + 0.5);
 
-  const Y_BRANCHE = 470;
-  const Y_BAS = 540;
+  // L'arbre tient entièrement dans la bande d'en-tête, gouttière comprise :
+  // ses icônes descendaient auparavant jusqu'à frôler les titres de colonne.
+  const Y_BRANCHE = 404;
+  const Y_BAS = 470;
 
   return (
     <AbsoluteFill style={{ backgroundColor: M.fond, opacity: vie }}>
@@ -323,10 +334,10 @@ export const Animation: React.FC = () => {
 
             return (
               <g key={g.cle}>
-                <Txt x={g.x} y={BANDES.colonnes.haut + 34} taille={38} couleur={g.couleur} opacity={venue}>
+                <Txt x={g.x} y={BANDES.colonnes.haut + 36} taille={38} couleur={g.couleur} opacity={venue}>
                   {g.titre}
                 </Txt>
-                <Txt x={g.x} y={BANDES.colonnes.haut + 78} taille={27} couleur={M.gris} opacity={venue}>
+                <Txt x={g.x} y={BANDES.colonnes.haut + 92} taille={27} couleur={M.gris} opacity={venue}>
                   MÊME DÉFICIT CALORIQUE
                 </Txt>
 
@@ -337,7 +348,7 @@ export const Animation: React.FC = () => {
                     <Silhouette
                       key={i}
                       x={g.x - 2 * 56 + (i % 5) * 56}
-                      y={BANDES.colonnes.haut + 200 + Math.floor(i / 5) * 88}
+                      y={BANDES.colonnes.haut + 178 + Math.floor(i / 5) * 84}
                       c={1.15 * (0.84 + o * 0.16)}
                       couleur={g.couleur}
                       o={o}
@@ -395,7 +406,7 @@ export const Animation: React.FC = () => {
 
                     <Txt
                       x={g.x}
-                      y={hautBarre - 26}
+                      y={hautBarre - 44}
                       taille={40}
                       couleur={M.texte}
                       opacity={rd(t, T.troisKg, T.troisKg + 0.5) * (1 - scission)}
@@ -403,37 +414,30 @@ export const Animation: React.FC = () => {
                       ≈ 3 KG
                     </Txt>
 
-                    {/* Chiffres de composition, posés DANS la barre : hors
-                        d'elle ils seraient venus mordre la colonne voisine. */}
-                    <Txt
-                      x={g.x}
-                      y={BASE - hGras * pousse / 2 + 12}
-                      taille={34}
-                      couleur="#0B140F"
-                      opacity={rd(t, T.chiffres, T.chiffres + 0.5)}
-                    >
-                      {g.gras.toFixed(1).replace(".", ",")} kg
-                    </Txt>
-                    <Txt
-                      x={g.x}
-                      y={hautBarre + (hauteur - hGras * pousse) / 2 + 12}
-                      taille={30}
-                      couleur="#2A0E0B"
-                      opacity={rd(t, T.chiffres + 0.35, T.chiffres + 0.85)}
-                    >
-                      muscle
-                    </Txt>
                   </g>
                 ) : null}
 
                 <Txt
                   x={g.x}
-                  y={BANDES.socle.haut + 52}
+                  y={BANDES.socle.haut + 56}
                   taille={34}
                   couleur={g.couleur}
                   opacity={rd(t, T.barres - 0.2, T.barres + 0.4)}
                 >
                   {g.cle === "long" ? "8H30" : "5H30"}
+                </Txt>
+                {/* Valeur chiffrée SOUS l'axe, et non dans la barre. Dans la
+                    portion « gras » du groupe court dormeur — 0,6 kg, soit à
+                    peine quatre-vingts pixels — le texte touchait les deux
+                    bords. Sous l'axe, la place ne dépend plus de la donnée. */}
+                <Txt
+                  x={g.x}
+                  y={BANDES.socle.haut + 122}
+                  taille={36}
+                  couleur={COULEUR_GRAS}
+                  opacity={rd(t, T.chiffres, T.chiffres + 0.5)}
+                >
+                  {g.gras.toFixed(1).replace(".", ",")} kg de gras
                 </Txt>
               </g>
             );
@@ -453,12 +457,12 @@ export const Animation: React.FC = () => {
 
           {/* Légende gras / muscle, dans la bande du socle. */}
           <g opacity={rd(t, T.scission + 0.6, T.scission + 1.2)}>
-            <rect x={296} y={BANDES.socle.haut + 88} width={26} height={26} rx={6} fill={COULEUR_GRAS} />
-            <Txt x={340} y={BANDES.socle.haut + 110} taille={28} couleur={M.gris} ancre="start">
+            <rect x={296} y={BANDES.socle.haut + 196} width={26} height={26} rx={6} fill={COULEUR_GRAS} />
+            <Txt x={340} y={BANDES.socle.haut + 218} taille={28} couleur={M.gris} ancre="start">
               gras
             </Txt>
-            <rect x={560} y={BANDES.socle.haut + 88} width={26} height={26} rx={6} fill={COULEUR_MUSCLE} />
-            <Txt x={604} y={BANDES.socle.haut + 110} taille={28} couleur={M.gris} ancre="start">
+            <rect x={560} y={BANDES.socle.haut + 196} width={26} height={26} rx={6} fill={COULEUR_MUSCLE} />
+            <Txt x={604} y={BANDES.socle.haut + 218} taille={28} couleur={M.gris} ancre="start">
               muscle
             </Txt>
           </g>
