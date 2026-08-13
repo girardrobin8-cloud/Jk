@@ -28,23 +28,30 @@ const doux = (p: number) => p * p * (3 - 2 * p);
 const rd = (t: number, a: number, b: number) => doux(r(t, a, b));
 
 // ── Repères de temps, en secondes absolues ───────────────────────────────
+/**
+ * Repères de temps, en secondes absolues.
+ *
+ * Chaque valeur tombe sur la phrase que la voix prononce à cet instant, les
+ * fenêtres venant de `scripts/caler.py`. Le commentaire cite les mots visés :
+ * c'est ce qui permet de vérifier un calage sans relancer l'analyse.
+ */
 const T = {
-  soleil: 9.5, // « Pendant 14 jours… »
-  lune: 10.7,
-  racine: 12.2,
-  branches: 13.2, // « …en déficit calorique modéré… »
-  conditions: 14.6, // « …deux conditions de sommeil différentes »
-  colonneA: 16.1, // « 8h30 de sommeil pour le premier groupe »
-  grilleA: 16.7,
-  colonneB: 18.24, // « 5h30 pour le second »
-  grilleB: 18.85,
-  barres: 22.0, // « Le poids total perdu ? »
-  troisKg: 24.9, // « …environ 3 kilos »
-  scission: 26.9, // « regarde ce qui compose cette perte »
-  chiffres: 28.7, // « 1,4 kilo de gras perdu »
-  surbrillance: 32.7, // « le groupe qui dort peu »
-  soixante: 34.4, // « 60 % de muscle en plus »
-  fin: 39.3,
+  soleil: 7.3, // « Pendant quatorze jours »              [7,16 → 7,99]
+  lune: 8.3, // « des chercheurs ont mis… »               [7,99 → 11,53]
+  racine: 9.6,
+  branches: 10.4, // « …en déficit calorique modéré »
+  conditions: 11.7, // « avec deux conditions de sommeil » [11,53 → 13,69]
+  colonneA: 13.75, // « huit heures trente… »              [13,69 → 15,81]
+  grilleA: 14.3,
+  colonneB: 15.85, // « cinq heures trente pour le second »[15,81 → 17,14]
+  grilleB: 16.35,
+  barres: 20.3, // « Le poids total perdu ? »              [20,21 → 21,61]
+  troisKg: 23.75, // « environ trois kilos »               [23,68 → 25,00]
+  scission: 25.2, // « regarde ce qui compose cette perte »[25,00 → 27,08]
+  chiffres: 28.9, // « un virgule quatre kilo de gras »    [28,81 → 30,77]
+  surbrillance: 34.6, // « le groupe qui dort peu… »       [34,53 → 37,62]
+  soixante: 35.6, // « …soixante pour cent de muscle »
+  fin: 39.1,
 };
 
 // ── Bandes horizontales réservées ────────────────────────────────────────
