@@ -18,6 +18,11 @@ import { M, TITRE_FONT } from "../Muscle/Plan";
  * 3. Jamais d'écran figé plus de deux secondes. Une respiration lente porte
  *    l'ensemble, et chaque temps est subdivisé en micro-événements décalés.
  *
+ * Les durées de transition ont été allongées d'environ un tiers après visionnage :
+ * les étapes s'enchaînaient trop vite pour être lues. Le rythme d'APPARITION
+ * reste dicté par la voix — ce sont les fondus et les croissances qui prennent
+ * leur temps, pas les repères.
+ *
  * `t` est le temps ABSOLU du montage, pour que les bornes de reperes.ts
  * s'appliquent sans conversion.
  */
@@ -53,9 +58,12 @@ const T = {
   troisKg: 23.9, // « environ trois kilos »            [23,73 → 24,89]
   scission: 25.2, // « regarde ce qui compose… »       [25,10 → 25,96]
   chiffres: 27.3, // « un virgule quatre kilo… »       [27,18 → 28,22]
-  surbrillance: 30.9, // « le groupe qui dort peu… »   [30,39 → 35,73]
-  soixante: 32.4, // « …soixante pour cent »
-  fin: 37.6, // la parole revient au plan filmé
+  // Le muscle perdu par le groupe qui dort BIEN, d'abord : sans ce point de
+  // comparaison, « soixante pour cent de plus » ne se rapporte à rien.
+  muscleLong: 30.6, // « Et à l'inverse… »               [30,39 → 35,73]
+  surbrillance: 32.4, // « …le groupe qui dort peu… »
+  soixante: 32.4, // « …soixante pour cent de muscle »
+  fin: 37.72, // la parole revient au plan filmé
 };
 
 // ── Bandes horizontales réservées ────────────────────────────────────────
@@ -205,7 +213,11 @@ export const Animation: React.FC = () => {
 
   // Le fondu d'entrée part de la bascule elle-même, jamais avant : il
   // démarrait 0,5 s en amont, donc pendant la dernière phrase du hook.
-  const vie = Math.min(rd(t, T.debut, T.debut + 0.4), 1 - rd(t, T.fin, T.fin + 0.3));
+  // L'animation est ENTIÈREMENT partie quand le plan filmé revient : le fondu
+  // de sortie se consomme dans le silence qui précède, pas par-dessus la
+  // parole suivante. Pendant une fenêtre tête caméra, il ne doit rien rester à
+  // l'écran d'autre que le plan et son texte.
+  const vie = Math.min(rd(t, T.debut, T.debut + 0.55), 1 - rd(t, T.fin - 0.22, T.fin));
   if (vie <= 0.001) {
     return null;
   }
@@ -214,24 +226,28 @@ export const Animation: React.FC = () => {
   // à l'arrêt d'un temps le cadre continue de vivre imperceptiblement.
   const souffle = 1 + Math.sin(t * 0.9) * 0.006;
 
-  const nuit = rd(t, T.lune, T.lune + 1.0);
-  const monte = rd(t, T.racine, T.racine + 0.9);
+  const nuit = rd(t, T.lune, T.lune + 1.35);
+  const monte = rd(t, T.racine, T.racine + 1.15);
   const astreY = 700 - (700 - 300) * monte;
   const astreR = 96 - 54 * monte;
 
-  const tronc = rd(t, T.branches, T.branches + 0.5);
-  const bras = rd(t, T.branches + 0.35, T.branches + 1.0);
-  const descentes = rd(t, T.branches + 0.8, T.branches + 1.4);
-  const conditions = rd(t, T.conditions, T.conditions + 0.6);
+  const tronc = rd(t, T.branches, T.branches + 0.7);
+  const bras = rd(t, T.branches + 0.45, T.branches + 1.3);
+  const descentes = rd(t, T.branches + 1.0, T.branches + 1.8);
+  const conditions = rd(t, T.conditions, T.conditions + 0.85);
   // L'arbre s'estompe quand les colonnes prennent le relais, mais ne disparaît
   // pas : il reste le lien entre la racine et les deux groupes.
-  const arbre = 1 - 0.72 * rd(t, T.colonneA, T.colonneA + 0.8);
-  // …puis s'efface pour de bon quand le bandeau « +60 % » occupe l'en-tête.
-  const sortieArbre = rd(t, T.soixante - 0.5, T.soixante + 0.2);
+  const arbre = 1 - 0.72 * rd(t, T.colonneA, T.colonneA + 1.05);
+  // …puis s'efface pour de bon dès que le PREMIER bandeau occupe l'en-tête.
+  // Il sortait auparavant à l'arrivée du « +60 % » : la lune et les branches
+  // se retrouvaient alors en travers du texte « 8H30 : 1,6 KG », les deux se
+  // disputant la même bande pendant près de deux secondes.
+  const sortieArbre = rd(t, T.muscleLong - 0.55, T.muscleLong + 0.15);
 
-  const scission = rd(t, T.scission, T.scission + 1.1);
-  const soixante = rd(t, T.soixante, T.soixante + 0.6);
-  const halo = rd(t, T.surbrillance, T.surbrillance + 0.5);
+  const scission = rd(t, T.scission, T.scission + 1.5);
+  const soixante = rd(t, T.soixante, T.soixante + 0.85);
+  const halo = rd(t, T.surbrillance, T.surbrillance + 0.8);
+  const haloLong = rd(t, T.muscleLong, T.muscleLong + 0.8);
 
   // L'arbre tient entièrement dans la bande d'en-tête, gouttière comprise :
   // ses icônes descendaient auparavant jusqu'à frôler les titres de colonne.
@@ -328,22 +344,24 @@ export const Animation: React.FC = () => {
             y={astreY}
             rayon={astreR}
             nuit={nuit}
-            o={rd(t, T.soleil, T.soleil + 0.6) * (1 - sortieArbre)}
+            o={rd(t, T.soleil, T.soleil + 0.85) * (1 - sortieArbre)}
           />
 
           {/* ── Les deux colonnes ───────────────────────────────────────── */}
           {GROUPES.map((g) => {
-            const venue = rd(t, g.depart, g.depart + 0.6);
+            const venue = rd(t, g.depart, g.depart + 0.8);
             if (venue <= 0.001) {
               return null;
             }
             const hGras = g.gras * PX_PAR_KG;
             const hTotal = g.total * PX_PAR_KG;
-            const pousse = rd(t, T.barres, T.barres + 1.0);
+            const pousse = rd(t, T.barres, T.barres + 1.4);
             const hauteur = hTotal * pousse;
             const hautBarre = BASE - hauteur;
-            const estCourt = g.cle === "court";
-            const lueur = estCourt ? halo : 0;
+            // Chaque barre a sa propre mise en lumière : celle du long dormeur
+            // arrive la première, pour donner l'échelle à laquelle « soixante
+            // pour cent de plus » se rapporte.
+            const lueur = g.cle === "court" ? halo : haloLong;
 
             return (
               <g key={g.cle}>
@@ -356,7 +374,7 @@ export const Animation: React.FC = () => {
 
                 {/* Dix silhouettes, posées une à une. */}
                 {Array.from({ length: 10 }, (_, i) => {
-                  const o = rd(t, g.grille + i * 0.07, g.grille + 0.3 + i * 0.07);
+                  const o = rd(t, g.grille + i * 0.085, g.grille + 0.42 + i * 0.085);
                   return (
                     <Silhouette
                       key={i}
@@ -422,7 +440,7 @@ export const Animation: React.FC = () => {
                       y={hautBarre - 44}
                       taille={40}
                       couleur={M.texte}
-                      opacity={rd(t, T.troisKg, T.troisKg + 0.5) * (1 - scission)}
+                      opacity={rd(t, T.troisKg, T.troisKg + 0.7) * (1 - scission)}
                     >
                       ≈ 3 KG
                     </Txt>
@@ -435,7 +453,7 @@ export const Animation: React.FC = () => {
                   y={BANDES.socle.haut + 56}
                   taille={34}
                   couleur={g.couleur}
-                  opacity={rd(t, T.barres - 0.2, T.barres + 0.4)}
+                  opacity={rd(t, T.barres - 0.2, T.barres + 0.55)}
                 >
                   {g.cle === "long" ? "8H30" : "5H30"}
                 </Txt>
@@ -448,7 +466,7 @@ export const Animation: React.FC = () => {
                   y={BANDES.socle.haut + 122}
                   taille={36}
                   couleur={COULEUR_GRAS}
-                  opacity={rd(t, T.chiffres, T.chiffres + 0.5)}
+                  opacity={rd(t, T.chiffres, T.chiffres + 0.7)}
                 >
                   {g.gras.toFixed(1).replace(".", ",")} kg de gras
                 </Txt>
@@ -460,16 +478,16 @@ export const Animation: React.FC = () => {
           <line
             x1={120}
             y1={BASE}
-            x2={120 + 840 * rd(t, T.barres - 0.45, T.barres + 0.15)}
+            x2={120 + 840 * rd(t, T.barres - 0.6, T.barres + 0.2)}
             y2={BASE}
             stroke={M.gris}
             strokeWidth={5}
             strokeLinecap="round"
-            opacity={rd(t, T.barres - 0.45, T.barres + 0.15)}
+            opacity={rd(t, T.barres - 0.6, T.barres + 0.2)}
           />
 
           {/* Légende gras / muscle, dans la bande du socle. */}
-          <g opacity={rd(t, T.scission + 0.6, T.scission + 1.2)}>
+          <g opacity={rd(t, T.scission + 0.8, T.scission + 1.6)}>
             <rect x={296} y={BANDES.socle.haut + 196} width={26} height={26} rx={6} fill={COULEUR_GRAS} />
             <Txt x={340} y={BANDES.socle.haut + 218} taille={28} couleur={M.gris} ancre="start">
               gras
@@ -482,7 +500,34 @@ export const Animation: React.FC = () => {
         </g>
       </svg>
 
-      {/* ── Bandeau « +60 % », dans la bande d'en-tête libérée par l'arbre ── */}
+      {/* ── Bande d'en-tête : le muscle perdu, puis l'écart ──────────────
+          Les deux textes occupent la MÊME bande, celle que l'arbre a libérée.
+          Ils ne coexistent donc jamais : le premier s'efface exactement quand
+          le second arrive. */}
+      {haloLong > 0.001 ? (
+        <AbsoluteFill
+          style={{ alignItems: "center", justifyContent: "flex-start", paddingTop: 286 }}
+        >
+          <div
+            style={{
+              fontFamily: TITRE_FONT,
+              fontSize: 74,
+              fontWeight: 700,
+              letterSpacing: -2,
+              lineHeight: 1.12,
+              color: COULEUR_MUSCLE,
+              textAlign: "center",
+              opacity: haloLong * (1 - soixante),
+              transform: `scale(${0.93 + haloLong * 0.07})`,
+            }}
+          >
+            8H30 : 1,6 KG
+            <br />
+            DE MUSCLE PERDU
+          </div>
+        </AbsoluteFill>
+      ) : null}
+
       {soixante > 0.001 ? (
         <AbsoluteFill
           style={{ alignItems: "center", justifyContent: "flex-start", paddingTop: 280 }}
@@ -500,9 +545,9 @@ export const Animation: React.FC = () => {
               transform: `scale(${0.92 + soixante * 0.08})`,
             }}
           >
-            +60 % DE MUSCLE
+            5H30 : +60 %
             <br />
-            PERDU
+            DE MUSCLE PERDU
           </div>
         </AbsoluteFill>
       ) : null}
