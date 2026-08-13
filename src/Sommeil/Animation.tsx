@@ -1,0 +1,494 @@
+import { AbsoluteFill, interpolate, useCurrentFrame, useVideoConfig } from "remotion";
+import { M, TITRE_FONT } from "../Muscle/Plan";
+
+/**
+ * Les 39 s de motion design, en UN SEUL composant continu.
+ *
+ * Le brief pose trois règles dures, et c'est la structure du composant qui les
+ * tient, pas une relecture au montage :
+ *
+ * 1. Aucun chevauchement. Chaque élément a sa bande horizontale réservée —
+ *    en-tête, colonnes, barres, socle — et n'en sort jamais. Les bandes sont
+ *    déclarées dans BANDES ci-dessous ; c'est le seul endroit à relire pour
+ *    vérifier qu'un ajout ne recouvre rien.
+ * 2. Aucune coupe sèche. Rien n'apparaît sans venir d'ailleurs : le soleil
+ *    devient la lune, la lune devient la racine de l'arbre, les extrémités de
+ *    l'arbre deviennent les en-têtes des deux colonnes, et la barre grise se
+ *    scinde en ses deux composantes au lieu d'être remplacée.
+ * 3. Jamais d'écran figé plus de deux secondes. Une respiration lente porte
+ *    l'ensemble, et chaque temps est subdivisé en micro-événements décalés.
+ *
+ * `t` est le temps ABSOLU du montage, pour que les bornes de reperes.ts
+ * s'appliquent sans conversion.
+ */
+
+const CL = { extrapolateLeft: "clamp", extrapolateRight: "clamp" } as const;
+const r = (t: number, a: number, b: number) => interpolate(t, [a, b], [0, 1], CL);
+const doux = (p: number) => p * p * (3 - 2 * p);
+const rd = (t: number, a: number, b: number) => doux(r(t, a, b));
+
+// ── Repères de temps, en secondes absolues ───────────────────────────────
+const T = {
+  soleil: 5.1,
+  lune: 6.3, // le soleil se referme en lune
+  racine: 8.0, // la lune monte et devient la racine de l'arbre
+  branches: 9.0,
+  conditions: 10.4, // assiette + lune au bout de chaque branche
+  colonneA: 12.2, // les extrémités deviennent les en-têtes de colonne
+  grilleA: 13.0,
+  colonneB: 15.2,
+  grilleB: 15.9,
+  barres: 18.4, // les deux barres grises poussent
+  troisKg: 20.6,
+  scission: 26.4, // la barre grise se scinde en gras + muscle
+  chiffres: 29.0,
+  surbrillance: 36.4, // le muscle du groupe court dormeur
+  soixante: 37.6,
+  fin: 44.0,
+};
+
+// ── Bandes horizontales réservées ────────────────────────────────────────
+/**
+ * Le découpage vertical qui garantit l'absence de chevauchement. Aucun élément
+ * ne doit sortir de sa bande ; deux éléments d'une même bande ne doivent pas
+ * coexister — c'est le cas de l'arbre et du bandeau « +60 % », séparés dans le
+ * temps de plus de vingt secondes.
+ */
+const BANDES = {
+  enTete: { haut: 250, bas: 520 }, // soleil/lune, arbre, puis bandeau « +60 % »
+  colonnes: { haut: 560, bas: 960 }, // libellés et grilles de silhouettes
+  barres: { haut: 1000, bas: 1400 }, // les barres, poussant depuis leur socle
+  socle: { haut: 1400, bas: 1560 }, // libellés d'axe sous le socle
+};
+
+const CX = 540;
+const GA = 296; // colonne 8h30
+const GB = 784; // colonne 5h30
+const BASE = BANDES.barres.bas;
+const BARRE_L = 132;
+
+/** Échelle des barres : 3 kg occupent toute la bande disponible. */
+const PX_PAR_KG = (BANDES.barres.bas - BANDES.barres.haut - 60) / 3;
+
+const GROUPES = [
+  {
+    cle: "long",
+    x: GA,
+    titre: "8H30 DE SOMMEIL",
+    couleur: M.bleuClair,
+    gras: 1.4,
+    total: 3,
+    depart: T.colonneA,
+    grille: T.grilleA,
+  },
+  {
+    cle: "court",
+    x: GB,
+    titre: "5H30 DE SOMMEIL",
+    couleur: M.ambre,
+    gras: 0.6,
+    total: 3,
+    depart: T.colonneB,
+    grille: T.grilleB,
+  },
+];
+
+const COULEUR_GRAS = M.vert;
+const COULEUR_MUSCLE = M.corail;
+
+const Txt: React.FC<{
+  x: number;
+  y: number;
+  children: React.ReactNode;
+  taille?: number;
+  couleur?: string;
+  opacity?: number;
+  ancre?: "start" | "middle" | "end";
+}> = ({ x, y, children, taille = 32, couleur = M.gris, opacity = 1, ancre = "middle" }) => (
+  <text
+    x={x}
+    y={y}
+    textAnchor={ancre}
+    fontFamily={TITRE_FONT}
+    fontSize={taille}
+    fontWeight={700}
+    fill={couleur}
+    opacity={opacity}
+  >
+    {children}
+  </text>
+);
+
+/** Silhouette : dix par groupe, comme les dix participants de l'étude. */
+const Silhouette: React.FC<{ x: number; y: number; c: number; couleur: string; o: number }> = ({
+  x,
+  y,
+  c,
+  couleur,
+  o,
+}) => (
+  <g opacity={o} transform={`translate(${x} ${y}) scale(${c})`}>
+    <circle cx={0} cy={-18} r={10} fill={couleur} />
+    <path d="M -14 -5 Q 0 -11 14 -5 L 12 24 L -12 24 Z" fill={couleur} />
+  </g>
+);
+
+/**
+ * Astre unique : le soleil se referme en lune sans être remplacé.
+ *
+ * `nuit` va de 0 à 1. Les rayons se rétractent pendant qu'un disque de fond
+ * vient mordre le disque principal — c'est la même forme qui change, pas deux
+ * icônes en fondu croisé.
+ */
+const Astre: React.FC<{ x: number; y: number; rayon: number; nuit: number; o: number }> = ({
+  x,
+  y,
+  rayon,
+  nuit,
+  o,
+}) => (
+  <g transform={`translate(${x} ${y})`} opacity={o}>
+    {Array.from({ length: 8 }, (_, i) => {
+      const a = (i / 8) * Math.PI * 2;
+      const r1 = rayon * 1.32;
+      const r2 = r1 + rayon * 0.42 * (1 - nuit);
+      return (
+        <line
+          key={i}
+          x1={Math.cos(a) * r1}
+          y1={Math.sin(a) * r1}
+          x2={Math.cos(a) * r2}
+          y2={Math.sin(a) * r2}
+          stroke={M.ambre}
+          strokeWidth={7}
+          strokeLinecap="round"
+          opacity={1 - nuit}
+        />
+      );
+    })}
+    <circle cx={0} cy={0} r={rayon} fill={M.ambre} />
+    {/* Le disque qui mord : hors champ à gauche au départ, il vient créer le
+        croissant en glissant. Sa couleur est celle du fond, pas du noir. */}
+    <circle
+      cx={rayon * (2.1 - 1.35 * nuit)}
+      cy={-rayon * 0.34 * nuit}
+      r={rayon * 0.94}
+      fill={M.fond}
+    />
+  </g>
+);
+
+export const Animation: React.FC = () => {
+  const frame = useCurrentFrame();
+  const { fps } = useVideoConfig();
+  const t = frame / fps;
+
+  const vie = Math.min(rd(t, T.soleil - 0.5, T.soleil), 1 - rd(t, T.fin - 0.5, T.fin));
+  if (vie <= 0.001) {
+    return null;
+  }
+
+  // Respiration lente de l'ensemble : le brief interdit l'écran figé, et même
+  // à l'arrêt d'un temps le cadre continue de vivre imperceptiblement.
+  const souffle = 1 + Math.sin(t * 0.9) * 0.006;
+
+  const nuit = rd(t, T.lune, T.lune + 1.0);
+  const monte = rd(t, T.racine, T.racine + 0.9);
+  const astreY = 700 - (700 - 330) * monte;
+  const astreR = 96 - 54 * monte;
+
+  const tronc = rd(t, T.branches, T.branches + 0.5);
+  const bras = rd(t, T.branches + 0.35, T.branches + 1.0);
+  const descentes = rd(t, T.branches + 0.8, T.branches + 1.4);
+  const conditions = rd(t, T.conditions, T.conditions + 0.6);
+  // L'arbre s'estompe quand les colonnes prennent le relais, mais ne disparaît
+  // pas : il reste le lien entre la racine et les deux groupes.
+  const arbre = 1 - 0.72 * rd(t, T.colonneA, T.colonneA + 0.8);
+  // …puis s'efface pour de bon quand le bandeau « +60 % » occupe l'en-tête.
+  const sortieArbre = rd(t, T.soixante - 0.5, T.soixante + 0.2);
+
+  const scission = rd(t, T.scission, T.scission + 1.1);
+  const soixante = rd(t, T.soixante, T.soixante + 0.6);
+  const halo = rd(t, T.surbrillance, T.surbrillance + 0.5);
+
+  const Y_BRANCHE = 470;
+  const Y_BAS = 540;
+
+  return (
+    <AbsoluteFill style={{ backgroundColor: M.fond, opacity: vie }}>
+      <AbsoluteFill
+        style={{
+          background:
+            "radial-gradient(58% 40% at 50% 42%, rgba(47,191,113,0.09) 0%, transparent 72%)",
+        }}
+      />
+      <svg viewBox="0 0 1080 1920" width="100%" height="100%">
+        <defs>
+          <filter id="somHalo" x="-70%" y="-70%" width="240%" height="240%">
+            <feGaussianBlur stdDeviation="12" result="f" />
+            <feMerge>
+              <feMergeNode in="f" />
+              <feMergeNode in="f" />
+              <feMergeNode in="SourceGraphic" />
+            </feMerge>
+          </filter>
+        </defs>
+
+        <g transform={`translate(${CX} 960) scale(${souffle}) translate(${-CX} -960)`}>
+          {/* ── Arbre de décision, bande d'en-tête ──────────────────────── */}
+          <g opacity={(1 - sortieArbre) * arbre}>
+            <line
+              x1={CX}
+              y1={astreY + astreR + 16}
+              x2={CX}
+              y2={astreY + astreR + 16 + (Y_BRANCHE - astreY - astreR - 16) * tronc}
+              stroke={M.gris}
+              strokeWidth={5}
+              strokeLinecap="round"
+              opacity={tronc}
+            />
+            <line
+              x1={CX}
+              y1={Y_BRANCHE}
+              x2={CX - (CX - GA) * bras}
+              y2={Y_BRANCHE}
+              stroke={M.gris}
+              strokeWidth={5}
+              strokeLinecap="round"
+              opacity={bras}
+            />
+            <line
+              x1={CX}
+              y1={Y_BRANCHE}
+              x2={CX + (GB - CX) * bras}
+              y2={Y_BRANCHE}
+              stroke={M.gris}
+              strokeWidth={5}
+              strokeLinecap="round"
+              opacity={bras}
+            />
+            {[GA, GB].map((x) => (
+              <line
+                key={x}
+                x1={x}
+                y1={Y_BRANCHE}
+                x2={x}
+                // La descente s'arrête AU-DESSUS des deux icônes : menée jusqu'à
+                // leur hauteur, elle venait pointer entre l'assiette et la lune.
+                y2={Y_BRANCHE + (Y_BAS - 42 - Y_BRANCHE) * descentes}
+                stroke={M.gris}
+                strokeWidth={5}
+                strokeLinecap="round"
+                opacity={descentes}
+              />
+            ))}
+
+            {/* Assiette et lune au bout de chaque branche : les deux conditions
+                de l'étude, mêmes calories, sommeil différent. */}
+            {[GA, GB].map((x, i) => (
+              <g key={x} opacity={conditions} transform={`translate(${x} ${Y_BAS - 6})`}>
+                <g transform={`translate(-46 0) scale(${0.9 + conditions * 0.1})`}>
+                  <circle cx={0} cy={0} r={23} fill="none" stroke={M.gris} strokeWidth={5} />
+                  <circle cx={0} cy={0} r={9} fill={M.gris} />
+                </g>
+                <g transform={`translate(46 0) scale(${0.9 + conditions * 0.1})`}>
+                  <circle cx={0} cy={0} r={22} fill={i === 0 ? M.bleuClair : M.ambre} />
+                  <circle cx={9} cy={-7} r={19} fill={M.fond} />
+                </g>
+              </g>
+            ))}
+          </g>
+
+          <Astre
+            x={CX}
+            y={astreY}
+            rayon={astreR}
+            nuit={nuit}
+            o={rd(t, T.soleil, T.soleil + 0.6) * (1 - sortieArbre)}
+          />
+
+          {/* ── Les deux colonnes ───────────────────────────────────────── */}
+          {GROUPES.map((g) => {
+            const venue = rd(t, g.depart, g.depart + 0.6);
+            if (venue <= 0.001) {
+              return null;
+            }
+            const hGras = g.gras * PX_PAR_KG;
+            const hTotal = g.total * PX_PAR_KG;
+            const pousse = rd(t, T.barres, T.barres + 1.0);
+            const hauteur = hTotal * pousse;
+            const hautBarre = BASE - hauteur;
+            const estCourt = g.cle === "court";
+            const lueur = estCourt ? halo : 0;
+
+            return (
+              <g key={g.cle}>
+                <Txt x={g.x} y={BANDES.colonnes.haut + 34} taille={38} couleur={g.couleur} opacity={venue}>
+                  {g.titre}
+                </Txt>
+                <Txt x={g.x} y={BANDES.colonnes.haut + 78} taille={27} couleur={M.gris} opacity={venue}>
+                  MÊME DÉFICIT CALORIQUE
+                </Txt>
+
+                {/* Dix silhouettes, posées une à une. */}
+                {Array.from({ length: 10 }, (_, i) => {
+                  const o = rd(t, g.grille + i * 0.07, g.grille + 0.3 + i * 0.07);
+                  return (
+                    <Silhouette
+                      key={i}
+                      x={g.x - 2 * 56 + (i % 5) * 56}
+                      y={BANDES.colonnes.haut + 200 + Math.floor(i / 5) * 88}
+                      c={1.15 * (0.84 + o * 0.16)}
+                      couleur={g.couleur}
+                      o={o}
+                    />
+                  );
+                })}
+
+                {/* ── La barre ────────────────────────────────────────────
+                    Une seule barre grise, qui se scinde en ses deux
+                    composantes plutôt que d'être remplacée : la portion basse
+                    vire au « gras », la haute au « muscle », et un trait de
+                    séparation s'ouvre entre les deux. */}
+                {pousse > 0.001 ? (
+                  <g>
+                    <rect
+                      x={g.x - BARRE_L / 2}
+                      y={hautBarre}
+                      width={BARRE_L}
+                      height={hauteur}
+                      rx={8}
+                      fill={M.fondCase}
+                      stroke={M.gris}
+                      strokeWidth={3}
+                    />
+                    {/* Portion « muscle », en haut. */}
+                    <rect
+                      x={g.x - BARRE_L / 2}
+                      y={hautBarre}
+                      width={BARRE_L}
+                      height={Math.max(0, hauteur - hGras * pousse)}
+                      rx={8}
+                      fill={COULEUR_MUSCLE}
+                      opacity={scission * 0.92}
+                      filter={lueur > 0.02 ? "url(#somHalo)" : undefined}
+                    />
+                    {/* Portion « gras », en bas. */}
+                    <rect
+                      x={g.x - BARRE_L / 2}
+                      y={BASE - hGras * pousse}
+                      width={BARRE_L}
+                      height={hGras * pousse}
+                      rx={8}
+                      fill={COULEUR_GRAS}
+                      opacity={scission * 0.92}
+                    />
+                    <line
+                      x1={g.x - BARRE_L / 2}
+                      y1={BASE - hGras * pousse}
+                      x2={g.x + BARRE_L / 2}
+                      y2={BASE - hGras * pousse}
+                      stroke={M.fond}
+                      strokeWidth={4}
+                      opacity={scission}
+                    />
+
+                    <Txt
+                      x={g.x}
+                      y={hautBarre - 26}
+                      taille={40}
+                      couleur={M.texte}
+                      opacity={rd(t, T.troisKg, T.troisKg + 0.5) * (1 - scission)}
+                    >
+                      ≈ 3 KG
+                    </Txt>
+
+                    {/* Chiffres de composition, posés DANS la barre : hors
+                        d'elle ils seraient venus mordre la colonne voisine. */}
+                    <Txt
+                      x={g.x}
+                      y={BASE - hGras * pousse / 2 + 12}
+                      taille={34}
+                      couleur="#0B140F"
+                      opacity={rd(t, T.chiffres, T.chiffres + 0.5)}
+                    >
+                      {g.gras.toFixed(1).replace(".", ",")} kg
+                    </Txt>
+                    <Txt
+                      x={g.x}
+                      y={hautBarre + (hauteur - hGras * pousse) / 2 + 12}
+                      taille={30}
+                      couleur="#2A0E0B"
+                      opacity={rd(t, T.chiffres + 0.35, T.chiffres + 0.85)}
+                    >
+                      muscle
+                    </Txt>
+                  </g>
+                ) : null}
+
+                <Txt
+                  x={g.x}
+                  y={BANDES.socle.haut + 52}
+                  taille={34}
+                  couleur={g.couleur}
+                  opacity={rd(t, T.barres - 0.2, T.barres + 0.4)}
+                >
+                  {g.cle === "long" ? "8H30" : "5H30"}
+                </Txt>
+              </g>
+            );
+          })}
+
+          {/* Socle des barres : il se trace avant qu'elles ne poussent. */}
+          <line
+            x1={120}
+            y1={BASE}
+            x2={120 + 840 * rd(t, T.barres - 0.45, T.barres + 0.15)}
+            y2={BASE}
+            stroke={M.gris}
+            strokeWidth={5}
+            strokeLinecap="round"
+            opacity={rd(t, T.barres - 0.45, T.barres + 0.15)}
+          />
+
+          {/* Légende gras / muscle, dans la bande du socle. */}
+          <g opacity={rd(t, T.scission + 0.6, T.scission + 1.2)}>
+            <rect x={296} y={BANDES.socle.haut + 88} width={26} height={26} rx={6} fill={COULEUR_GRAS} />
+            <Txt x={340} y={BANDES.socle.haut + 110} taille={28} couleur={M.gris} ancre="start">
+              gras
+            </Txt>
+            <rect x={560} y={BANDES.socle.haut + 88} width={26} height={26} rx={6} fill={COULEUR_MUSCLE} />
+            <Txt x={604} y={BANDES.socle.haut + 110} taille={28} couleur={M.gris} ancre="start">
+              muscle
+            </Txt>
+          </g>
+        </g>
+      </svg>
+
+      {/* ── Bandeau « +60 % », dans la bande d'en-tête libérée par l'arbre ── */}
+      {soixante > 0.001 ? (
+        <AbsoluteFill
+          style={{ alignItems: "center", justifyContent: "flex-start", paddingTop: 280 }}
+        >
+          <div
+            style={{
+              fontFamily: TITRE_FONT,
+              fontSize: 84,
+              fontWeight: 700,
+              letterSpacing: -2,
+              lineHeight: 1.1,
+              color: COULEUR_MUSCLE,
+              textAlign: "center",
+              opacity: soixante,
+              transform: `scale(${0.92 + soixante * 0.08})`,
+            }}
+          >
+            +60 % DE MUSCLE
+            <br />
+            PERDU
+          </div>
+        </AbsoluteFill>
+      ) : null}
+    </AbsoluteFill>
+  );
+};
