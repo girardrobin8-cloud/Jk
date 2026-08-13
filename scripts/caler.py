@@ -44,11 +44,16 @@ SEUIL_PIC = 0.05  # part du pic au-delà de laquelle on considère qu'on parle
 CREUX_MIN = 0.07  # s ; en deçà, c'est une articulation, pas une frontière
 PAROLE_MIN = 0.25  # s ; parole minimale d'une phrase, garde anti-dégénérescence
 TOLERANCE = 0.40  # s ; portée de recherche autour d'une frontière de phrase
-TOLERANCE_BEAT = 0.55  # s ; portée un peu élargie aux frontières de beats.
-# Une version précédente y cherchait le silence LE PLUS LONG dans une fenêtre
-# large. C'était un contresens : le plus long silence d'une prise est souvent
-# une pause d'effet AVANT une chute, pas un changement de sujet. Le critère
-# reste donc le même partout — le creux le plus proche, à durée comparable.
+# Une frontière de BEAT ne se traite pas comme une frontière de phrase.
+#
+# Elle marque l'instant où l'image change : le plan filmé cède à l'animation.
+# La poser au milieu d'un silence coupe la parole — le locuteur n'a pas fini
+# d'articuler la dernière syllabe que l'image a déjà basculé. Elle est donc
+# poussée jusqu'à la FIN du silence, c'est-à-dire à la reprise de parole
+# suivante : la phrase est alors entièrement dite, pause comprise.
+RESPIRATION_BEAT = 0.13  # s ; silence minimal acceptable pour une bascule
+MARGE_BEAT = 0.06  # s ; retard supplémentaire, l'attaque d'un mot précédant
+# souvent de quelques centièmes le franchissement du seuil d'énergie.
 
 SCRIPTS = {
     "sommeil": [
@@ -117,7 +122,10 @@ def enveloppe(chemin):
 
 
 def creux_candidats(parle):
+    """Renvoie (milieux, bruts) : les milieux pour caler, les bornes brutes
+    pour viser une reprise de parole plutôt que le cœur d'un silence."""
     out = []
+    bruts = []
     i = 0
     while i < len(parle):
         if not parle[i]:
@@ -126,10 +134,11 @@ def creux_candidats(parle):
                 j += 1
             if i > 0 and j < len(parle) and (j - i) * FENETRE >= CREUX_MIN:
                 out.append(((i + j) / 2 * FENETRE, (j - i) * FENETRE))
+                bruts.append((i * FENETRE, j * FENETRE))
             i = j
         else:
             i += 1
-    return out
+    return out, bruts
 
 
 def main():
@@ -159,7 +168,7 @@ def main():
                 hi = mi
         return lo * FENETRE
 
-    creux = creux_candidats(parle)
+    creux, bruts = creux_candidats(parle)
     syl = [compter(t) for _, t in phrases]
     total_syl = sum(syl)
     debit = total_syl / total_parole
@@ -183,15 +192,32 @@ def main():
         predit = horloge(cible)
 
         frontiere_beat = phrases[i][0] != phrases[i + 1][0]
-        tol = TOLERANCE_BEAT if frontiere_beat else TOLERANCE
-        # Le creux doit laisser de quoi prononcer la phrase : sans cette garde,
-        # deux bornes pouvaient se caler sur le même silence et produire une
-        # phrase de durée nulle.
+
+        if frontiere_beat:
+            # Premier silence assez franc À PARTIR de la position prédite, et
+            # jamais avant : mieux vaut laisser respirer un dixième de seconde
+            # que d'entamer l'image sur une fin de mot.
+            suivants = [
+                (deb, fin_c)
+                for deb, fin_c in bruts
+                if fin_c - deb >= RESPIRATION_BEAT and fin_c >= predit - 0.10
+            ]
+            if suivants:
+                _, fin_c = suivants[0]
+                bornes.append(fin_c + MARGE_BEAT)
+                origines.append(f"reprise de parole (+{MARGE_BEAT * 1000:.0f} ms)")
+                curseur = fin_c
+            else:
+                bornes.append(predit)
+                origines.append("prédite")
+                curseur = predit
+            continue
+
         plancher = horloge(cumul[min(len(cumul) - 1, int(curseur / FENETRE))] + PAROLE_MIN)
         proches = [
             (abs(m - predit), m, d)
             for m, d in creux
-            if abs(m - predit) <= tol and m >= plancher
+            if abs(m - predit) <= TOLERANCE and m >= plancher
         ]
         if proches:
             _, m, d = min(proches, key=lambda c: (c[0] / max(c[2], 0.07)))

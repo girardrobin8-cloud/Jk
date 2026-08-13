@@ -31,27 +31,31 @@ const rd = (t: number, a: number, b: number) => doux(r(t, a, b));
 /**
  * Repères de temps, en secondes absolues.
  *
- * Chaque valeur tombe sur la phrase que la voix prononce à cet instant, les
- * fenêtres venant de `scripts/caler.py`. Le commentaire cite les mots visés :
- * c'est ce qui permet de vérifier un calage sans relancer l'analyse.
+ * Chaque valeur tombe sur le groupe de parole que la voix prononce à cet
+ * instant ; le commentaire cite les mots visés et la fenêtre mesurée, ce qui
+ * permet de vérifier un calage sans relancer l'analyse.
+ *
+ * `debut` et `fin` bornent l'animation entière : ils coïncident avec les deux
+ * bascules plan filmé ↔ animation, toutes deux posées dans un silence.
  */
 const T = {
-  soleil: 7.3, // « Pendant quatorze jours »              [7,16 → 7,99]
-  lune: 8.3, // « des chercheurs ont mis… »               [7,99 → 11,53]
-  racine: 9.6,
-  branches: 10.4, // « …en déficit calorique modéré »
-  conditions: 11.7, // « avec deux conditions de sommeil » [11,53 → 13,69]
-  colonneA: 13.75, // « huit heures trente… »              [13,69 → 15,81]
-  grilleA: 14.3,
-  colonneB: 15.85, // « cinq heures trente pour le second »[15,81 → 17,14]
-  grilleB: 16.35,
-  barres: 20.3, // « Le poids total perdu ? »              [20,21 → 21,61]
-  troisKg: 23.75, // « environ trois kilos »               [23,68 → 25,00]
-  scission: 25.2, // « regarde ce qui compose cette perte »[25,00 → 27,08]
-  chiffres: 28.9, // « un virgule quatre kilo de gras »    [28,81 → 30,77]
-  surbrillance: 34.6, // « le groupe qui dort peu… »       [34,53 → 37,62]
-  soixante: 35.6, // « …soixante pour cent de muscle »
-  fin: 39.1,
+  debut: 8.6, // le hook est fini ; l'animation peut entrer
+  soleil: 8.78, // « Pendant quatorze jours »          [8,71 → 9,64]
+  lune: 9.9, // « des chercheurs ont mis… »            [9,77 → 12,89]
+  racine: 11.0,
+  branches: 11.6, // « …en déficit calorique modéré »
+  conditions: 13.1, // « avec deux conditions… »       [13,01 → 14,97]
+  colonneA: 15.25, // « huit heures trente… »          [15,20 → 17,03]
+  grilleA: 15.8,
+  colonneB: 17.3, // « cinq heures trente… »           [17,26 → 18,65]
+  grilleB: 17.8,
+  barres: 21.9, // « Le poids total perdu ? »          [21,82 → 22,61]
+  troisKg: 23.9, // « environ trois kilos »            [23,73 → 24,89]
+  scission: 25.2, // « regarde ce qui compose… »       [25,10 → 25,96]
+  chiffres: 27.3, // « un virgule quatre kilo… »       [27,18 → 28,22]
+  surbrillance: 30.9, // « le groupe qui dort peu… »   [30,39 → 35,73]
+  soixante: 32.4, // « …soixante pour cent »
+  fin: 37.6, // la parole revient au plan filmé
 };
 
 // ── Bandes horizontales réservées ────────────────────────────────────────
@@ -199,7 +203,9 @@ export const Animation: React.FC = () => {
   const { fps } = useVideoConfig();
   const t = frame / fps;
 
-  const vie = Math.min(rd(t, T.soleil - 0.5, T.soleil), 1 - rd(t, T.fin - 0.5, T.fin));
+  // Le fondu d'entrée part de la bascule elle-même, jamais avant : il
+  // démarrait 0,5 s en amont, donc pendant la dernière phrase du hook.
+  const vie = Math.min(rd(t, T.debut, T.debut + 0.4), 1 - rd(t, T.fin, T.fin + 0.3));
   if (vie <= 0.001) {
     return null;
   }
