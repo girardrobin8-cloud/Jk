@@ -16,6 +16,10 @@ import {
 import { Plage, PLAGE_FRAMES } from "./Plage/Plage";
 import { Carte, CARTE_FRAMES } from "./Carte/Carte";
 import {
+  Montage as RecompMontage,
+  MONTAGE_FRAMES as RECOMP_FRAMES,
+} from "./Recomp/Montage";
+import {
   Montage as SommeilMontage,
   MONTAGE_FRAMES as SOMMEIL_FRAMES,
 } from "./Sommeil/Montage";
@@ -35,6 +39,19 @@ import { Logo, myCompSchema2 } from "./HelloWorld/Logo";
 export const RemotionRoot: React.FC = () => {
   return (
     <>
+      {/* « Recomposition corporelle » — 57 s, calé sur la prise réelle.
+          Bornes MESURÉES : python3 scripts/caler.py <wav> recomp.
+          Voix : public/voix/recomp.mp4, copiée sans réencodage.
+          npx remotion render Recomp */}
+      <Composition
+        id="Recomp"
+        component={RecompMontage}
+        durationInFrames={RECOMP_FRAMES}
+        fps={30}
+        width={1080}
+        height={1920}
+      />
+
       {/* « Le sommeil décide si tu perds du gras ou du muscle » — 55 s.
           SANS VOIX : bornes du brief, à recaler (src/Sommeil/reperes.ts).
           npx remotion render Sommeil */}

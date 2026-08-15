@@ -17,18 +17,36 @@ pourtant » sans reprendre son souffle, et forcer une frontière là où il n'y 
 pas de silence en déplace une autre, en cascade — les débits obtenus allaient
 de 1 à 10 mots par seconde.
 
-D'où la méthode retenue : PRÉDIRE puis CORROBORER.
+D'où la méthode retenue, à DEUX NIVEAUX — parce que les deux niveaux n'ont ni
+les mêmes contraintes ni les mêmes conséquences en cas d'erreur.
 
-1. Prédire. La durée d'une phrase est proportionnelle à son nombre de
-   SYLLABES, mesuré sur le texte une fois les nombres écrits en toutes lettres.
-   Le débit syllabique d'un locuteur est remarquablement stable.
-2. Corroborer. Si un creux de l'enveloppe se trouve à portée de la position
-   prédite, la borne s'y cale : un vrai silence est une meilleure frontière
-   qu'une estimation. Sinon la prédiction est conservée telle quelle.
+Niveau 1, les BEATS. Une frontière de beat est l'instant où l'image change.
+Se tromper de deux dixièmes s'y voit immédiatement : l'animation démarre alors
+que la phrase n'est pas finie. Ces frontières sont donc placées EXACTEMENT sur
+des silences mesurés, jamais interpolées. Le découpage est choisi globalement,
+par programmation dynamique : parmi toutes les façons de répartir les groupes
+de parole entre les beats, on retient celle qui rend les débits syllabiques des
+beats les plus semblables entre eux. Un beat est ainsi toujours une suite
+ENTIÈRE de groupes de parole, et l'image ne peut structurellement pas basculer
+au milieu d'un mot.
 
-La sortie indique, pour chaque borne, si elle est CALÉE sur un silence mesuré
-ou seulement PRÉDITE — les seules qui puissent demander un ajustement à
-l'oreille.
+Niveau 2, les PHRASES à l'intérieur d'un beat. Elles ne déclenchent aucune
+coupe — l'animation est continue — et servent seulement à situer les repères
+internes. Toutes les frontières de phrase ne sont d'ailleurs pas audibles : le
+locuteur enchaîne « le même poids et pourtant » sans reprendre son souffle. On
+les place donc au prorata des SYLLABES, en temps de PAROLE : le débit
+syllabique d'un locuteur est remarquablement stable, et les silences, qui ne
+consomment pas de syllabes, sont exclus du calcul avant d'être réintroduits.
+
+C'est ce niveau 1 qui a manqué à une version précédente. Elle traitait toutes
+les frontières de la même façon, cherchait un silence « à portée » de chaque
+position prédite, et propageait ses erreurs : sur la prise « recomposition »,
+où la parole est quasi continue et les silences nombreux, elle donnait des
+débits allant de 2,9 à 16,7 syllabes par seconde. Le découpage global les
+ramène dans une bande de 5,7 à 7,4.
+
+La sortie donne la dispersion des débits, en écart-type des logarithmes.
+Au-delà de 0,25 l'alignement est douteux ; en deçà de 0,15 il est fiable.
 
 Usage :  python3 scripts/caler.py <audio.wav> <module>
 """
@@ -41,21 +59,23 @@ import wave
 
 FENETRE = 0.01  # s
 SEUIL_PIC = 0.05  # part du pic au-delà de laquelle on considère qu'on parle
-CREUX_MIN = 0.07  # s ; en deçà, c'est une articulation, pas une frontière
-PAROLE_MIN = 0.25  # s ; parole minimale d'une phrase, garde anti-dégénérescence
-TOLERANCE = 0.40  # s ; portée de recherche autour d'une frontière de phrase
-# Une frontière de BEAT ne se traite pas comme une frontière de phrase.
-#
-# Elle marque l'instant où l'image change : le plan filmé cède à l'animation.
-# La poser au milieu d'un silence coupe la parole — le locuteur n'a pas fini
-# d'articuler la dernière syllabe que l'image a déjà basculé. Elle est donc
-# poussée jusqu'à la FIN du silence, c'est-à-dire à la reprise de parole
-# suivante : la phrase est alors entièrement dite, pause comprise.
-RESPIRATION_BEAT = 0.13  # s ; silence minimal acceptable pour une bascule
-MARGE_BEAT = 0.06  # s ; retard supplémentaire, l'attaque d'un mot précédant
-# souvent de quelques centièmes le franchissement du seuil d'énergie.
+# Deux groupes séparés par moins de SOUDURE ne sont pas séparés par un silence
+# mais par une occlusive — le blanc qui précède le [p] de « proche » dure trois
+# centièmes et n'est pas une frontière. On les recolle avant toute analyse.
+SOUDURE = 0.12  # s
+# Nombre maximal de groupes de parole qu'un beat peut couvrir. Sert seulement à
+# borner le coût de la programmation dynamique ; aucun beat réel n'approche
+# cette valeur (le plus long de « recomposition » en couvre cinq).
+GROUPES_MAX = 8
 
 SCRIPTS = {
+    # « Le sommeil décide si tu perds du gras ou du muscle ». Attention : les
+    # bornes de src/Sommeil/reperes.ts ont été établies AVANT la méthode à deux
+    # niveaux, puis vérifiées à l'œil sur le rendu et validées. Le découpage
+    # global en redonne des valeurs voisines mais pas identiques (B3→B4 à 22,61
+    # au lieu de 21,57). Le montage livré n'a pas été recalé dessus : il est
+    # bon, et le rejouer pour un dixième de seconde ferait courir plus de
+    # risques qu'il n'en écarterait.
     "sommeil": [
         ("B1", "Deux personnes peuvent perdre exactement le même poids"),
         ("B1", "et pourtant l'une perd surtout du gras"),
@@ -84,6 +104,40 @@ SCRIPTS = {
         ("B7", "ou dans ton muscle"),
         ("B8", "Avant d'optimiser ta diète au gramme près"),
         ("B8", "regarde d'abord combien tu dors"),
+    ],
+    # « Recomposition corporelle ». Le brief donne des timecodes lus sur les
+    # sous-titres automatiques, fiables à la seconde près pour le DÉBUT de
+    # chaque réplique, et le dit lui-même : le sous-découpage interne est à
+    # affiner sur la piste. C'est ce que fait ce script — les valeurs du brief
+    # servent de contrôle, pas de source.
+    "recomp": [
+        ("B1", "Perdre du gras et prendre du muscle en même temps"),
+        ("B1", "on t'a dit que c'était un mythe"),
+        ("B1", "Faux"),
+        ("B1", "et je vais t'expliquer comment faire une vraie recomposition corporelle"),
+        ("B2", "Voici les trois choses dont tu as besoin"),
+        ("B2", "pour vraiment réussir ta recomposition corporelle"),
+        ("B3", "En un c'est comment tu t'entraines"),
+        ("B4", "Soulever lourd ça ne suffit pas"),
+        ("B4", "ce qui compte c'est vraiment d'aller toujours proche de l'échec"),
+        ("B4", "Pour cela tu dois garder une bonne technique d'exécution"),
+        ("B4", "avec un maximum de tension mécanique"),
+        ("B5", "Tu en as besoin pour construire du muscle"),
+        ("B6", "En deux ton apport calorique"),
+        ("B7", "En musculation et des années d'expérience"),
+        ("B7", "tu devras ajuster un léger déficit calorique dans la plupart des cas"),
+        ("B8", "En trois tes protéines"),
+        ("B9", "Sans protéines tu peux perdre du gras"),
+        ("B9", "mais tu auras sans doute beaucoup de mal à prendre du muscle"),
+        ("B9", "Avec assez de protéines tu peux faire les deux en même temps"),
+        ("B10", "un virgule six à deux virgule deux grammes de protéines"),
+        ("B10", "par kilo de poids de corps"),
+        ("B11", "Bien sûr une recomposition corporelle ça se fait sur le long terme"),
+        ("B11", "donc ne vise pas à aller trop vite"),
+        ("B11", "Étale ça sur le long terme"),
+        ("B11", "et ne sois pas trop restrictif avec toi"),
+        ("B11", "Niveau diète assure-toi d'avoir vraiment un plan"),
+        ("B11", "qui te permet de durer sur le long terme"),
     ],
 }
 
@@ -121,138 +175,160 @@ def enveloppe(chemin):
     return [max(abs(v) for v in ech[i : i + pas]) for i in range(0, len(ech) - pas, pas)]
 
 
-def creux_candidats(parle):
-    """Renvoie (milieux, bruts) : les milieux pour caler, les bornes brutes
-    pour viser une reprise de parole plutôt que le cœur d'un silence."""
-    out = []
+def groupes_parole(env):
+    """
+    Découpe l'enveloppe en groupes de parole, silences recollés.
+
+    Renvoie une liste de (début, fin) en secondes. C'est la seule lecture du
+    signal dont dépend tout le reste : les frontières de beats sont choisies
+    parmi ces bornes, et nulle part ailleurs.
+    """
+    pic = max(env)
+    parle = [e > SEUIL_PIC * pic for e in env]
     bruts = []
     i = 0
     while i < len(parle):
-        if not parle[i]:
+        if parle[i]:
             j = i
-            while j < len(parle) and not parle[j]:
+            while j < len(parle) and parle[j]:
                 j += 1
-            if i > 0 and j < len(parle) and (j - i) * FENETRE >= CREUX_MIN:
-                out.append(((i + j) / 2 * FENETRE, (j - i) * FENETRE))
-                bruts.append((i * FENETRE, j * FENETRE))
+            bruts.append((i * FENETRE, j * FENETRE))
             i = j
         else:
             i += 1
-    return out, bruts
+    if not bruts:
+        return []
+    out = [bruts[0]]
+    for a, b in bruts[1:]:
+        if a - out[-1][1] < SOUDURE:
+            out[-1] = (out[-1][0], b)
+        else:
+            out.append((a, b))
+    return out
+
+
+def decouper_beats(syl_beat, durees, debit):
+    """
+    Répartit les groupes de parole entre les beats, par programmation dynamique.
+
+    Chaque beat reçoit une suite ENTIÈRE et contiguë de groupes ; le coût d'un
+    beat est l'écart de son débit au débit moyen, au carré, pondéré par son
+    nombre de syllabes — un beat long pèse plus lourd qu'une incise de six
+    syllabes, dont le débit apparent est de toute façon plus bruité.
+
+    Renvoie la liste des (premier groupe, dernier groupe exclu) par beat.
+    """
+    nb, m = len(syl_beat), len(durees)
+    if nb > m:
+        print(
+            f"{nb} beats pour {m} groupes de parole : le découpage est "
+            "impossible, un beat au moins n'a pas de groupe à lui.",
+            file=sys.stderr,
+        )
+        sys.exit(3)
+    INF = float("inf")
+    cout = [[INF] * (m + 1) for _ in range(nb + 1)]
+    venant = [[None] * (m + 1) for _ in range(nb + 1)]
+    cout[0][0] = 0.0
+    for i in range(nb):
+        for j in range(m):
+            if cout[i][j] == INF:
+                continue
+            for l in range(1, min(GROUPES_MAX, m - j) + 1):
+                # Il faut laisser au moins un groupe à chacun des beats suivants.
+                if m - (j + l) < nb - (i + 1):
+                    break
+                d = sum(durees[j : j + l])
+                c = cout[i][j] + syl_beat[i] * (math.log(syl_beat[i] / d) - math.log(debit)) ** 2
+                if c < cout[i + 1][j + l]:
+                    cout[i + 1][j + l] = c
+                    venant[i + 1][j + l] = j
+    tranches = []
+    j = m
+    for i in range(nb, 0, -1):
+        pj = venant[i][j]
+        tranches.append((pj, j))
+        j = pj
+    tranches.reverse()
+    return tranches
+
+
+def dispersion(debits):
+    moy = sum(math.log(d) for d in debits) / len(debits)
+    return math.sqrt(sum((math.log(d) - moy) ** 2 for d in debits) / len(debits))
 
 
 def main():
     if len(sys.argv) != 3:
         sys.exit(__doc__)
     audio, module = sys.argv[1], sys.argv[2]
+    if module not in SCRIPTS:
+        print(f"module inconnu ; connus : {', '.join(sorted(SCRIPTS))}", file=sys.stderr)
+        sys.exit(3)
     phrases = SCRIPTS[module]
 
     env = enveloppe(audio)
-    pic = max(env)
-    parle = [e > SEUIL_PIC * pic for e in env]
-    cumul = [0.0]
-    for p in parle:
-        cumul.append(cumul[-1] + (FENETRE if p else 0.0))
-    fin = len(parle) * FENETRE
-    total_parole = cumul[-1]
+    groupes = groupes_parole(env)
+    durees = [b - a for a, b in groupes]
+    fin = len(env) * FENETRE
+    parole = sum(durees)
 
-    # Passage temps de parole → temps horloge : un silence ne consomme pas de
-    # syllabes, donc la prédiction se fait sur l'échelle de la parole seule.
-    def horloge(p):
-        lo, hi = 0, len(cumul) - 1
-        while lo < hi:
-            mi = (lo + hi) // 2
-            if cumul[mi] < p:
-                lo = mi + 1
-            else:
-                hi = mi
-        return lo * FENETRE
+    # Regroupement des phrases par beat, dans l'ordre.
+    beats = []
+    for beat, texte in phrases:
+        if not beats or beats[-1][0] != beat:
+            beats.append((beat, []))
+        beats[-1][1].append(texte)
+    syl_beat = [sum(compter(t) for t in ts) for _, ts in beats]
+    debit = sum(syl_beat) / parole
 
-    creux, bruts = creux_candidats(parle)
-    syl = [compter(t) for _, t in phrases]
-    total_syl = sum(syl)
-    debit = total_syl / total_parole
+    print(f"durée {fin:.2f} s | parole {parole:.2f} s | {len(groupes)} groupes")
+    print(f"{sum(syl_beat)} syllabes | débit {debit:.2f} syll/s")
+    print(f"{len(beats)} beats, {len(phrases)} phrases\n")
 
-    print(f"durée {fin:.2f} s | parole {total_parole:.2f} s | {len(creux)} creux")
-    print(f"{total_syl} syllabes | débit {debit:.2f} syll/s\n")
+    tranches = decouper_beats(syl_beat, durees, debit)
 
-    # Prédiction réancrée : après chaque borne calée sur un silence, le débit
-    # est réestimé sur ce qui reste. Sans cela une borne corrigée de 0,7 s
-    # laisse toutes les suivantes décalées d'autant, l'erreur ne se rattrapant
-    # jamais.
-    bornes = [0.0]
-    origines = ["début"]
-    restant = list(syl)
-    curseur = 0.0
-    for i in range(len(syl) - 1):
-        reste_syl = sum(restant[i:])
-        reste_parole = total_parole - cumul[min(len(cumul) - 1, int(curseur / FENETRE))]
-        debit_local = reste_syl / max(0.01, reste_parole)
-        cible = cumul[min(len(cumul) - 1, int(curseur / FENETRE))] + restant[i] / debit_local
-        predit = horloge(cible)
-
-        frontiere_beat = phrases[i][0] != phrases[i + 1][0]
-
-        if frontiere_beat:
-            # Premier silence assez franc À PARTIR de la position prédite, et
-            # jamais avant : mieux vaut laisser respirer un dixième de seconde
-            # que d'entamer l'image sur une fin de mot.
-            suivants = [
-                (deb, fin_c)
-                for deb, fin_c in bruts
-                if fin_c - deb >= RESPIRATION_BEAT and fin_c >= predit - 0.10
-            ]
-            if suivants:
-                _, fin_c = suivants[0]
-                bornes.append(fin_c + MARGE_BEAT)
-                origines.append(f"reprise de parole (+{MARGE_BEAT * 1000:.0f} ms)")
-                curseur = fin_c
-            else:
-                bornes.append(predit)
-                origines.append("prédite")
-                curseur = predit
-            continue
-
-        plancher = horloge(cumul[min(len(cumul) - 1, int(curseur / FENETRE))] + PAROLE_MIN)
-        proches = [
-            (abs(m - predit), m, d)
-            for m, d in creux
-            if abs(m - predit) <= TOLERANCE and m >= plancher
-        ]
-        if proches:
-            _, m, d = min(proches, key=lambda c: (c[0] / max(c[2], 0.07)))
-            bornes.append(m)
-            origines.append(f"calée sur {d * 1000:.0f} ms")
-            curseur = m
-        else:
-            bornes.append(predit)
-            origines.append("prédite")
-            curseur = predit
-    bornes.append(fin)
-    origines.append("fin")
-
-    print(f"{'beat':5} {'fenêtre':>17} {'syll':>5} {'débit':>10}  origine")
-    for (beat, texte), a, b, o in zip(phrases, bornes[:-1], bornes[1:], origines[1:]):
-        p = cumul[min(len(cumul) - 1, int(b / FENETRE))] - cumul[min(len(cumul) - 1, int(a / FENETRE))]
-        d = compter(texte) / max(0.01, p)
-        print(f"{beat:5} {a:7.2f} → {b:6.2f} {compter(texte):5} {d:7.2f} s/s  {o}")
-
+    print("NIVEAU 1 — beats, calés sur des silences mesurés")
+    print(f"{'beat':5} {'fenêtre':>17} {'syll':>5} {'débit':>9}  groupes")
     debits = []
-    for (_, texte), a, b in zip(phrases, bornes[:-1], bornes[1:]):
-        pa = cumul[min(len(cumul) - 1, int(b / FENETRE))] - cumul[min(len(cumul) - 1, int(a / FENETRE))]
-        debits.append(compter(texte) / max(0.01, pa))
-    moy = sum(math.log(d) for d in debits) / len(debits)
-    ecart = math.sqrt(sum((math.log(d) - moy) ** 2 for d in debits) / len(debits))
-    print(f"\ndispersion des débits : {ecart:.3f} (log) — plus c'est bas, plus")
-    print("l'alignement est vraisemblable ; au-delà de 0,25 il est douteux.")
+    for (beat, _), s_b, (j0, j1) in zip(beats, syl_beat, tranches):
+        d = sum(durees[j0:j1])
+        debits.append(s_b / d)
+        a, b = groupes[j0][0], groupes[j1 - 1][1]
+        print(f"{beat:5} {a:7.2f} → {b:6.2f} {s_b:5} {s_b / d:6.2f} s/s  {j1 - j0}")
+    print(f"\ndispersion des débits de beats : {dispersion(debits):.3f} (log)")
+    print("au-delà de 0,25 l'alignement est douteux ; en deçà de 0,15 il est fiable.\n")
+
+    print("NIVEAU 2 — phrases, au prorata des syllabes en temps de parole")
+    bornes_phrases = []
+    for (beat, textes), (j0, j1) in zip(beats, tranches):
+        seg = groupes[j0:j1]
+        duree = sum(durees[j0:j1])
+        total = sum(compter(t) for t in textes)
+
+        def horloge(p):
+            """Temps de parole → temps horloge, en réinjectant les silences."""
+            cumul = 0.0
+            for a, b in seg:
+                if cumul + (b - a) >= p:
+                    return a + (p - cumul)
+                cumul += b - a
+            return seg[-1][1]
+
+        acc = 0
+        precedent = seg[0][0]
+        for texte in textes:
+            acc += compter(texte)
+            x = horloge(duree * acc / total)
+            bornes_phrases.append((beat, precedent, x, texte))
+            precedent = x
+    for beat, a, b, texte in bornes_phrases:
+        print(f"{beat:5} {a:7.2f} → {b:6.2f}  {texte}")
 
     print("\nBornes de beats (à reporter dans reperes.ts) :")
-    precedent = None
-    for (beat, _), a, o in zip(phrases, bornes[:-1], origines[:-1]):
-        if precedent is not None and beat != precedent:
-            print(f"  {precedent} → {beat} : {a:6.2f}   ({o})")
-        precedent = beat
-    print(f"  fin : {fin:.2f}")
+    for (beat, _), (j0, j1) in zip(beats, tranches):
+        print(f"  {beat:4} {groupes[j0][0]:6.2f} → {groupes[j1 - 1][1]:6.2f}")
+    print(f"  fin de piste : {fin:.2f}")
 
 
 if __name__ == "__main__":
