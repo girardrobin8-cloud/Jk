@@ -139,6 +139,37 @@ SCRIPTS = {
         ("B11", "Niveau diète assure-toi d'avoir vraiment un plan"),
         ("B11", "qui te permet de durer sur le long terme"),
     ],
+    # « Aspartame / Coca Zero ». La prise n'a PAS été fournie : les bornes de
+    # src/Aspartame/reperes.ts sont reconstruites, pas mesurées. Ce script est
+    # écrit d'avance pour qu'il n'y ait rien à rédiger le jour où la voix
+    # arrive — il suffira de lancer la commande et de reporter les bornes.
+    #
+    # Une réserve à connaître avant de le lancer : le montage bascule du plan
+    # filmé à l'animation À L'INTÉRIEUR d'une phrase continue, sur « j'oublie
+    # souvent ce détail ». Le découpage en beats de niveau 1 impose ses
+    # frontières sur des silences ; cette bascule-là n'en aura pas forcément.
+    # B3 et B4 sont donc à traiter comme un seul beat au moment de lire la
+    # sortie, la bascule interne se plaçant ensuite au prorata des syllabes.
+    "aspartame": [
+        ("B1", "Tu peux mourir en buvant trop d'eau"),
+        ("B1", "Ça s'appelle littéralement l'intoxication à l'eau"),
+        ("B2", "Le sel le café l'oxygène"),
+        ("B2", "à trop forte dose tout devient dangereux"),
+        ("B2", "C'est la dose qui fait le poison"),
+        ("B3", "Quand les gens paniquent sur l'aspartame de leur boisson sans sucre"),
+        ("B3", "parce que l'OMS l'a placé dans une catégorie qui s'appelle possiblement cancérogène"),
+        ("B4", "j'oublie souvent ce détail"),
+        ("B4", "c'est la même que l'aloe vera"),
+        ("B4", "ou de certains légumes fermentés"),
+        ("B5", "La dose journalière jugée sûre par l'OMS"),
+        ("B5", "c'est quarante milligrammes par kilo de poids de corps"),
+        ("B5", "Pour un adulte de soixante-dix kilos par exemple"),
+        ("B5", "ça représente entre neuf et quatorze canettes par jour"),
+        ("B6", "Donc non ta canette de midi ne va pas te tuer"),
+        ("B6", "Elle va même plutôt t'aider en sèche par exemple"),
+        ("B6", "car elle comporte très peu de calories"),
+        ("B6", "Mais ce qui va vraiment nuire à ta santé se situe probablement ailleurs"),
+    ],
 }
 
 VOYELLES = "aeiouyàâäéèêëîïôöùûü"

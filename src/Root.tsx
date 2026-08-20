@@ -16,6 +16,10 @@ import {
 import { Plage, PLAGE_FRAMES } from "./Plage/Plage";
 import { Carte, CARTE_FRAMES } from "./Carte/Carte";
 import {
+  Montage as AspartameMontage,
+  MONTAGE_FRAMES as ASPARTAME_FRAMES,
+} from "./Aspartame/Montage";
+import {
   Montage as RecompMontage,
   MONTAGE_FRAMES as RECOMP_FRAMES,
 } from "./Recomp/Montage";
@@ -39,6 +43,21 @@ import { Logo, myCompSchema2 } from "./HelloWorld/Logo";
 export const RemotionRoot: React.FC = () => {
   return (
     <>
+      {/* « Aspartame / Coca Zero » — 39 s.
+          SANS VOIX : la prise n'a pas été fournie. Les bornes sont
+          RECONSTRUITES, pas mesurées — lire l'avertissement en tête de
+          src/Aspartame/reperes.ts avant d'y toucher. Quand la prise arrivera :
+          python3 scripts/caler.py <prise.wav> aspartame
+          npx remotion render Aspartame */}
+      <Composition
+        id="Aspartame"
+        component={AspartameMontage}
+        durationInFrames={ASPARTAME_FRAMES}
+        fps={30}
+        width={1080}
+        height={1920}
+      />
+
       {/* « Recomposition corporelle » — 57 s, calé sur la prise réelle.
           Bornes MESURÉES : python3 scripts/caler.py <wav> recomp.
           Voix : public/voix/recomp.mp4, copiée sans réencodage.
