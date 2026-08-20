@@ -47,33 +47,33 @@ const melange = (a: number, b: number, p: number) => a + (b - a) * p;
  * place quand il est dit.
  */
 const T = {
-  // ── ÎLOT 1 — « la dose fait le poison »   B2 4,15 → 9,50
-  ilot1: 4.15,
-  sel: 4.15, // « Le sel »                                  [4,15 → 4,56]
-  cafe: 4.55, // « le café »                                [4,56 → 5,17]
-  oxygene: 5.15, // « l'oxygène »                           [5,17 → 5,79]
+  // ── ÎLOT 1 — « la dose fait le poison »   B2 4,52 → 9,64
+  ilot1: 4.46,
+  sel: 4.52, // « Le sel »                                  [4,52 → 4,88]
+  cafe: 4.85, // « le café »                                [4,88 → 5,42]
+  oxygene: 5.38, // « l'oxygène »                           [5,42 → 5,97]
   // Les trois curseurs glissent pendant « à trop forte dose, tout devient
   // dangereux » et sont tous arrivés avant la chute de la phrase.
-  curseurs: [5.75, 6.25, 6.75], //                          [5,79 → 8,05]
-  poison: 7.95, // « C'est la dose qui fait le poison »     [8,05 → 9,50]
-  sortie1: 9.15,
-  fin1: 9.5,
+  curseurs: [5.95, 6.4, 6.85], //                           [5,97 → 7,94]
+  poison: 7.85, // « C'est la dose qui fait le poison »     [7,94 → 9,64]
+  sortie1: 9.32,
+  fin1: 9.7,
 
-  // ── ÎLOT 2 — comparaison puis dose réelle   B4 15,45 → 20,30, B5 → 29,40
-  ilot2: 15.45,
-  etiquette: 15.45, // « j'oublie souvent ce détail »       [15,45 → 16,93]
-  canette: 16.35, // le sujet, posé avant la comparaison
-  aloe: 16.95, // « c'est la même que l'aloe vera »         [16,93 → 18,40]
-  legumes: 18.4, // « ou de certains légumes fermentés »    [18,40 → 20,30]
-  sortie2B: 20.05, // le groupe 2B descend et quitte la scène
+  // ── ÎLOT 2 — comparaison puis dose réelle   B4 17,65 → 21,21, B5 → 30,17
+  ilot2: 17.53,
+  etiquette: 17.62, // « j'oublie souvent ce détail »       [17,65 → 18,54]
+  canette: 18.2, // le sujet, posé avant la comparaison
+  aloe: 18.6, // « c'est la même que l'aloe vera »          [18,54 → 19,58]
+  legumes: 19.65, // « ou de certains légumes fermentés »   [19,58 → 21,21]
+  sortie2B: 20.95, // le groupe 2B descend et quitte la scène
 
-  enteteDose: 20.9, // la scène est libre, l'en-tête peut descendre
-  valeur: 22.3, // « quarante milligrammes… »               [22,44 → 24,94]
-  rangeValeur: 24.8, // le chiffre remonte en en-tête, la scène se libère
-  adulte: 25.0, // « Pour un adulte de soixante-dix kilos » [24,94 → 27,26]
-  canettes: 25.4, // la jauge se construit, canette par canette
-  zones: 27.3, // « entre neuf et quatorze canettes »       [27,26 → 29,40]
-  fin2: 29.4,
+  enteteDose: 21.45, // la scène est libre, l'en-tête peut descendre
+  valeur: 22.8, // « c'est quarante milligrammes… »         [22,85 → 25,63]
+  rangeValeur: 25.35, // le chiffre remonte en en-tête, la scène se libère
+  adulte: 25.55, // « Pour un adulte de soixante-dix kilos »[25,63 → 27,88]
+  canettes: 26.05, // la jauge se construit, canette par canette
+  zones: 27.8, // « entre neuf et quatorze canettes »       [27,88 → 30,17]
+  fin2: 30.29,
 };
 
 // ── Bandes horizontales réservées ────────────────────────────────────────
@@ -323,7 +323,10 @@ export const Animation: React.FC = () => {
    * commence avant la borne de son îlot.
    */
   const vie1 = rd(t, T.ilot1, T.ilot1 + 0.35) * (1 - rd(t, T.fin1 - 0.3, T.fin1));
-  const vie2 = rd(t, T.ilot2, T.ilot2 + 0.35) * (1 - rd(t, T.fin2 - 0.28, T.fin2));
+  // La sortie du second îlot est plus courte que son entrée : la dernière
+  // phrase se termine à 30,17 et la bascule tombe à 30,29. Un fondu de trois
+  // dixièmes aurait commencé à effacer la jauge sur « canettes par jour ».
+  const vie2 = rd(t, T.ilot2, T.ilot2 + 0.35) * (1 - rd(t, T.fin2 - 0.12, T.fin2));
   const vie = Math.max(vie1, vie2);
   if (vie <= 0) return null;
 
@@ -428,13 +431,18 @@ export const Animation: React.FC = () => {
               );
             })()}
 
+          {/* Trente-deux caractères sur une seule ligne : c'est la ligne la plus
+              longue du montage, et c'est elle qui fixe le corps. À 58 px avec
+              un interlettrage de 2 elle mesurait près de 1140 px et sortait du
+              cadre des deux côtés. À 42 px et un interlettrage de 1 elle tient
+              dans 1080 px avec une marge franche. */}
           {poison > 0 && (
             <Txt
               x={CX}
               y={BANDES.socle.haut + melange(80, 70, poison)}
-              taille={melange(50, 58, poison)}
+              taille={melange(37, 42, poison)}
               couleur={ACCENT}
-              espace={2}
+              espace={1}
               opacity={poison}
             >
               C'EST LA DOSE QUI FAIT LE POISON

@@ -43,11 +43,9 @@ import { Logo, myCompSchema2 } from "./HelloWorld/Logo";
 export const RemotionRoot: React.FC = () => {
   return (
     <>
-      {/* « Aspartame / Coca Zero » — 39 s.
-          SANS VOIX : la prise n'a pas été fournie. Les bornes sont
-          RECONSTRUITES, pas mesurées — lire l'avertissement en tête de
-          src/Aspartame/reperes.ts avant d'y toucher. Quand la prise arrivera :
-          python3 scripts/caler.py <prise.wav> aspartame
+      {/* « Aspartame / Coca Zero » — 39,82 s, calé sur la prise réelle.
+          Bornes MESURÉES : python3 scripts/caler.py <wav> aspartame.
+          Voix : public/voix/aspartame.mp4, copiée sans réencodage.
           npx remotion render Aspartame */}
       <Composition
         id="Aspartame"

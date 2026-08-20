@@ -45,6 +45,9 @@ où la parole est quasi continue et les silences nombreux, elle donnait des
 débits allant de 2,9 à 16,7 syllabes par seconde. Le découpage global les
 ramène dans une bande de 5,7 à 7,4.
 
+Le SEUIL de silence, lui, n'est pas fixé d'avance : il est choisi par la
+cohérence de l'alignement qu'il produit. Voir choisir_seuil().
+
 La sortie donne la dispersion des débits, en écart-type des logarithmes.
 Au-delà de 0,25 l'alignement est douteux ; en deçà de 0,15 il est fiable.
 
@@ -58,15 +61,23 @@ import sys
 import wave
 
 FENETRE = 0.01  # s
-SEUIL_PIC = 0.05  # part du pic au-delà de laquelle on considère qu'on parle
+# Longueur de la moyenne glissante qui sert de passe-bas. À 16 kHz, K = 20 place
+# son premier zéro vers 800 Hz : de quoi garder le voisement et écarter le
+# souffle. Voir enveloppe().
+PASSE_BAS = 20  # échantillons
 # Deux groupes séparés par moins de SOUDURE ne sont pas séparés par un silence
 # mais par une occlusive — le blanc qui précède le [p] de « proche » dure trois
 # centièmes et n'est pas une frontière. On les recolle avant toute analyse.
 SOUDURE = 0.12  # s
+# En deçà, un « groupe » n'est pas un groupe de parole mais un accident du
+# seuillage : une reprise de souffle, un claquement de langue.
+GROUPE_MIN = 0.10  # s
+# Plage balayée pour le seuil de silence, en part du maximum de l'enveloppe de
+# voisement. Voir choisir_seuil().
+SEUILS = [x / 100 for x in range(3, 26)]
 # Nombre maximal de groupes de parole qu'un beat peut couvrir. Sert seulement à
-# borner le coût de la programmation dynamique ; aucun beat réel n'approche
-# cette valeur (le plus long de « recomposition » en couvre cinq).
-GROUPES_MAX = 8
+# borner le coût de la programmation dynamique.
+GROUPES_MAX = 10
 
 SCRIPTS = {
     # « Le sommeil décide si tu perds du gras ou du muscle ». Attention : les
@@ -76,6 +87,17 @@ SCRIPTS = {
     # au lieu de 21,57). Le montage livré n'a pas été recalé dessus : il est
     # bon, et le rejouer pour un dixième de seconde ferait courir plus de
     # risques qu'il n'en écarterait.
+    #
+    # Même remarque depuis le passage au détecteur de voisement. Il fait baisser
+    # la dispersion sur les deux prises déjà montées — 0,160 → 0,067 ici, 0,095
+    # → 0,061 sur « recomposition » — mais une dispersion plus basse ne suffit
+    # pas à trancher : sur « recomposition » il déplace B8, B9 et B11 d'environ
+    # une seconde, et les ÉLOIGNE des timecodes relevés sur les sous-titres,
+    # que l'ancien alignement retrouvait au dixième près. Les deux montages
+    # livrés restent donc sur leurs bornes d'origine, validées à l'écran. Le
+    # détecteur de voisement était en revanche INDISPENSABLE sur « aspartame »,
+    # où l'ancien échouait franchement : onze groupes pour six beats, et une
+    # dispersion de 0,292.
     "sommeil": [
         ("B1", "Deux personnes peuvent perdre exactement le même poids"),
         ("B1", "et pourtant l'une perd surtout du gras"),
@@ -199,23 +221,54 @@ def compter(phrase):
 
 
 def enveloppe(chemin):
+    """
+    Enveloppe de VOISEMENT : énergie de la bande grave, fenêtre par fenêtre.
+
+    Une première version mesurait l'amplitude crête, toutes bandes confondues,
+    et seuillait à 5 % du pic. Cela marche sur un son brut, pas sur une prise
+    compressée. La prise « aspartame » arrive écrêtée — son pic vaut exactement
+    32768, le maximum d'un entier 16 bits — et son compresseur remonte le
+    souffle de salle entre les mots jusqu'au niveau de la parole. Au seuil de
+    5 % du pic, 94 % de la piste passait pour de la parole : il ne restait que
+    onze groupes pour six beats, et le découpage n'avait plus aucune latitude.
+    Le même seuil poussé à 25 % ne récupérait toujours que 87 %.
+
+    La bande grave sépare ce que l'amplitude ne sépare plus. La voix voisée
+    porte l'essentiel de son énergie sous 400 Hz ; le souffle qu'un compresseur
+    remonte, non — il est large bande. Une moyenne glissante sur PASSE_BAS
+    échantillons suffit à faire ce filtre, et la même mesure marche aussi bien
+    sur les prises non compressées : sur « sommeil » et « recomposition », elle
+    donne un alignement au moins aussi cohérent que l'ancienne.
+    """
     with wave.open(chemin) as w:
         sr = w.getframerate()
         ech = array.array("h", w.readframes(w.getnframes()))
     pas = int(sr * FENETRE)
-    return [max(abs(v) for v in ech[i : i + pas]) for i in range(0, len(ech) - pas, pas)]
+    cumul = [0] * (len(ech) + 1)
+    for i, v in enumerate(ech):
+        cumul[i + 1] = cumul[i] + v
+    grave = [
+        (cumul[min(len(ech), i + PASSE_BAS)] - cumul[i]) / PASSE_BAS for i in range(len(ech))
+    ]
+    return [
+        math.sqrt(sum(v * v for v in grave[i : i + pas]) / pas)
+        for i in range(0, len(ech) - pas, pas)
+    ]
 
 
-def groupes_parole(env):
+def groupes_parole(env, seuil):
     """
     Découpe l'enveloppe en groupes de parole, silences recollés.
+
+    `seuil` est une part du maximum de l'enveloppe ; il est choisi par
+    choisir_seuil(), pas fixé d'avance.
 
     Renvoie une liste de (début, fin) en secondes. C'est la seule lecture du
     signal dont dépend tout le reste : les frontières de beats sont choisies
     parmi ces bornes, et nulle part ailleurs.
     """
     pic = max(env)
-    parle = [e > SEUIL_PIC * pic for e in env]
+    parle = [e > seuil * pic for e in env]
     bruts = []
     i = 0
     while i < len(parle):
@@ -235,7 +288,7 @@ def groupes_parole(env):
             out[-1] = (out[-1][0], b)
         else:
             out.append((a, b))
-    return out
+    return [(a, b) for a, b in out if b - a >= GROUPE_MIN]
 
 
 def decouper_beats(syl_beat, durees, debit):
@@ -289,6 +342,69 @@ def dispersion(debits):
     return math.sqrt(sum((math.log(d) - moy) ** 2 for d in debits) / len(debits))
 
 
+def choisir_seuil(env, syl_beat, trace=False):
+    """
+    Choisit le seuil de silence par la COHÉRENCE de l'alignement qu'il produit.
+
+    Le seuil ne peut pas être fixé une fois pour toutes : il dépend du bruit de
+    fond et de la compression, qui changent d'une prise à l'autre. Le régler
+    jusqu'à obtenir un débit « qui semble juste » serait circulaire — le débit
+    est précisément ce qu'on cherche à établir.
+
+    Le critère retenu est indépendant du signal. Pour chaque seuil, on découpe
+    les beats et on mesure la dispersion de leurs débits. Les nombres de
+    syllabes, eux, viennent du TEXTE : un seuil qui fait tomber juste les
+    frontières entre parole et silence ne peut pas y arriver par hasard, et un
+    seuil trop bas comme un seuil trop haut se paient tous deux en dispersion.
+
+    Le minimum brut ne peut PAS être pris tel quel, et c'est le piège de cette
+    méthode. Plus le seuil monte, plus il y a de groupes, et plus le découpage a
+    de latitude pour égaliser les débits par chance : la dispersion se met à
+    plonger ponctuellement sans que l'alignement soit meilleur. Sur
+    « aspartame », le minimum brut tombe à 0,070 pour un seuil de 0,19, entre
+    deux voisins à 0,151 et 0,140 — un accident, pas un signal. Le vrai plateau
+    est ailleurs, entre 0,07 et 0,14, où la dispersion reste à 0,105–0,129 sur
+    huit seuils consécutifs.
+
+    D'où le filtre MÉDIAN sur trois seuils voisins avant de comparer : un creux
+    isolé est écrasé par ses voisins, un bassin large survit. On cherche un
+    seuil autour duquel l'alignement est stable, pas un seuil qui gagne seul.
+
+    Renvoie (seuil, groupes, tranches).
+    """
+    essais = []
+    for seuil in SEUILS:
+        groupes = groupes_parole(env, seuil)
+        if len(groupes) < len(syl_beat):
+            continue
+        durees = [b - a for a, b in groupes]
+        debit = sum(syl_beat) / sum(durees)
+        tranches = decouper_beats(syl_beat, durees, debit)
+        debits = [s / sum(durees[j0:j1]) for s, (j0, j1) in zip(syl_beat, tranches)]
+        essais.append((seuil, dispersion(debits), groupes, tranches))
+    if not essais:
+        print(
+            "aucun seuil ne laisse assez de groupes de parole pour ce script : "
+            "la piste est-elle bien la bonne ?",
+            file=sys.stderr,
+        )
+        sys.exit(3)
+
+    meilleur = None
+    for k, (seuil, brute, groupes, tranches) in enumerate(essais):
+        voisins = [e[1] for e in essais[max(0, k - 1) : k + 2]]
+        lisse = sorted(voisins)[len(voisins) // 2]
+        if trace:
+            print(
+                f"  seuil {seuil:.2f} → {len(groupes):3} groupes, "
+                f"dispersion {brute:.3f} (lissée {lisse:.3f})"
+            )
+        # À égalité de valeur lissée, on départage sur la dispersion brute.
+        if meilleur is None or (lisse, brute) < (meilleur[0], meilleur[1]):
+            meilleur = (lisse, brute, seuil, groupes, tranches)
+    return meilleur[2], meilleur[3], meilleur[4]
+
+
 def main():
     if len(sys.argv) != 3:
         sys.exit(__doc__)
@@ -299,10 +415,7 @@ def main():
     phrases = SCRIPTS[module]
 
     env = enveloppe(audio)
-    groupes = groupes_parole(env)
-    durees = [b - a for a, b in groupes]
     fin = len(env) * FENETRE
-    parole = sum(durees)
 
     # Regroupement des phrases par beat, dans l'ordre.
     beats = []
@@ -311,13 +424,17 @@ def main():
             beats.append((beat, []))
         beats[-1][1].append(texte)
     syl_beat = [sum(compter(t) for t in ts) for _, ts in beats]
+
+    print("Choix du seuil de silence, par cohérence de l'alignement :")
+    seuil, groupes, tranches = choisir_seuil(env, syl_beat, trace=True)
+    durees = [b - a for a, b in groupes]
+    parole = sum(durees)
     debit = sum(syl_beat) / parole
 
+    print(f"\nseuil retenu {seuil:.2f}")
     print(f"durée {fin:.2f} s | parole {parole:.2f} s | {len(groupes)} groupes")
     print(f"{sum(syl_beat)} syllabes | débit {debit:.2f} syll/s")
     print(f"{len(beats)} beats, {len(phrases)} phrases\n")
-
-    tranches = decouper_beats(syl_beat, durees, debit)
 
     print("NIVEAU 1 — beats, calés sur des silences mesurés")
     print(f"{'beat':5} {'fenêtre':>17} {'syll':>5} {'débit':>9}  groupes")

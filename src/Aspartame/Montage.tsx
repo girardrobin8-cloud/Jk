@@ -1,26 +1,13 @@
-import { AbsoluteFill, Sequence, useCurrentFrame, useVideoConfig } from "remotion";
+import { AbsoluteFill, Audio, Sequence, staticFile, useCurrentFrame, useVideoConfig } from "remotion";
 import { M, TITRE_FONT } from "../Muscle/Plan";
 import { Animation } from "./Animation";
 import { Beat, BEATS, DUREE, s } from "./reperes";
 
 /**
- * Montage complet — « Aspartame / Coca Zero », 39 s.
+ * Montage complet — « Aspartame / Coca Zero », 39,82 s.
  *
- * SANS VOIX : la prise n'a pas été fournie avec le brief. Les bornes de
- * reperes.ts sont reconstruites et NON mesurées — l'avertissement en tête de
- * ce fichier-là explique comment elles ont été obtenues et ce qu'il faudra
- * faire quand la prise arrivera.
- *
- * Pour brancher la voix le moment venu, il y a exactement trois gestes, et le
- * premier est de loin le plus important :
- *
- *   1. mesurer   python3 scripts/caler.py <prise.wav> aspartame
- *                puis reporter les bornes dans reperes.ts et ajuster DUREE.
- *   2. copier    la piste SANS réencodage dans public/voix/aspartame.mp4
- *                (ffmpeg -i <prise.mov> -vn -c:a copy …) — le brief interdit
- *                de toucher à l'audio, et un simple transcodage suffirait à en
- *                changer le rendu.
- *   3. monter    décommenter l'<Audio> ci-dessous.
+ * Calé sur la prise réelle : les bornes de reperes.ts sont MESURÉES sur
+ * l'enveloppe sonore par scripts/caler.py, pas estimées d'après le brief.
  *
  * Contrainte du brief : la voix est continue et n'est jamais recoupée ni
  * resynchronisée. C'est ce que garantit la structure : la piste se montera
@@ -31,8 +18,14 @@ import { Beat, BEATS, DUREE, s } from "./reperes";
 
 export const MONTAGE_FRAMES = s(DUREE);
 
-// import { Audio, staticFile } from "remotion";
-// const VOIX = "voix/aspartame.mp4";
+/**
+ * Piste voix, telle qu'enregistrée.
+ *
+ * Le flux d'origine est copié sans réencodage (`-c:a copy`) depuis le .mov de
+ * la prise : le brief interdit de toucher à l'audio, et un simple transcodage
+ * suffirait à en changer le rendu.
+ */
+const VOIX = "voix/aspartame.mp4";
 
 /**
  * AUCUN BRUITAGE sur ce montage.
@@ -102,7 +95,7 @@ const Reserve: React.FC<{ beat: Beat }> = ({ beat }) => {
 
 export const Montage: React.FC = () => (
   <AbsoluteFill style={{ backgroundColor: M.fond }}>
-    {/* <Audio src={staticFile(VOIX)} /> */}
+    <Audio src={staticFile(VOIX)} />
 
     {/* Montée sur toute la durée : c'est ce qui lui donne le temps absolu. */}
     <Animation />
