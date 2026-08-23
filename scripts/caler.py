@@ -192,6 +192,32 @@ SCRIPTS = {
         ("B6", "car elle comporte très peu de calories"),
         ("B6", "Mais ce qui va vraiment nuire à ta santé se situe probablement ailleurs"),
     ],
+    # « NEAT / la dépense calorique cachée ». Script original, prise pas encore
+    # enregistrée : les bornes de src/Neat/reperes.ts sont PRÉDITES à partir du
+    # débit horloge moyen des trois prises mesurées (5,385 syll/s), et non
+    # relevées. Écrit d'avance pour n'avoir qu'à mesurer le jour où la voix
+    # arrive.
+    "neat": [
+        ("B1", "Ton entraînement c'est probablement la plus petite partie des calories que tu brûles dans ta journée"),
+        ("B2", "Ce que ton corps dépense chaque jour se divise en plusieurs parts"),
+        ("B2", "ton métabolisme de base la digestion et ton activité physique"),
+        ("B3", "Rien qu'en existant"),
+        ("B3", "respirer faire circuler ton sang réguler ta température"),
+        ("B3", "ça représente environ soixante à soixante-dix pour cent de tes calories brûlées"),
+        ("B4", "Digérer ce que tu manges ça en prend encore dix pour cent"),
+        ("B5", "Et ta séance de sport"),
+        ("B5", "Pour la plupart des gens qui s'entraînent quelques heures par semaine"),
+        ("B5", "ça représente en moyenne moins de cent calories par jour"),
+        ("B6", "Le vrai facteur qui varie le plus d'une personne à l'autre c'est tout le reste"),
+        ("B6", "marcher monter des escaliers rester debout gigoter"),
+        ("B6", "Ça s'appelle le NEAT"),
+        ("B6", "et ça peut représenter jusqu'à deux mille calories de différence par jour entre deux personnes de la même taille"),
+        ("B7", "Dans une étude des chercheurs ont suralimenté des volontaires de mille calories par jour pendant huit semaines"),
+        ("B7", "Résultat les deux tiers de l'énergie supplémentaire brûlée venaient de l'augmentation spontanée du NEAT"),
+        ("B7", "et ça expliquait une différence de prise de graisse allant jusqu'à dix fois d'une personne à l'autre"),
+        ("B8", "Donc avant de rajouter une séance de cardio regarde d'abord combien tu bouges le reste de la journée"),
+        ("B8", "Parfois huit mille pas de plus valent plus qu'une heure de sport en plus"),
+    ],
 }
 
 VOYELLES = "aeiouyàâäéèêëîïôöùûü"

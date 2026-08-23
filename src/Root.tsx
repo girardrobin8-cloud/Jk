@@ -16,6 +16,10 @@ import {
 import { Plage, PLAGE_FRAMES } from "./Plage/Plage";
 import { Carte, CARTE_FRAMES } from "./Carte/Carte";
 import {
+  Montage as NeatMontage,
+  MONTAGE_FRAMES as NEAT_FRAMES,
+} from "./Neat/Montage";
+import {
   Montage as AspartameMontage,
   MONTAGE_FRAMES as ASPARTAME_FRAMES,
 } from "./Aspartame/Montage";
@@ -43,6 +47,21 @@ import { Logo, myCompSchema2 } from "./HelloWorld/Logo";
 export const RemotionRoot: React.FC = () => {
   return (
     <>
+      {/* « NEAT / la dépense calorique cachée » — 64,8 s.
+          SANS VOIX : script original, prise pas encore enregistrée. Bornes
+          PRÉDITES d'après le débit horloge des trois prises mesurées — lire
+          l'avertissement en tête de src/Neat/reperes.ts. Quand la prise
+          arrivera : python3 scripts/caler.py <prise.wav> neat
+          npx remotion render Neat */}
+      <Composition
+        id="Neat"
+        component={NeatMontage}
+        durationInFrames={NEAT_FRAMES}
+        fps={30}
+        width={1080}
+        height={1920}
+      />
+
       {/* « Aspartame / Coca Zero » — 39,82 s, calé sur la prise réelle.
           Bornes MESURÉES : python3 scripts/caler.py <wav> aspartame.
           Voix : public/voix/aspartame.mp4, copiée sans réencodage.
