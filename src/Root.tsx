@@ -19,6 +19,7 @@ import {
   Montage as NeatMontage,
   MONTAGE_FRAMES as NEAT_FRAMES,
 } from "./Neat/Montage";
+import { Miniature as NeatMiniature } from "./Neat/Miniature";
 import {
   Montage as AspartameMontage,
   MONTAGE_FRAMES as ASPARTAME_FRAMES,
@@ -47,6 +48,17 @@ import { Logo, myCompSchema2 } from "./HelloWorld/Logo";
 export const RemotionRoot: React.FC = () => {
   return (
     <>
+      {/* Miniature 9:16 de la vidéo NEAT — image fixe.
+          npx remotion still NeatMiniature miniature.png */}
+      <Composition
+        id="NeatMiniature"
+        component={NeatMiniature}
+        durationInFrames={1}
+        fps={30}
+        width={1080}
+        height={1920}
+      />
+
       {/* « NEAT / la dépense calorique cachée » — 64,8 s.
           SANS VOIX : script original, prise pas encore enregistrée. Bornes
           PRÉDITES d'après le débit horloge des trois prises mesurées — lire
