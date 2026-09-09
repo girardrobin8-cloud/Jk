@@ -18,6 +18,7 @@ import json
 import os
 import re
 import sys
+import unicodedata
 
 RACINE = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "episodes")
 
@@ -29,11 +30,13 @@ TEXTES = ["brief.json", "lyrics.txt", "song_plan.json", "timeline.json", "metada
 # faite. Leur absence n'est jamais une erreur.
 MEDIAS = ["song.mp3", "images", "clips", "final.mp4", "thumbnail.png"]
 
-FPS = 30
-LARGEUR, HAUTEUR = 1080, 1920
+# Les clés d'un plan de timeline.json, dans l'ordre.
+CLES_PLAN = ("start", "end", "lyrics", "scene", "image_prompt", "video_prompt")
 
-# Tolérance sur les raccords : un dixième d'image, de quoi absorber les
-# arrondis d'écriture sans laisser passer un vrai trou.
+FPS = 30
+
+# Tolérance sur les raccords : un demi-centième de seconde, de quoi absorber
+# les arrondis d'écriture sans laisser passer un vrai trou.
 EPSILON = 0.5 / FPS
 
 
@@ -52,25 +55,35 @@ def lire_json(episode, nom, erreurs):
     return None
 
 
-def sections_des_paroles(episode):
-    """Les balises [ ] de lyrics.txt, dans l'ordre."""
+def normaliser(texte):
+    """Réduit un texte à ce qui compte pour le comparer : minuscules, sans
+    accents ni ponctuation, espaces et retours à la ligne écrasés."""
+    plat = unicodedata.normalize("NFD", texte.lower())
+    plat = "".join(c for c in plat if unicodedata.category(c) != "Mn")
+    return " ".join(re.sub(r"[^a-z0-9]+", " ", plat).split())
+
+
+def lignes_des_paroles(episode):
+    """Le contenu de lyrics.txt, sans les notes : (sections, texte suivi)."""
     try:
         with open(chemin(episode, "lyrics.txt"), encoding="utf-8") as f:
-            lignes = f.read().splitlines()
+            lignes = [l for l in f.read().splitlines() if not l.startswith("#")]
     except FileNotFoundError:
-        return None
-    return [
-        m.group(1).strip()
-        for m in (re.match(r"^\[(.+)\]\s*$", l) for l in lignes if not l.startswith("#"))
-        if m
-    ]
+        return None, None
+    sections, chante = [], []
+    for l in lignes:
+        m = re.match(r"^\[(.+)\]\s*$", l)
+        if m:
+            sections.append(m.group(1).strip())
+        else:
+            chante.append(l)
+    return sections, normaliser(" ".join(chante))
 
 
-def verifier_timeline(episode, timeline, erreurs, restes):
-    """Cohérence interne du montage : bornes, enchaînement, médias attendus."""
-    plans = timeline.get("plans")
+def verifier_timeline(episode, plans, brief, chante, erreurs, restes):
+    """Cohérence du montage : format des plans, enchaînement, paroles, médias."""
     if not isinstance(plans, list):
-        erreurs.append("timeline.json : « plans » doit être une liste")
+        erreurs.append("timeline.json : le fichier doit être une liste de plans")
         return
     if not plans:
         # État normal d'un épisode qui vient d'être créé : le montage s'écrit
@@ -78,38 +91,62 @@ def verifier_timeline(episode, timeline, erreurs, restes):
         restes.append("timeline.json : le découpage en plans reste à écrire")
         return
 
-    if timeline.get("fps", FPS) != FPS:
-        erreurs.append(f"timeline.json : le dépôt tourne à {FPS} i/s")
-    if (timeline.get("largeur"), timeline.get("hauteur")) != (LARGEUR, HAUTEUR):
-        erreurs.append(f"timeline.json : le format attendu est {LARGEUR}×{HAUTEUR}")
-
     curseur = 0.0
     for i, p in enumerate(plans, 1):
-        nom = p.get("id", f"plan {i}")
-        debut, fin = p.get("debut_s"), p.get("fin_s")
+        nom = f"plan {i:02d}"
+        if not isinstance(p, dict):
+            erreurs.append(f"{nom} : ce n'est pas un objet")
+            continue
+
+        manquantes = [c for c in CLES_PLAN if c not in p]
+        if manquantes:
+            erreurs.append(f"{nom} : clés manquantes — {', '.join(manquantes)}")
+        for c in ("scene", "image_prompt", "video_prompt"):
+            if c in p and not str(p[c]).strip():
+                erreurs.append(f"{nom} : « {c} » est vide")
+
+        debut, fin = p.get("start"), p.get("end")
         if not isinstance(debut, (int, float)) or not isinstance(fin, (int, float)):
-            erreurs.append(f"{nom} : debut_s et fin_s doivent être des nombres")
+            erreurs.append(f"{nom} : start et end doivent être des nombres")
             continue
         if fin <= debut:
-            erreurs.append(f"{nom} : fin_s ({fin}) n'est pas après debut_s ({debut})")
+            erreurs.append(f"{nom} : end ({fin}) n'est pas après start ({debut})")
         if abs(debut - curseur) > EPSILON:
             manque = "trou" if debut > curseur else "recouvrement"
             erreurs.append(f"{nom} : {manque} de {abs(debut - curseur):.2f}s avant le plan")
         curseur = max(curseur, fin)
 
-        for cle in ("image", "clip"):
-            ref = p.get(cle)
-            if not ref:
-                erreurs.append(f"{nom} : « {cle} » manque")
-            elif not os.path.exists(chemin(episode, ref)):
+        # Les paroles affichées sont un extrait de lyrics.txt : si l'un des deux
+        # bouge sans l'autre, c'est ici que ça se voit.
+        paroles = str(p.get("lyrics", ""))
+        if paroles.strip() and chante and normaliser(paroles) not in chante:
+            erreurs.append(f"{nom} : « {paroles} » ne se retrouve pas dans lyrics.txt")
+
+        # Le nom des médias se déduit du rang du plan, il ne s'écrit nulle part.
+        for dossier, ext in (("images", "png"), ("clips", "mp4")):
+            ref = f"{dossier}/p{i:02d}.{ext}"
+            if not os.path.exists(chemin(episode, ref)):
                 restes.append(f"{nom} : {ref} reste à produire")
 
-    duree = timeline.get("duree_s")
-    if isinstance(duree, (int, float)) and abs(curseur - duree) > EPSILON:
-        erreurs.append(
-            f"timeline.json : les plans couvrent {curseur:.2f}s "
-            f"pour une durée annoncée de {duree:.2f}s"
-        )
+    visee = (brief or {}).get("duree_visee_s")
+    if isinstance(visee, (int, float)) and visee > 0:
+        # Un écart franc veut dire qu'un des deux fichiers n'a pas suivi ; un
+        # petit écart est normal, la chanson ne tombe jamais juste.
+        marge = max(2.0, 0.1 * visee)
+        if abs(curseur - visee) > marge:
+            erreurs.append(
+                f"timeline.json : les plans couvrent {curseur:.1f}s "
+                f"pour une durée visée de {visee:.1f}s dans brief.json"
+            )
+
+
+def produit(episode, nom):
+    """Une étape est faite quand son fichier existe — et, pour un dossier de
+    médias, quand il contient autre chose que son .gitkeep."""
+    c = chemin(episode, nom)
+    if os.path.isdir(c):
+        return any(f != ".gitkeep" for f in os.listdir(c))
+    return os.path.exists(c)
 
 
 def verifier(episode):
@@ -137,33 +174,32 @@ def verifier(episode):
     for nom, doc, cle in (
         ("brief.json", brief, "id"),
         ("song_plan.json", plan, "episode"),
-        ("timeline.json", timeline, "episode"),
         ("metadata.json", meta, "episode"),
     ):
-        if doc is not None and doc.get(cle) != episode:
+        if isinstance(doc, dict) and doc.get(cle) != episode:
             erreurs.append(f"{nom} : « {cle} » vaut {doc.get(cle)!r} au lieu de {episode!r}")
 
-    paroles = sections_des_paroles(episode)
-    if paroles is not None and plan is not None:
+    sections, chante = lignes_des_paroles(episode)
+    if sections is not None and isinstance(plan, dict):
         attendues = [s.get("section") for s in plan.get("structure", [])]
-        if not paroles or not attendues:
+        if not sections or not attendues:
             # Les paroles s'écrivent avant le plan de la chanson : tant que l'un
             # des deux est vide, il reste du travail, pas une incohérence.
             restes.append("les sections restent à écrire dans lyrics.txt et song_plan.json")
-        elif paroles != attendues:
+        elif sections != attendues:
             erreurs.append(
                 "les sections ne coïncident pas — "
-                f"lyrics.txt : {paroles} ; song_plan.json : {attendues}"
+                f"lyrics.txt : {sections} ; song_plan.json : {attendues}"
             )
 
     if timeline is not None:
-        verifier_timeline(episode, timeline, erreurs, restes)
+        verifier_timeline(episode, timeline, brief, chante, erreurs, restes)
 
     return erreurs, restes
 
 
 def squelette(episode, titre):
-    """Les cinq fichiers versionnés, vides mais complets, prêts à remplir."""
+    """Les fichiers versionnés, vides mais complets, prêts à remplir."""
     return {
         "brief.json": {
             "id": episode,
@@ -172,7 +208,7 @@ def squelette(episode, titre):
             "angle": "",
             "public": "",
             "ton": "",
-            "format": {"largeur": LARGEUR, "hauteur": HAUTEUR, "fps": FPS},
+            "format": {"largeur": 1080, "hauteur": 1920, "fps": FPS},
             "duree_visee_s": 60,
             "points_cles": [],
             "sources": [],
@@ -190,22 +226,14 @@ def squelette(episode, titre):
             "structure": [],
             "sortie": "song.mp3",
         },
-        "timeline.json": {
-            "episode": episode,
-            "fps": FPS,
-            "largeur": LARGEUR,
-            "hauteur": HAUTEUR,
-            "audio": "song.mp3",
-            "duree_s": 0.0,
-            "plans": [],
-        },
+        "timeline.json": [],
         "metadata.json": {
             "episode": episode,
             "titre": titre,
             "description": "",
             "mots_cles": [],
             "hashtags": [],
-            "format": f"{LARGEUR}x{HAUTEUR}",
+            "format": "1080x1920",
             "duree_s": 0.0,
             "miniature": "thumbnail.png",
             "video": "final.mp4",
@@ -248,15 +276,6 @@ def episodes():
     if not os.path.isdir(RACINE):
         return []
     return sorted(d for d in os.listdir(RACINE) if re.fullmatch(r"ep_\d{3}", d))
-
-
-def produit(episode, nom):
-    """Une étape est faite quand son fichier existe — et, pour un dossier de
-    médias, quand il contient autre chose que son .gitkeep."""
-    c = chemin(episode, nom)
-    if os.path.isdir(c):
-        return any(f != ".gitkeep" for f in os.listdir(c))
-    return os.path.exists(c)
 
 
 def lister():
