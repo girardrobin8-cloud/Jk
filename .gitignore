@@ -10,3 +10,13 @@ out
 # Rushes filmés : média source, hors dépôt (les remettre dans public/rushes/)
 public/rushes/*.mp4
 public/voix/*.mp4
+
+# Épisodes : le texte et les plans sont versionnés, les médias non.
+# Tout se régénère depuis brief.json, song_plan.json et timeline.json.
+episodes/*/song.mp3
+episodes/*/final.mp4
+episodes/*/thumbnail.png
+episodes/*/images/*
+episodes/*/clips/*
+!episodes/*/images/.gitkeep
+!episodes/*/clips/.gitkeep

@@ -37,6 +37,21 @@ npx remotion render
 npx remotion upgrade
 ```
 
+## Épisodes
+
+Chaque vidéo chantée vit dans `episodes/ep_XXX/` : le brief, les paroles, le
+plan de la chanson, la timeline et les métadonnées sont versionnés, les médias
+(chanson, images, clips, rendu) restent hors dépôt et se régénèrent.
+
+```console
+python3 scripts/episode.py nouveau ep_002 --titre "Le sucre du soir"
+python3 scripts/episode.py verifier ep_001
+python3 scripts/episode.py lister
+```
+
+Le détail de la structure et l'ordre de fabrication sont dans
+[`episodes/README.md`](episodes/README.md).
+
 ## Docs
 
 Get started with Remotion by reading the [fundamentals page](https://www.remotion.dev/docs/the-fundamentals).

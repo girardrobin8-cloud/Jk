@@ -1,0 +1,130 @@
+{
+  "episode": "ep_001",
+  "fps": 30,
+  "largeur": 1080,
+  "hauteur": 1920,
+  "audio": "song.mp3",
+  "duree_s": 60.0,
+  "plans": [
+    {
+      "id": "p01",
+      "section": "intro",
+      "debut_s": 0.0,
+      "fin_s": 6.0,
+      "image": "images/p01.png",
+      "clip": "clips/p01.mp4",
+      "prompt": "Cuisine sombre au petit matin, une tasse vide sur le plan de travail, lumière bleutée de fenêtre, format vertical",
+      "mouvement": "Lent travelling avant sur la tasse",
+      "texte": "On t'a dit que sauter le matin te coûterait tes progrès.",
+      "transition": "coupe"
+    },
+    {
+      "id": "p02",
+      "section": "couplet 1",
+      "debut_s": 6.0,
+      "fin_s": 11.0,
+      "image": "images/p02.png",
+      "clip": "clips/p02.mp4",
+      "prompt": "Silhouette d'homme qui s'étire au réveil, contre-jour, tons froids",
+      "mouvement": "Léger panoramique latéral",
+      "texte": "Le corps ne se met pas en veille",
+      "transition": "fondu"
+    },
+    {
+      "id": "p03",
+      "section": "couplet 1",
+      "debut_s": 11.0,
+      "fin_s": 16.0,
+      "image": "images/p03.png",
+      "clip": "clips/p03.mp4",
+      "prompt": "Assiette posée tard sur une table, horloge floue en arrière-plan",
+      "mouvement": "Zoom arrière lent",
+      "texte": "parce que l'assiette arrive plus tard.",
+      "transition": "coupe"
+    },
+    {
+      "id": "p04",
+      "section": "couplet 1",
+      "debut_s": 16.0,
+      "fin_s": 22.0,
+      "image": "images/p04.png",
+      "clip": "clips/p04.mp4",
+      "prompt": "Gros plan sur une montre qui marque dix heures, grain de pellicule",
+      "mouvement": "Rotation très lente de l'aiguille",
+      "texte": "Quatre heures sans manger, c'est juste une matinée.",
+      "transition": "fondu"
+    },
+    {
+      "id": "p05",
+      "section": "refrain",
+      "debut_s": 22.0,
+      "fin_s": 29.0,
+      "image": "images/p05.png",
+      "clip": "clips/p05.mp4",
+      "prompt": "Table vue de dessus, trois repas alignés sur fond graphite, éclairage net",
+      "mouvement": "Descente verticale de la caméra",
+      "texte": "Ce n'est pas l'heure qui compte, c'est le total du jour.",
+      "transition": "coupe"
+    },
+    {
+      "id": "p06",
+      "section": "refrain",
+      "debut_s": 29.0,
+      "fin_s": 36.0,
+      "image": "images/p06.png",
+      "clip": "clips/p06.mp4",
+      "prompt": "Balance de cuisine et montre côte à côte, contraste dur",
+      "mouvement": "Léger travelling latéral",
+      "texte": "La balance ne lit pas ta montre.",
+      "transition": "coupe"
+    },
+    {
+      "id": "p07",
+      "section": "couplet 2",
+      "debut_s": 36.0,
+      "fin_s": 42.0,
+      "image": "images/p07.png",
+      "clip": "clips/p07.mp4",
+      "prompt": "Bol de fromage blanc et œufs, lumière chaude, fond sombre",
+      "mouvement": "Zoom avant doux",
+      "texte": "Le petit-déj aide s'il te cale,",
+      "transition": "fondu"
+    },
+    {
+      "id": "p08",
+      "section": "couplet 2",
+      "debut_s": 42.0,
+      "fin_s": 47.0,
+      "image": "images/p08.png",
+      "clip": "clips/p08.mp4",
+      "prompt": "Assiette de protéines vue de trois quarts, vapeur légère",
+      "mouvement": "Panoramique montant",
+      "texte": "s'il pose tes protéines tôt.",
+      "transition": "coupe"
+    },
+    {
+      "id": "p09",
+      "section": "couplet 2",
+      "debut_s": 47.0,
+      "fin_s": 52.0,
+      "image": "images/p09.png",
+      "clip": "clips/p09.mp4",
+      "prompt": "Bol de céréales sucrées sous une lumière crue, ambiance publicitaire ironique",
+      "mouvement": "Zoom arrière rapide",
+      "texte": "Pas de magie dans les céréales.",
+      "transition": "coupe"
+    },
+    {
+      "id": "p10",
+      "section": "final",
+      "debut_s": 52.0,
+      "fin_s": 60.0,
+      "image": "images/p10.png",
+      "clip": "clips/p10.mp4",
+      "prompt": "Semainier sur un mur, sept cases cochées, lumière rasante",
+      "mouvement": "Travelling arrière final",
+      "texte": "Tiens ta semaine, pas ton matin.",
+      "transition": "fondu"
+    }
+  ]
+}

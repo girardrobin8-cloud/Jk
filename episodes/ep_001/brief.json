@@ -1,0 +1,25 @@
+{
+  "id": "ep_001",
+  "titre": "Le petit-déjeuner n'est pas obligatoire",
+  "sujet": "Sauter le petit-déjeuner ne ralentit pas le métabolisme",
+  "angle": "Démonter la peur du petit-déjeuner sauté : c'est le total de la journée qui décide, pas l'heure du premier repas.",
+  "public": "Débutants en salle, 18-30 ans, qui suivent des conseils nutrition de réseaux sociaux",
+  "ton": "Direct, sourcé, sans culpabilisation",
+  "format": {
+    "largeur": 1080,
+    "hauteur": 1920,
+    "fps": 30
+  },
+  "duree_visee_s": 60,
+  "points_cles": [
+    "Le métabolisme ne se met pas en veille après quelques heures sans manger",
+    "L'effet thermique dépend de ce qui est mangé dans la journée, pas de sa répartition",
+    "Un petit-déjeuner aide s'il cale l'appétit ou les apports en protéines, pas par magie",
+    "Le seul vrai critère : est-ce que tu tiens ton total quotidien sur la semaine"
+  ],
+  "sources": [
+    "Sievert et al., BMJ 2019 — effet du petit-déjeuner sur le poids et la dépense énergétique",
+    "Betts et al., Am J Clin Nutr 2014 — Bath Breakfast Project"
+  ],
+  "cree_le": "2026-09-09"
+}

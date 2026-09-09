@@ -1,0 +1,30 @@
+# Paroles de ep_001 — « Le petit-déjeuner n'est pas obligatoire »
+# Une section par balise [ ] ; les balises et leur ordre doivent coller à
+# "structure" dans song_plan.json. Les lignes vides séparent les phrases
+# chantées, les lignes commençant par # sont des notes et ne sont pas chantées.
+
+[intro]
+On t'a dit que sauter le matin
+te coûterait tes progrès.
+
+[couplet 1]
+Le corps ne se met pas en veille
+parce que l'assiette arrive plus tard.
+Quatre heures sans manger, ce n'est pas un jeûne,
+c'est juste une matinée.
+
+[refrain]
+Ce n'est pas l'heure qui compte,
+c'est le total du jour.
+Mange à huit heures ou à midi,
+la balance ne lit pas ta montre.
+
+[couplet 2]
+Le petit-déj aide s'il te cale,
+s'il pose tes protéines tôt.
+Pas de magie dans les céréales,
+juste des calories comme les autres.
+
+[final]
+Tiens ta semaine, pas ton matin.
+Le reste, c'est du décor.
