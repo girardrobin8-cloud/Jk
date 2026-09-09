@@ -2,7 +2,13 @@
   "episode": "ep_001",
   "titre": "Le petit-déjeuner n'est pas obligatoire",
   "description": "Sauter le petit-déjeuner ne met pas ton métabolisme en veille. Ce qui décide, c'est le total de la journée, pas l'heure du premier repas.",
-  "mots_cles": ["petit-déjeuner", "métabolisme", "déficit calorique", "protéines", "nutrition"],
+  "mots_cles": [
+    "petit-déjeuner",
+    "métabolisme",
+    "déficit calorique",
+    "protéines",
+    "nutrition"
+  ],
   "hashtags": ["#nutrition", "#musculation", "#pertedepoids", "#petitdejeuner"],
   "format": "1080x1920",
   "duree_s": 60.0,

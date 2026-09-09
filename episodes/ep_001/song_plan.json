@@ -8,11 +8,36 @@
   "duree_visee_s": 60,
   "prompt": "Chanson française courte, pop électro minimaliste à 96 BPM en La mineur. Voix d'homme grave, diction nette, peu d'effets. Couplets parlés-chantés, refrain plus ouvert. Pas de cuivres, pas de guitare acoustique.",
   "structure": [
-    { "section": "intro", "debut_s": 0.0, "duree_s": 6.0, "role": "Poser la croyance à démonter" },
-    { "section": "couplet 1", "debut_s": 6.0, "duree_s": 16.0, "role": "Le métabolisme ne s'arrête pas" },
-    { "section": "refrain", "debut_s": 22.0, "duree_s": 14.0, "role": "Le total quotidien décide" },
-    { "section": "couplet 2", "debut_s": 36.0, "duree_s": 16.0, "role": "Quand le petit-déjeuner sert vraiment" },
-    { "section": "final", "debut_s": 52.0, "duree_s": 8.0, "role": "Chute et conclusion" }
+    {
+      "section": "intro",
+      "debut_s": 0.0,
+      "duree_s": 6.0,
+      "role": "Poser la croyance à démonter"
+    },
+    {
+      "section": "couplet 1",
+      "debut_s": 6.0,
+      "duree_s": 16.0,
+      "role": "Le métabolisme ne s'arrête pas"
+    },
+    {
+      "section": "refrain",
+      "debut_s": 22.0,
+      "duree_s": 14.0,
+      "role": "Le total quotidien décide"
+    },
+    {
+      "section": "couplet 2",
+      "debut_s": 36.0,
+      "duree_s": 16.0,
+      "role": "Quand le petit-déjeuner sert vraiment"
+    },
+    {
+      "section": "final",
+      "debut_s": 52.0,
+      "duree_s": 8.0,
+      "role": "Chute et conclusion"
+    }
   ],
   "sortie": "song.mp3"
 }
