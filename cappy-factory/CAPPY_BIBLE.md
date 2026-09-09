@@ -1,136 +1,171 @@
-# Cappy — la bible
+# Cappy — Character Bible
 
-Le document de référence de la série : qui est Cappy, à quoi ressemble son
-monde, ce qu'un épisode a le droit de faire. Tout ce qui se génère — paroles,
-images, clips — doit pouvoir se justifier ici. Quand un épisode et la bible se
-contredisent, c'est la bible qui gagne, ou c'est la bible qu'on change
-sciemment.
+The reference for the series. Everything generated — lyrics, images, clips —
+must be justifiable from this file. When an episode and the bible disagree, the
+bible wins, or the bible gets changed on purpose.
 
-## Le pitch
+Visual reference: [`reference/cappy_character_sheet.png`](reference/cappy_character_sheet.png)
+— views, expressions, accessories and palette on one sheet. When a prompt and
+the sheet disagree, the sheet wins.
 
-Un petit personnage à chapeau de champignon vit seul dans une cabane en bois,
-au bord d'un ruisseau. Chaque épisode est une journée sans histoire : il se
-réveille, il marche, il regarde, il rentre. Une chanson douce porte le tout.
-Format vertical, une minute, aucune parole dite — seulement chantée.
+## The pitch
 
-Ce n'est pas une série d'aventures. Il ne se passe presque rien, et c'est le
-sujet.
+Cappy is a small capybara with big dreams. Every episode is a 60-second sung
+story about a gentle adventure: a river, a forest, a mountain, a new friend.
+No dialogue, no villain, no peril. A kinder world, one minute at a time.
 
 ## Cappy
 
-Ce qui ne change jamais, d'un plan à l'autre comme d'un épisode à l'autre :
+What never changes, from shot to shot and episode to episode:
 
-- **Taille** — trente centimètres. Le monde est vu d'en bas : les fougères sont
-  hautes, les marches de la cabane sont des obstacles.
-- **Corps** — rond, beige crème, lisse, sans poils. Bras courts, jambes
-  courtes, pieds nus et larges.
-- **Chapeau** — un chapeau de champignon rouge-orangé mat, un peu trop grand
-  pour lui, six taches crème irrégulières, bords souples qui bougent quand il
-  marche. Il ne l'enlève jamais, il ne tombe jamais.
-- **Yeux** — deux points noirs ronds, très écartés. **Pas de bouche.** Tout
-  passe par la posture et l'inclinaison du chapeau.
-- **Besace** — une petite besace en toile écrue, portée en bandoulière. Elle est
-  toujours là, même quand elle ne sert à rien.
-- **Démarche** — lente, un léger dandinement. Il ne court pas. Il ne saute pas.
+- **Species** — a small capybara, chubby proportions, standing upright.
+- **Fur** — warm caramel brown, soft and slightly fuzzy at the edges.
+- **Eyes** — large, glossy, dark, wide apart. They carry every expression.
+- **Muzzle** — rounded, dark brown nose, a few fine whiskers.
+- **Ears** — small, rounded, set high.
+- **Hoodie** — sage green, oversized, cream drawstrings. Iconic, always worn.
+- **Backpack** — brown leather, worn on both shoulders, small tree emblem on
+  the front pocket. Always there, even when it serves no purpose.
 
-### Le bloc verrouillé
+### The locked block
 
-À coller **au début de chaque `image_prompt`**, mot pour mot. C'est ce qui tient
-la ressemblance d'un plan à l'autre ; le reste du prompt décrit la scène.
+Paste this at the **start of every `image_prompt`**, word for word. It is what
+holds the likeness together across shots; the rest of the prompt describes the
+scene.
 
 ```
-Cappy, a small round mushroom character 30 cm tall, cream-beige smooth body,
-short arms and wide bare feet, oversized soft red-orange mushroom cap with six
-irregular cream spots, two small round black eyes, no mouth, tiny woven satchel
-across the chest; hand-painted gouache storybook style, warm natural light,
-soft grain, vertical 9:16 composition
+Cappy, a small chubby capybara character with warm caramel brown fur, large
+glossy dark eyes, rounded muzzle, small ears, wearing an oversized sage green
+hoodie with cream drawstrings and a brown leather backpack with a small tree
+emblem; cinematic high-end 3D animated movie look, warm lighting, cute
+expressive face, family friendly, rich environmental detail, shallow depth of
+field, horizontal 16:9 composition
 ```
 
-Et ce qu'on refuse, à passer en négatif : `no text, no logos, no other people,
-no modern objects, no glossy 3D render, no harsh contrast, no motion blur`.
+Negative prompt, every time: `no text, no logos, no humans, no scary imagery,
+no dark or moody lighting, no photorealistic animal fur, no flat 2D cartoon,
+no distorted anatomy`.
 
-## Le monde
+### Expressions
 
-- **La cabane** — une seule pièce en rondins, un lit bas, une fenêtre carrée à
-  l'est, une table, une théière. Identique dans tous les épisodes : c'est le
-  décor le plus reconnaissable de la série, il ne se réaménage pas.
-- **Le ruisseau** — peu profond, à dix pas de la porte, des galets ronds, on y
-  marche pieds nus.
-- **La clairière, les fougères, la colline** — le reste du monde tient en trois
-  lieux. On n'en ajoute pas un quatrième sans l'écrire ici.
-- **Les saisons** — un épisode se passe dans une seule saison, décidée dans le
-  brief. L'été est la saison par défaut.
-- **Les autres** — pas d'humains, jamais. Des animaux muets, de passage : une
-  grenouille, un héron, des lucioles. Ils ne parlent pas et ne deviennent pas
-  des personnages.
+Eight, and no others. Named in the shot's `scene` field so the generation is
+deliberate rather than accidental.
 
-## Le ton
+| Expression | When |
+| --- | --- |
+| Happy | The default. Most shots. |
+| Surprised | A discovery, the start of a chorus. |
+| Sad | Brief only, always resolved before the episode ends. |
+| Mischievous | A small harmless trick. |
+| Curious | Cappy looking at something new. Very common. |
+| Determined | Climbing, walking uphill, setting off. |
+| Amazed | The big reveal shot: a view, a mountain, a night sky. |
+| Sleepy | The closing shot, almost always. |
 
-Ce que la série fait : regarder, attendre, refaire les mêmes gestes.
+### Accessories
 
-Ce qu'elle ne fait pas, et c'est ferme :
+- **Always** — the green hoodie and the leather backpack.
+- **Optional** — the coffee cup, the brown cap. One per episode at most.
+- **Story props** — a leaf (his favourite snack), a croissant (his weakness),
+  a rubber duck (his best friend), a globe (he wants to travel), a camera (he
+  explores the world). One props at a time, and it should be the reason the
+  episode exists.
 
-- pas de dialogue, pas de voix off, pas de texte à l'écran ;
-- pas de méchant, pas de danger, pas de tension à résoudre ;
-- pas de gag, pas de chute comique ;
-- pas de coupe rapide, pas de zoom brusque, pas de musique qui monte ;
-- pas de morale à la fin.
+### Palette
 
-Si un épisode a besoin d'un conflit pour tenir, c'est que la chanson n'est pas
-assez bonne.
+Four colours, approximated from the sheet — confirm the exact values before the
+first render.
 
-## La chanson
+| Role | Approx. |
+| --- | --- |
+| Fur, caramel brown | `#A9763F` |
+| Hoodie, sage green | `#7C8F63` |
+| Cream, drawstrings and highlights | `#EFDFB8` |
+| Dark brown, nose, outlines, leather | `#4A3728` |
 
-- **Langue** — anglais. C'est la seule chose qui parle dans la série.
-- **Style** — folk douce, guitare nylon, voix proche et basse en volume, un peu
-  de souffle. Tempo entre 70 et 80 BPM.
-- **Durée** — une minute, jamais plus.
-- **Structure** — intro instrumentale, couplet, refrain, couplet, sortie. Le
-  refrain revient une seule fois : c'est ce qui garde la minute calme.
-- **Sujet** — ce que Cappy fait ce jour-là, à la deuxième personne. Pas de
-  narration à la troisième personne, pas de « je ».
+## The world
 
-## La grammaire visuelle
+- **Themes** — nature, friendship, kindness, exploration, positive adventures,
+  animals.
+- **Places** — rivers, forests, mountains. A new location per episode is fine,
+  as long as it belongs to those three families.
+- **Other characters** — animals only, silent, passing through. No humans, ever.
+- **Time** — one episode is one continuous stretch of time, moving forward. The
+  light never goes backwards from evening to morning.
 
-- **Format** — 1080 × 1920, 30 images par seconde.
-- **Style** — gouache peinte à la main, grain visible, contours doux. Jamais de
-  rendu 3D lisse.
-- **Lumière** — l'heure de la journée est décidée par plan et avance dans le
-  sens de la journée : on ne repasse pas du soir au matin.
-- **Caméra** — **un seul mouvement par plan**, lent : travelling avant,
-  panoramique, ou fixe. Rien d'autre.
-- **Échelle** — un plan large pour ouvrir, un plan large pour fermer. Entre les
-  deux, des plans moyens à hauteur de Cappy.
+## Tone
 
-## L'épisode
+Made for young children and families. What the series never does:
 
-- Entre 55 et 65 secondes, dix à douze plans, de trois à huit secondes chacun.
-- **Le premier plan est instrumental** : `lyrics` vide, on installe le lieu
-  avant que la voix arrive.
-- Le dernier plan s'éloigne et laisse la musique finir seule.
-- Les plans sont bout à bout, sans trou ni recouvrement, du début à la fin de
-  la chanson.
+- no dialogue, no voice-over, no on-screen text;
+- no villain, no danger, no conflict to resolve;
+- no sarcasm, no adult jokes;
+- no fast cuts, no whip pans, no music that swells for tension;
+- no moral spelled out at the end.
 
-Le détail des fichiers — `brief.json`, `lyrics.txt`, `song_plan.json`,
-`timeline.json` — est décrit dans `episodes/README.md`. La bible dit quoi
-raconter, `episodes/README.md` dit où l'écrire.
+## The song
 
-## Continuité
+- **Language** — English, simple vocabulary a five-year-old follows.
+- **Style** — acoustic pop: ukulele, piano, bells, light drums.
+- **Mood** — positive, warm, never frantic.
+- **Chorus** — catchy, repeated, the one line a child sings back.
+- **Length** — 60 seconds exactly.
+- **Point of view** — second person, addressed to Cappy or to the listener.
 
-Trois choses se vérifient à la relecture d'un épisode, avant de générer quoi
-que ce soit :
+## Visual grammar
 
-1. Le bloc verrouillé est en tête de **chaque** `image_prompt`.
-2. La cabane, le chapeau et la besace sont ceux d'hier.
-3. La journée avance dans un seul sens, du matin vers le soir.
+- **Format** — 16:9 horizontal, for YouTube.
+- **Look** — cinematic high-end 3D animated movie, the register of a feature
+  film, not a game engine.
+- **Light** — warm, natural, generous. Golden hour is the house default.
+- **Depth** — shallow depth of field, soft background.
+- **Detail** — rich environments: foliage, water, dust in the light, texture.
+- **Camera** — one slow move per shot, and one only: push in, pan, or locked
+  off. Nothing else.
+- **Scale** — Cappy is small. Frame him from low angles, with tall grass, high
+  ferns, big trees.
 
-## Ce qui reste à trancher
+## The episode
 
-À décider avant le deuxième épisode, parce que chaque épisode produit rend le
-changement plus cher :
+60 seconds, **12 scenes of 5 seconds**, no exception.
 
-- Le nom de la série, et s'il est différent du nom du personnage.
-- La plateforme visée en premier, et donc la cadence de publication.
-- Un cycle fermé — quatre saisons, quatre épisodes — ou une série ouverte.
-- Si `cappy-factory` est un projet à part ou si la série vit dans `episodes/`
-  du dépôt `Jk`, à côté des vidéos existantes.
+| Scene | Time | Role |
+| --- | --- | --- |
+| 1 | 0–5 | Wake up, establish the place. Usually instrumental. |
+| 2–3 | 5–15 | Set off. First verse. |
+| 4–6 | 15–30 | The journey, the discovery. Chorus lands here. |
+| 7–9 | 30–45 | The friend, the prop, the small event. Second verse. |
+| 10–11 | 45–55 | Chorus back, the widest and most beautiful shot. |
+| 12 | 55–60 | Home, sleepy, the music finishes alone. |
+
+Shots are back to back, no gap and no overlap, from the first frame to the last
+note.
+
+## Continuity checklist
+
+Before generating anything for an episode:
+
+1. The locked block opens **every** `image_prompt`.
+2. Hoodie, backpack and tree emblem are unchanged.
+3. One accessory or prop at most, and it earns its place.
+4. The expression of each shot is one of the eight, and it is written down.
+5. Time moves in one direction across the twelve scenes.
+
+## Where episodes live
+
+The file layout of an episode — `brief.json`, `lyrics.txt`, `song_plan.json`,
+`timeline.json` — is described in [`../episodes/README.md`](../episodes/README.md).
+The bible says what to tell; that README says where to write it.
+
+Two things there still assume the older, vertical format and will need updating
+when the first Cappy episode is written: the 1080 × 1920 checks in
+`scripts/episode.py`, and the French example episode `ep_001`.
+
+## Open questions
+
+- The channel name, and whether it differs from the character's name.
+- Upload cadence, and how many episodes exist before the first one goes out.
+- Whether the series lives in `cappy-factory/` or in `episodes/` alongside the
+  existing videos.
+- The exact palette values, to be read off the source file rather than eyeballed
+  from the sheet.
