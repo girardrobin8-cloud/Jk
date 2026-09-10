@@ -45,42 +45,54 @@ const fenetre = (t: number, id: string) => {
 };
 
 // ── Repères internes, en secondes absolues ───────────────────────────────
+/**
+ * Chaque valeur est LUE sur les sous-titres incrustés de Robin, pas estimée.
+ * Le commentaire cite le mot visé et l'instant où il s'affiche à l'écran, ce
+ * qui permet de vérifier un calage sans relancer l'extraction.
+ *
+ * Règle tenue partout : l'élément COMMENCE à monter deux à quatre dixièmes
+ * avant son mot, pour être en place quand le spectateur le lit.
+ */
 const T = {
-  // B2 — 6,59 → 12,96
-  perso: 6.35,
-  riz: 6.8, // « Manger des glucides… »              [6,59 → 8,55]
-  courbe: 7.7, // « …fait grimper ta glycémie »
-  insuline: 8.5, // « ton corps sécrète de l'insuline »[8,55 → 11,39]
-  descente: 9.5, // « …pour la faire redescendre »
-  stockage: 11.2, // « en stockant cette énergie »    [11,39 → 12,96]
+  // ── B2 — 4,5 → 12,8
+  perso: 4.5,
+  riz: 4.9, // « glucides »                          affiché 5,1
+  courbe: 5.7, // « grimper ta glycémie »            5,9 → 6,3
+  insuline: 8.3, // « l'insuline »                   8,7
+  descente: 9.2, // « pour la faire redescendre »    9,4 → 9,6
+  stockage: 11.2, // « stocker cette énergie »       11,5 → 12,1
 
-  // B3 — 13,16 → 20,51
-  dedouble: 13.3, // « stocke aussi bien du glycogène que du gras » [13,16 → 16,42]
-  vraiFacteur: 16.2, // « Le vrai facteur »           [16,42 → 18,75]
-  balance: 18.6, // « peu importe la source »         [18,75 → 20,51]
+  // ── B3 — 12,8 → 26,2 : le raccourci, puis sa réfutation
+  raccourci: 12.9, // « là est né le raccourci »     13,0 → 13,7
+  plusInsuline: 14.4, // « plus d'insuline sécrétée » 14,7 → 15,7
+  plusGraisse: 16.1, // « plus de graisse stockée »  16,4 → 17,3
+  dedouble: 17.6, // « elle stocke aussi bien… »     17,8 → 20,7
+  vraiFacteur: 20.9, // « le vrai facteur »          21,2 → 21,6
+  balance: 22.7, // « ton bilan calorique total »    23,1 → 24,0
 
-  // B4 — 20,84 → 32,92
-  jauge: 20.9, // « remplissent d'abord ton glycogène »[20,84 → 22,81]
-  remplit: 21.3,
-  dose: 23.0, // « ton carburant à l'entraînement »
-  debordement: 24.5, // « une fois ces réserves pleines »[24,68 → 30,18]
-  graisse: 26.6, // « se transformer en graisse »
-  marginal: 30.0, // « un processus marginal »        [30,18 → 32,92]
+  // ── B4 — 26,2 → 37,7
+  jauge: 26.2, // « tes glucides »                   26,3
+  remplit: 26.7, // « remplissent d'abord »          27,2 → 28,0
+  dose: 28.4, // « ton carburant pour l'entraînement » 28,9 → 29,7
+  debordement: 32.2, // « l'excès peut, en théorie »  32,5 → 33,5
+  graisse: 33.9, // « se transformer en graisse »    34,2 → 34,7
+  marginal: 35.0, // « un processus marginal »       35,4 → 36,0
 
-  // B5 — 33,06 → 45,56
-  groupes: 33.0, // « une méta-analyse a réuni dix-neuf essais »
-  essais: 33.5,
-  personnes: 34.9, // « plus de trois mille deux cents »[34,99 → 36,66]
-  etiquettes: 36.5, // « pauvre en glucides / équilibré »[36,66 → 40,02]
-  barres: 39.9, // « à calories strictement égales »  [40,02 → 41,85]
-  carte: 41.7, // « Résultat quasi identique »        [41,85 → 43,41]
-  carteDeux: 43.4, // « six mois ou deux ans »        [43,41 → 45,56]
+  // ── B5 — 37,7 → 54,85
+  meta: 37.7, // « on va prendre par exemple une méta-analyse » 37,9 → 39,2
+  essais: 39.9, // « a réuni 19 essais »             40,5 → 41,0
+  personnes: 41.3, // « plus de 3200 personnes »     41,9 → 42,7
+  groupes: 43.0, // « un régime pauvre en glucides » 43,5 → 44,3
+  etiquettes: 44.8, // « contre un régime équilibré » 45,3 → 45,7
+  egales: 46.3, // « à calories strictement égales » 47,3 → 48,2
+  barres: 48.8, // « le résultat… quasi identique »  49,4 → 51,0
+  carte: 51.3, // « après 6 ou 2 ans d'expérience »  51,5 → 53,5
 
-  // B6 — 45,88 → 53,41
-  haltere: 45.7,
-  intensite: 46.4,
-  chute: 47.4, // la jauge redescend, l'haltère se ternit
-  duree: 50.8, // « donc tes résultats sur la durée » [50,90 → 53,41]
+  // ── B6 — 54,85 → 59,65
+  haltere: 54.85, // « par contre, les couper à l'excès » 54,9 → 55,9
+  intensite: 55.6,
+  chute: 56.2, // « baisse ton intensité »           56,5 → 56,9
+  duree: 58.0, // « tes résultats sur la durée »     58,5 → 59,2
 };
 
 const Txt: React.FC<{
@@ -220,7 +232,10 @@ export const Animation: React.FC = () => {
   })();
 
   // ── B3 ────────────────────────────────────────────────────────────────
-  const dedouble = rd(t, T.dedouble, T.dedouble + 0.9);
+  const raccourci = rd(t, T.raccourci, T.raccourci + 0.5) * (1 - rd(t, T.dedouble - 0.4, T.dedouble));
+  const plusInsuline = rd(t, T.plusInsuline, T.plusInsuline + 0.5);
+  const plusGraisse = rd(t, T.plusGraisse, T.plusGraisse + 0.5);
+  const dedouble = rd(t, T.dedouble, T.dedouble + 0.9) * (1 - rd(t, T.vraiFacteur - 0.4, T.vraiFacteur));
   const vraiFacteur = rd(t, T.vraiFacteur, T.vraiFacteur + 0.5) * (1 - rd(t, T.balance - 0.45, T.balance));
   const balance = rd(t, T.balance, T.balance + 0.8);
 
@@ -240,13 +255,14 @@ export const Animation: React.FC = () => {
   const gx = melange(CX, 410, debordement);
 
   // ── B5 ────────────────────────────────────────────────────────────────
+  const meta = rd(t, T.meta, T.meta + 0.6);
   const groupes = rd(t, T.groupes, T.groupes + 0.7);
   const essais = rd(t, T.essais, T.essais + 0.5);
   const personnes = rd(t, T.personnes, T.personnes + 0.5);
   const etiquettes = rd(t, T.etiquettes, T.etiquettes + 0.6);
-  const barres = rd(t, T.barres, T.barres + 1.0);
-  const carte = rd(t, T.carte, T.carte + 0.5);
-  const carteDeux = rd(t, T.carteDeux, T.carteDeux + 0.6);
+  const egales = rd(t, T.egales, T.egales + 0.6);
+  const barres = rd(t, T.barres, T.barres + 1.2);
+  const carte = rd(t, T.carte, T.carte + 0.6);
 
   // ── B6 ────────────────────────────────────────────────────────────────
   const haltere = rd(t, T.haltere, T.haltere + 0.5);
@@ -310,9 +326,52 @@ export const Animation: React.FC = () => {
         </Txt>
       </Panneau>
 
-      {/* ══ B3 — la bascule ════════════════════════════════════════════ */}
+      {/* ══ B3 — le raccourci, puis sa réfutation ═════════════════════ */}
+      {/* Quatre temps, dans l'ordre où Robin les énonce. Le premier — « là est
+          né le raccourci » — n'existait pas au brief : c'est une idée que Robin
+          a ajoutée en tournant, et elle a besoin de sa propre image, sans quoi
+          l'animation illustrerait une phrase qu'il ne dit pas. */}
       <Panneau e={b3}>
-        {vraiFacteur > 0.02 ? (
+        {raccourci > 0.02 ? (
+          <>
+            <Txt x={CX} y={BANDES.enTete.haut + 60} taille={40} couleur={M.gris} espace={5} opacity={raccourci}>
+              LÀ EST NÉ LE RACCOURCI
+            </Txt>
+            {plusInsuline > 0 && (
+              <g opacity={plusInsuline * raccourci} transform={`translate(0 ${melange(-30, 0, plusInsuline)})`}>
+                <Case x={CX} y={800} l={560} h={130} couleur={CYAN} />
+                <Txt x={CX} y={800} taille={44} couleur={CYAN} espace={2}>
+                  + D'INSULINE
+                </Txt>
+              </g>
+            )}
+            {plusGraisse > 0 && (
+              <g opacity={plusGraisse * raccourci}>
+                <path
+                  d={`M ${CX} 880 L ${CX} ${melange(880, 1020, plusGraisse)}`}
+                  stroke={M.gris}
+                  strokeWidth={7}
+                  strokeLinecap="round"
+                />
+                <path
+                  d={`M ${CX - 20} 992 L ${CX} 1026 L ${CX + 20} 992`}
+                  fill="none"
+                  stroke={M.gris}
+                  strokeWidth={7}
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  opacity={rd(plusGraisse, 0.7, 1)}
+                />
+                <g transform={`translate(0 ${melange(30, 0, plusGraisse)})`}>
+                  <Case x={CX} y={1130} l={560} h={130} couleur={AMBRE} />
+                  <Txt x={CX} y={1130} taille={44} couleur={AMBRE} espace={2}>
+                    + DE GRAISSE
+                  </Txt>
+                </g>
+              </g>
+            )}
+          </>
+        ) : vraiFacteur > 0.02 ? (
           <Txt x={CX} y={960} taille={melange(96, 118, vraiFacteur)} couleur={NEON} espace={4} opacity={vraiFacteur}>
             LE VRAI FACTEUR
           </Txt>
@@ -346,7 +405,7 @@ export const Animation: React.FC = () => {
         ) : (
           <>
             <Txt x={CX} y={BANDES.enTete.haut + 60} taille={40} couleur={M.gris} espace={5} opacity={dedouble}>
-              L'INSULINE STOCKE LES DEUX
+              SAUF QU'ELLE STOCKE LES DEUX
             </Txt>
             {[
               { x: melange(CX, 300, dedouble), l: "GLYCOGÈNE", c: NEON },
@@ -415,6 +474,9 @@ export const Animation: React.FC = () => {
 
       {/* ══ B5 — la preuve ═════════════════════════════════════════════ */}
       <Panneau e={b5}>
+        <Txt x={CX} y={BANDES.enTete.haut - 46} taille={36} couleur={M.gris} espace={5} opacity={meta}>
+          UNE MÉTA-ANALYSE
+        </Txt>
         <Txt x={CX} y={BANDES.enTete.haut + 34} taille={melange(66, 76, essais)} couleur={M.texte} espace={2} opacity={essais}>
           19 ESSAIS
         </Txt>
@@ -464,11 +526,23 @@ export const Animation: React.FC = () => {
             )}
           </g>
         ))}
+        {egales > 0 && (
+          <Txt x={CX} y={1284} taille={34} couleur={M.gris} espace={3} opacity={egales * (1 - rd(t, T.carte - 0.3, T.carte))}>
+            À CALORIES STRICTEMENT ÉGALES
+          </Txt>
+        )}
         {carte > 0 && (
           <g opacity={carte}>
-            <Case x={CX} y={BANDES.socle.haut + 70} l={640} h={116} couleur={M.texte} />
-            <Txt x={CX} y={BANDES.socle.haut + 70} taille={42} couleur={M.texte} espace={3}>
-              {carteDeux > 0.5 ? "IDENTIQUE — 2 ANS" : "IDENTIQUE — 6 MOIS"}
+            <Case x={CX} y={BANDES.socle.haut + 72} l={640} h={150} couleur={M.texte} />
+            {/* Le libellé suit ce que Robin DIT — « après 6 ou 2 ans
+                d'expérience » — et non ce que prévoyait le brief. Ses
+                sous-titres sont à l'écran : une carte qui les contredirait se
+                verrait immédiatement. */}
+            <Txt x={CX} y={BANDES.socle.haut + 44} taille={40} couleur={M.texte} espace={3}>
+              QUASI IDENTIQUE
+            </Txt>
+            <Txt x={CX} y={BANDES.socle.haut + 100} taille={34} couleur={M.gris} espace={3}>
+              APRÈS 6 OU 2 ANS
             </Txt>
           </g>
         )}

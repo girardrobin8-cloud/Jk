@@ -1,55 +1,51 @@
 /**
- * Repères de montage — Reel Jour 1, « On m'a dit d'arrêter le riz pour sécher ».
+ * Repères de montage — Reel Jour 1, « arrêter les pâtes ou le riz pour sécher ».
  *
- * Bornes MESURÉES sur la piste NETTOYÉE (56,84 s), pas sur le rush d'origine
- * (62,72 s) : le brief autorise à resserrer les silences, et les bornes doivent
- * décrire le montage final, pas la prise brute.
+ * ── Ces bornes sont LUES, pas déduites ──────────────────────────────────
  *
- * ── Ce que le brief demandait et que je n'ai pas pu faire ────────────────
+ * Robin a livré une seconde version de la vidéo avec ses sous-titres incrustés,
+ * mot à mot en karaoké. Ce sont eux la source : la bande de sous-titres a été
+ * extraite à 10 images par seconde, les images dédupliquées sur un masque du
+ * jaune du texte — le fond bouge derrière, une comparaison brute échouait — et
+ * les 260 vues restantes relues une à une.
  *
- * L'étape 0 exige une transcription par reconnaissance vocale, pour découvrir
- * ce que Robin a RÉELLEMENT dit plutôt que de faire confiance au script. C'est
- * impossible dans cet environnement, et ce n'est pas faute d'avoir cherché :
- * les paquets s'installent depuis PyPI, mais les poids des modèles viennent
- * d'openaipublic (whisper), de HuggingFace (faster-whisper) ou d'alphacephei
- * (vosk), tous bloqués par la politique réseau. pocketsphinx s'installe avec un
- * modèle embarqué, mais il est anglais et date d'une autre époque.
+ * C'est mieux qu'une reconnaissance vocale : ce sont les mots ET les timecodes
+ * réels, tels qu'ils s'affichent à l'écran pour le spectateur.
  *
- * ── Ce que j'ai fait à la place, et pourquoi c'est suffisant ici ─────────
+ * ── Ce que ça corrige ───────────────────────────────────────────────────
  *
- * Le brief craint que Robin ait improvisé. La mesure dit le contraire, et le
- * raisonnement tient sans transcription :
+ * Robin n'a pas suivi le script, et l'écart n'était pas anodin :
  *
- *   script prévu       274 syllabes  →  50,9 s attendues à son débit habituel
- *   prise réelle                        62,7 s
- *   silences > 0,5 s   13, totalisant    8,8 s
- *   prise moins silences                53,9 s
+ *  · le hook s'arrête à 4,4 s et non 6,1 — « chiffres à l'appui » a sauté ;
+ *  · « en contrepartie » est ajouté dans le beat 2 ;
+ *  · une idée ENTIÈRE est apparue au beat 3, absente du brief : « là est né le
+ *    raccourci — plus d'insuline sécrétée, plus de graisse stockée ». Elle
+ *    précède l'argument prévu et demande sa propre séquence ;
+ *  · la conclusion de l'étude est « après 6 ou 2 ans d'expérience », et non
+ *    « après 6 mois ou après 2 ans » ;
+ *  · le CTA est « envoie-moi GLUCIDE en DM si jamais tu veux qu'on parle de ton
+ *    profil ».
  *
- * L'écart de douze secondes s'explique entièrement par des hésitations, pas par
- * des mots en plus. Et l'alignement le confirme après coup : les sept beats
- * tiennent entre 6,4 et 7,8 syllabes par seconde, dispersion 0,062. Un script
- * qui ne serait pas celui prononcé ne produirait pas cette régularité — c'est
- * le principe même de la méthode, décrite en tête de scripts/caler.py.
+ * Mon estimation précédente, fondée sur le script du brief, plaçait les bornes
+ * jusqu'à deux secondes à côté. Elle ne pouvait pas faire mieux : l'arithmétique
+ * des syllabes ne voit que le VOLUME de parole, pas les mots. Une tournure
+ * remplacée par une autre de longueur voisine lui est invisible.
  *
- * Reste une limite honnête : si Robin a remplacé une tournure par une autre de
- * longueur voisine, la mesure ne peut pas le voir. Les bornes de BEATS sont
- * sûres, les repères internes de Animation.tsx le sont un peu moins.
+ * ── Silences non resserrés, et pourquoi ─────────────────────────────────
  *
- * ── Traitements appliqués à la piste ────────────────────────────────────
+ * L'étape 2 du brief demande de raboter les silences de plus d'une demi-seconde.
+ * Ce n'est PAS fait sur cette version, et c'est un choix : les sous-titres sont
+ * incrustés dans l'image, calés à l'image près sur la voix. Couper dans la piste
+ * les décalerait de leurs mots, et Robin a demandé que tout soit coordonné avant
+ * tout. Le resserrement reste faisable, mais il faudrait alors relire les
+ * sous-titres après coupe — c'est un second passage, pas un réglage.
  *
- * Étape 1 : débruitage doux (afftdn) puis normalisation en deux passes
- * (loudnorm), mesurée à -15,9 LUFS pour une cible de -16. Ni le contenu ni le
- * timing ne bougent.
- * Étape 2 : les 13 silences de plus de 0,5 s ramenés à 0,22 s, soit 5,89 s
- * retirées. Les respirations courtes sont intactes.
- *
- * Palette : la charte du dépôt (src/Muscle/Plan.tsx), plus un cyan secondaire
- * demandé par le brief.
+ * Palette : la charte du dépôt (src/Muscle/Plan.tsx), plus un cyan secondaire.
  */
 
 export const FPS = 30;
-/** Durée de la piste nettoyée. */
-export const DUREE = 56.84;
+/** Durée de la version sous-titrée livrée par Robin. */
+export const DUREE = 64.83;
 
 export type Beat = {
   id: string;
@@ -57,6 +53,7 @@ export type Beat = {
   type: "cam" | "anim";
   debut: number;
   fin: number;
+  /** Transcription relevée sur les sous-titres, mot pour mot. */
   dit: string;
 };
 
@@ -65,59 +62,54 @@ export const BEATS: Beat[] = [
     id: "B1",
     type: "cam",
     debut: 0,
-    fin: 6.14,
-    dit: "On m'a dit d'arrêter le riz et les pâtes pour sécher. Grosse erreur, et je vais te montrer pourquoi, chiffres à l'appui.",
+    fin: 4.5,
+    dit: "On m'a dit d'arrêter les pâtes ou riz pour sécher, c'est une grosse erreur et je vais te montrer pourquoi.",
   },
   {
     id: "B2",
     type: "anim",
-    debut: 6.59,
-    fin: 12.96,
-    dit: "Manger des glucides fait grimper ta glycémie, et ton corps sécrète de l'insuline pour la faire redescendre — notamment en stockant cette énergie.",
+    debut: 4.5,
+    fin: 12.8,
+    dit: "Manger des glucides, ça fait grimper ta glycémie, et en contrepartie ton corps sécrète de l'insuline pour la faire redescendre, notamment par le fait de stocker cette énergie.",
   },
   {
     id: "B3",
     type: "anim",
-    debut: 13.16,
-    fin: 20.51,
-    dit: "Sauf que l'insuline stocke aussi bien du glycogène que du gras. Le vrai facteur, c'est ton bilan calorique global, peu importe la source de tes calories.",
+    debut: 12.8,
+    fin: 26.2,
+    dit: "Là est né le raccourci : plus d'insuline sécrétée, plus de graisse stockée. Sauf que l'insuline, elle stocke aussi bien du glycogène que du gras. Le vrai facteur que tu dois prendre en compte, c'est ton bilan calorique total, peu importe ta source de calories.",
   },
   {
     id: "B4",
     type: "anim",
-    debut: 20.84,
-    fin: 32.92,
-    dit: "Tes glucides remplissent d'abord ton glycogène, ton carburant à l'entraînement. Ce n'est qu'une fois ces réserves pleines que l'excès peut, en théorie, se transformer en graisse — un processus marginal chez la plupart des gens.",
+    debut: 26.2,
+    fin: 37.7,
+    dit: "Tes glucides remplissent d'abord ton glycogène, c'est ton carburant pour l'entraînement. Ce n'est qu'une fois ces réserves pleines que l'excès peut, en théorie, se transformer en graisse — un processus marginal chez la plupart des gens.",
   },
   {
     id: "B5",
     type: "anim",
-    debut: 33.06,
-    fin: 45.56,
-    dit: "Une méta-analyse a réuni 19 essais, plus de 3200 personnes : régime pauvre en glucides contre régime équilibré, à calories strictement égales. Résultat quasi identique, que ce soit après 6 mois ou après 2 ans.",
+    debut: 37.7,
+    fin: 54.85,
+    dit: "On va prendre par exemple une méta-analyse qui a réuni 19 essais, plus de 3200 personnes : un régime pauvre en glucides contre un régime équilibré, et ceci à calories strictement égales. Et ben le résultat de cette analyse, c'est quasi identique, que ce soit après 6 ou 2 ans d'expérience.",
   },
   {
     id: "B6",
     type: "anim",
-    debut: 45.88,
-    fin: 53.41,
+    debut: 54.85,
+    fin: 59.65,
     dit: "Par contre, les couper à l'excès baisse ton intensité à l'entraînement, donc tes résultats sur la durée.",
   },
   {
     id: "B7",
     type: "cam",
-    debut: 53.54,
+    debut: 59.65,
     fin: DUREE,
-    dit: "Envoie-moi GLUCIDES en DM si tu veux qu'on regarde ton dosage.",
+    dit: "Envoie-moi GLUCIDE en DM si jamais tu veux qu'on parle de ton profil.",
   },
 ];
 
-/**
- * Durée des fondus caméra ↔ animation.
- *
- * Le brief interdit le cut sec. Le fondu déborde de part et d'autre de la borne
- * pour que l'image soit déjà en place quand la phrase commence.
- */
-export const FONDU = 0.36;
+/** Durée des fondus caméra ↔ animation. Le brief interdit le cut sec. */
+export const FONDU = 0.34;
 
 export const s = (secondes: number) => Math.round(secondes * FPS);
