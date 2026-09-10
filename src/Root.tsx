@@ -16,6 +16,10 @@ import {
 import { Plage, PLAGE_FRAMES } from "./Plage/Plage";
 import { Carte, CARTE_FRAMES } from "./Carte/Carte";
 import {
+  Montage as Jour1Montage,
+  MONTAGE_FRAMES as JOUR1_FRAMES,
+} from "./Jour1/Montage";
+import {
   Montage as NeatMontage,
   MONTAGE_FRAMES as NEAT_FRAMES,
 } from "./Neat/Montage";
@@ -48,6 +52,20 @@ import { Logo, myCompSchema2 } from "./HelloWorld/Logo";
 export const RemotionRoot: React.FC = () => {
   return (
     <>
+      {/* Reel Jour 1 « arrêter le riz pour sécher » — 56,84 s.
+          Rush nettoyé + motion design par-dessus sur B2..B6.
+          Bornes MESURÉES : python3 scripts/caler.py <wav> jour1
+          Média : public/rushes/jour1.mp4 (hors dépôt, voir reperes.ts).
+          npx remotion render Jour1 */}
+      <Composition
+        id="Jour1"
+        component={Jour1Montage}
+        durationInFrames={JOUR1_FRAMES}
+        fps={30}
+        width={1080}
+        height={1920}
+      />
+
       {/* Miniature 9:16 de la vidéo NEAT — image fixe.
           npx remotion still NeatMiniature miniature.png */}
       <Composition
