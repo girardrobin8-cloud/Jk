@@ -75,9 +75,36 @@ GROUPE_MIN = 0.10  # s
 # Plage balayée pour le seuil de silence, en part du maximum de l'enveloppe de
 # voisement. Voir choisir_seuil().
 SEUILS = [x / 100 for x in range(3, 26)]
+# Bornes de vraisemblance du débit, en syllabes par seconde de PAROLE détectée.
+#
+# Elles ne servent pas à deviner le débit mais à écarter les seuils qui mentent
+# sur ce qu'est la parole. Un seuil trop haut ne retient que les voyelles les
+# plus sonores : il « voit » deux fois moins de parole qu'il n'y en a, et le
+# débit apparent double. Sur le reel « jour 1 », le seuil de 0,25 ne déclarait
+# que 44 % de la piste comme parlée et sortait 10,96 syll/s — avec une
+# dispersion de 0,023, la meilleure de tout le balayage. C'était un mirage :
+# soixante-trois fragments laissent au découpage assez de liberté pour égaliser
+# les débits par accident.
+#
+# La fenêtre est resserrée sur ce que ce dépôt a MESURÉ, et non sur ce qu'un
+# humain peut physiquement produire. Les prises calées ici — sommeil,
+# recomposition, aspartame — tombent toutes entre 6,1 et 6,5 syllabes par
+# seconde de parole. Une fenêtre large de 4 à 9 laissait encore passer les
+# seuils sur-fragmentants : sur le reel « jour 1 », toutes les valeurs de 0,03
+# à 0,21 donnaient une dispersion « fiable » entre 0,042 et 0,106, si bien que
+# le critère de régularité ne départageait plus rien et que le minimum tombait
+# systématiquement du côté fragmenté.
+#
+# Ces bornes ne servent donc pas à deviner le débit : elles écartent les seuils
+# qui mentent sur ce qu'est la parole. Un seuil trop haut ne retient que les
+# voyelles les plus sonores, « voit » deux fois moins de parole qu'il n'y en a,
+# et double le débit apparent. À élargir si un jour une autre voix est montée
+# ici — ce sont les bornes d'un locuteur connu, pas une loi de la phonétique.
+DEBIT_MIN = 5.0
+DEBIT_MAX = 7.0
 # Nombre maximal de groupes de parole qu'un beat peut couvrir. Sert seulement à
 # borner le coût de la programmation dynamique.
-GROUPES_MAX = 10
+GROUPES_MAX = 16
 
 SCRIPTS = {
     # « Le sommeil décide si tu perds du gras ou du muscle ». Attention : les
@@ -218,6 +245,42 @@ SCRIPTS = {
         ("B8", "Donc avant de rajouter une séance de cardio regarde d'abord combien tu bouges le reste de la journée"),
         ("B8", "Parfois huit mille pas de plus valent plus qu'une heure de sport en plus"),
     ],
+    # « Reel Jour 1 — glucides ». Particularité : ce brief-ci exige une
+    # TRANSCRIPTION par reconnaissance vocale, impossible dans cet
+    # environnement — les paquets ASR s'installent depuis PyPI mais leurs poids
+    # viennent d'openaipublic, HuggingFace ou alphacephei, tous bloqués. Ce
+    # script est donc le texte PRÉVU, et l'alignement le corrobore plutôt qu'il
+    # ne le découvre : si les débits obtenus restent réguliers, c'est que Robin
+    # a bien dit ce texte ; s'ils partent dans tous les sens, c'est qu'il a
+    # improvisé et qu'il faudra sa transcription.
+    #
+    # À faire tourner sur la piste NETTOYÉE (silences resserrés), pas sur le
+    # rush d'origine : les bornes doivent être celles du montage final.
+    "jour1": [
+        ("B1", "On m'a dit d'arrêter le riz et les pâtes pour sécher"),
+        ("B1", "Grosse erreur et je vais te montrer pourquoi"),
+        ("B1", "chiffres à l'appui"),
+        ("B2", "Manger des glucides fait grimper ta glycémie"),
+        ("B2", "et ton corps sécrète de l'insuline pour la faire redescendre"),
+        ("B2", "notamment en stockant cette énergie"),
+        ("B3", "Sauf que l'insuline stocke aussi bien du glycogène que du gras"),
+        ("B3", "Le vrai facteur c'est ton bilan calorique global"),
+        ("B3", "peu importe la source de tes calories"),
+        ("B4", "Tes glucides remplissent d'abord ton glycogène"),
+        ("B4", "ton carburant à l'entraînement"),
+        ("B4", "Ce n'est qu'une fois ces réserves pleines que l'excès peut en théorie se transformer en graisse"),
+        ("B4", "un processus marginal chez la plupart des gens"),
+        ("B5", "Une méta-analyse a réuni dix-neuf essais"),
+        ("B5", "plus de trois mille deux cents personnes"),
+        ("B5", "régime pauvre en glucides contre régime équilibré"),
+        ("B5", "à calories strictement égales"),
+        ("B5", "Résultat quasi identique"),
+        ("B5", "que ce soit après six mois ou après deux ans"),
+        ("B6", "Par contre les couper à l'excès baisse ton intensité à l'entraînement"),
+        ("B6", "donc tes résultats sur la durée"),
+        ("B7", "Envoie-moi GLUCIDES en DM"),
+        ("B7", "si tu veux qu'on regarde ton dosage"),
+    ],
 }
 
 VOYELLES = "aeiouyàâäéèêëîïôöùûü"
@@ -353,6 +416,12 @@ def decouper_beats(syl_beat, durees, debit):
                 if c < cout[i + 1][j + l]:
                     cout[i + 1][j + l] = c
                     venant[i + 1][j + l] = j
+    # Aucun découpage ne couvre les m groupes avec nb beats d'au plus
+    # GROUPES_MAX groupes chacun : le seuil testé fragmente trop la parole.
+    # C'est un cas normal du balayage de seuils, pas une erreur — on le signale
+    # par None et l'appelant passe au seuil suivant.
+    if cout[nb][m] == INF:
+        return None
     tranches = []
     j = m
     for i in range(nb, 0, -1):
@@ -406,8 +475,10 @@ def choisir_seuil(env, syl_beat, trace=False):
         durees = [b - a for a, b in groupes]
         debit = sum(syl_beat) / sum(durees)
         tranches = decouper_beats(syl_beat, durees, debit)
+        if tranches is None:
+            continue
         debits = [s / sum(durees[j0:j1]) for s, (j0, j1) in zip(syl_beat, tranches)]
-        essais.append((seuil, dispersion(debits), groupes, tranches))
+        essais.append((seuil, dispersion(debits), groupes, tranches, debit))
     if not essais:
         print(
             "aucun seuil ne laisse assez de groupes de parole pour ce script : "
@@ -416,14 +487,28 @@ def choisir_seuil(env, syl_beat, trace=False):
         )
         sys.exit(3)
 
+    # On écarte d'abord les seuils dont le débit global est invraisemblable.
+    # Ce filtre passe AVANT la comparaison des dispersions : sans lui, un seuil
+    # qui fragmente la parole gagne le concours de régularité tout en décrivant
+    # une élocution que personne ne pourrait produire.
+    plausibles = [e for e in essais if DEBIT_MIN <= e[4] <= DEBIT_MAX]
+    if plausibles:
+        essais = plausibles
+    else:
+        print(
+            f"  aucun seuil ne donne un débit entre {DEBIT_MIN} et {DEBIT_MAX} "
+            "syll/s — le script ne correspond peut-être pas à cette piste.",
+            file=sys.stderr,
+        )
+
     meilleur = None
-    for k, (seuil, brute, groupes, tranches) in enumerate(essais):
+    for k, (seuil, brute, groupes, tranches, debit_g) in enumerate(essais):
         voisins = [e[1] for e in essais[max(0, k - 1) : k + 2]]
         lisse = sorted(voisins)[len(voisins) // 2]
         if trace:
             print(
                 f"  seuil {seuil:.2f} → {len(groupes):3} groupes, "
-                f"dispersion {brute:.3f} (lissée {lisse:.3f})"
+                f"{debit_g:5.2f} syll/s, dispersion {brute:.3f} (lissée {lisse:.3f})"
             )
         # À égalité de valeur lissée, on départage sur la dispersion brute.
         if meilleur is None or (lisse, brute) < (meilleur[0], meilleur[1]):
