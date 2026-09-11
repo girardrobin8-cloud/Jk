@@ -13,11 +13,16 @@ import { BEATS, FONDU } from "./reperes";
  * animation.
  *
  * Règles tenues par la structure :
- *  · aucun chevauchement — chaque bloc a sa bande horizontale réservée ;
+ *  · JAMAIS plus de trois blocs à l'écran. Un beat de dix secondes se joue en
+ *    deux ou trois ÉCRANS successifs, pas en un empilement : les éléments du
+ *    premier écran sortent pendant que ceux du second entrent, et la bascule
+ *    dure six à huit dixièmes — assez pour se lire comme un mouvement ;
+ *  · aucun chevauchement — chaque bloc a sa bande horizontale réservée, et les
+ *    bandes sont séparées d'au moins 90 px ;
+ *  · aucun texte coupé — tout libellé passe par `corps()`, qui rétrécit le
+ *    corps jusqu'à ce que la ligne tienne dans la largeur utile ;
  *  · aucune apparition brutale — tout entre en fondu doublé d'un déplacement
  *    ou d'un changement d'échelle ;
- *  · jamais figé plus de deux ou trois secondes — le beat le plus long (B4,
- *    douze secondes) est découpé en cinq micro-événements ;
  *  · aucun bruitage — rien à faire ici, le montage ne porte que la voix.
  */
 
@@ -32,11 +37,18 @@ const CYAN = "#5BD6E0"; // secondaire demandé par le brief, absent de la charte
 const NEON = M.bleuClair;
 const AMBRE = M.ambre;
 
+/**
+ * Les bandes horizontales réservées. Rien ne les enjambe : un bloc appartient à
+ * une bande et une seule, ce qui rend le non-chevauchement structurel plutôt que
+ * vérifié à l'œil.
+ */
 const BANDES = {
-  enTete: { haut: 250, bas: 470 },
-  scene: { haut: 560, bas: 1240 },
-  socle: { haut: 1330, bas: 1600 },
+  enTete: { haut: 250, bas: 430 },
+  scene: { haut: 560, bas: 1270 },
+  socle: { haut: 1360, bas: 1620 },
 };
+const EN_TETE = BANDES.enTete.haut + 50;
+const SOCLE = BANDES.socle.haut + 140;
 
 /** Fenêtre d'un beat, fondus compris. */
 const fenetre = (t: number, id: string) => {
@@ -95,6 +107,24 @@ const T = {
   duree: 58.0, // « tes résultats sur la durée »     58,5 → 59,2
 };
 
+/**
+ * Largeur utile, marges comprises. Tout texte qui la dépasse est coupé à
+ * l'écran — c'est ce qui est arrivé à « LE VRAI FACTEUR », posé à 118 px pour
+ * quinze caractères, soit près de 1150 px dans un cadre de 1080.
+ */
+const UTILE = 940;
+
+/**
+ * Le plus grand corps auquel `texte` tient dans `large`, plafonné à `vise`.
+ *
+ * L'approximation — 0,62 em par capitale dans cette graisse — est volontairement
+ * pessimiste : mieux vaut deux points de trop petit qu'une lettre mangée.
+ */
+const corps = (texte: string, vise: number, espace = 0, large = UTILE) => {
+  const dispo = large - texte.length * espace;
+  return Math.min(vise, Math.floor(dispo / (texte.length * 0.62)));
+};
+
 const Txt: React.FC<{
   x: number;
   y: number;
@@ -120,6 +150,22 @@ const Txt: React.FC<{
     {children}
   </text>
 );
+
+/**
+ * L'en-tête d'un écran : une seule ligne, toujours à la même hauteur, toujours
+ * mesurée. C'est elle qui dit au spectateur DE QUOI parle l'écran ; deux
+ * en-têtes ne coexistent jamais, ils se croisent en fondu.
+ */
+const EnTete: React.FC<{ children: string; opacity: number; couleur?: string }> = ({
+  children,
+  opacity,
+  couleur = M.gris,
+}) =>
+  opacity <= 0.01 ? null : (
+    <Txt x={CX} y={EN_TETE} taille={corps(children, 40, 5, 880)} couleur={couleur} espace={5} opacity={opacity}>
+      {children}
+    </Txt>
+  );
 
 /**
  * Le personnage pixel-art, repère central des séquences animées.
@@ -196,6 +242,49 @@ const Case: React.FC<{
   />
 );
 
+/**
+ * Une étiquette encadrée : le cadre, puis le mot dedans, au corps le plus grand
+ * qui tient à l'intérieur avec une gouttière de 40 px. Passer par ce composant
+ * plutôt que par un `Case` + un `Txt` posés à la main supprime la classe entière
+ * des débordements de badge.
+ */
+const Etiquette: React.FC<{
+  x: number;
+  y: number;
+  l: number;
+  h: number;
+  couleur: string;
+  vise?: number;
+  espace?: number;
+  opacity?: number;
+  children: string;
+}> = ({ x, y, l, h, couleur, vise = 40, espace = 2, opacity = 1, children }) => (
+  <g opacity={opacity}>
+    <Case x={x} y={y} l={l} h={h} couleur={couleur} />
+    <Txt x={x} y={y} taille={corps(children, vise, espace, l - 40)} couleur={couleur} espace={espace}>
+      {children}
+    </Txt>
+  </g>
+);
+
+/** Pointe de flèche verticale, dessinée à part pour ne pas la répéter. */
+const Pointe: React.FC<{ x: number; y: number; couleur: string; opacity?: number }> = ({
+  x,
+  y,
+  couleur,
+  opacity = 1,
+}) => (
+  <path
+    d={`M ${x - 20} ${y - 34} L ${x} ${y} L ${x + 20} ${y - 34}`}
+    fill="none"
+    stroke={couleur}
+    strokeWidth={7}
+    strokeLinecap="round"
+    strokeLinejoin="round"
+    opacity={opacity}
+  />
+);
+
 export const Animation: React.FC = () => {
   const frame = useCurrentFrame();
   const { fps } = useVideoConfig();
@@ -211,38 +300,49 @@ export const Animation: React.FC = () => {
   const souffle = 1 + 0.005 * Math.sin(2 * Math.PI * t / 7);
 
   // ── B2 ────────────────────────────────────────────────────────────────
+  const perso = rd(t, T.perso, T.perso + 0.5);
   const riz = rd(t, T.riz, T.riz + 0.5);
   const courbe = rd(t, T.courbe, T.courbe + 1.1);
   const insuline = rd(t, T.insuline, T.insuline + 0.5);
   const descente = rd(t, T.descente, T.descente + 1.2);
   const stockage = rd(t, T.stockage, T.stockage + 0.6);
+  /**
+   * La bascule de B2. Écran 1 : le personnage mange, la glycémie monte à sa
+   * droite. Écran 2 : le personnage sort, la courbe prend toute la largeur, et
+   * l'insuline entre au-dessus d'elle. Sans cette bascule, les cinq blocs du
+   * beat cohabitaient dans une bande de 680 px.
+   */
+  const q2 = rd(t, T.insuline - 0.6, T.insuline + 0.1);
+  const cx0 = melange(600, 190, q2);
+  const cw = melange(400, 700, q2);
+  const cbase = melange(1150, 1180, q2);
+  const camp = melange(290, 400, q2);
 
   // Courbe de glycémie : monte, puis redescend quand l'insuline agit.
   const chemin = (() => {
-    const x0 = 660;
     const pts: string[] = [];
-    for (let i = 0; i <= 40; i++) {
-      const p = i / 40;
+    for (let i = 0; i <= 48; i++) {
+      const p = i / 48;
       const monte = Math.min(1, p / 0.45) * courbe;
       const baisse = Math.max(0, (p - 0.5) / 0.5) * 0.82 * descente;
       const v = Math.max(0, monte - baisse);
-      pts.push(`${x0 + p * 300},${1010 - v * 300}`);
+      pts.push(`${cx0 + p * cw},${cbase - v * camp}`);
     }
     return `M ${pts.join(" L ")}`;
   })();
 
   // ── B3 ────────────────────────────────────────────────────────────────
-  const raccourci = rd(t, T.raccourci, T.raccourci + 0.5) * (1 - rd(t, T.dedouble - 0.4, T.dedouble));
+  const raccourci = rd(t, T.raccourci, T.raccourci + 0.5) * (1 - rd(t, T.dedouble - 0.5, T.dedouble));
   const plusInsuline = rd(t, T.plusInsuline, T.plusInsuline + 0.5);
   const plusGraisse = rd(t, T.plusGraisse, T.plusGraisse + 0.5);
-  const dedouble = rd(t, T.dedouble, T.dedouble + 0.9) * (1 - rd(t, T.vraiFacteur - 0.4, T.vraiFacteur));
-  const vraiFacteur = rd(t, T.vraiFacteur, T.vraiFacteur + 0.5) * (1 - rd(t, T.balance - 0.45, T.balance));
+  const dedouble = rd(t, T.dedouble, T.dedouble + 0.9) * (1 - rd(t, T.vraiFacteur - 0.5, T.vraiFacteur));
+  const vraiFacteur = rd(t, T.vraiFacteur, T.vraiFacteur + 0.6) * (1 - rd(t, T.balance - 0.55, T.balance));
   const balance = rd(t, T.balance, T.balance + 0.8);
 
   // ── B4 ────────────────────────────────────────────────────────────────
   const jauge = rd(t, T.jauge, T.jauge + 0.5);
   const remplit = rd(t, T.remplit, T.remplit + 3.0);
-  const dose = rd(t, T.dose, T.dose + 0.5) * (1 - rd(t, T.debordement, T.debordement + 0.5));
+  const dose = rd(t, T.dose, T.dose + 0.6) * (1 - rd(t, T.debordement - 0.4, T.debordement + 0.2));
   const debordement = rd(t, T.debordement, T.debordement + 0.9);
   const graisse = rd(t, T.graisse, T.graisse + 0.7);
   const marginal = rd(t, T.marginal, T.marginal + 0.6);
@@ -252,7 +352,7 @@ export const Animation: React.FC = () => {
    * gauche pour laisser entrer le trop-plein et l'icône graisse. Le déplacement
    * tient aussi lieu de transition : rien n'apparaît sur un écran figé.
    */
-  const gx = melange(CX, 410, debordement);
+  const gx = melange(CX, 340, debordement);
 
   // ── B5 ────────────────────────────────────────────────────────────────
   const meta = rd(t, T.meta, T.meta + 0.6);
@@ -263,6 +363,14 @@ export const Animation: React.FC = () => {
   const egales = rd(t, T.egales, T.egales + 0.6);
   const barres = rd(t, T.barres, T.barres + 1.2);
   const carte = rd(t, T.carte, T.carte + 0.6);
+  /**
+   * Les deux bascules du beat 5. `p2` fait monter les chiffres en en-tête pour
+   * libérer la scène ; `p3` remplace les groupes par les barres. Elles durent
+   * sept dixièmes — assez pour se lire comme un mouvement, pas comme un
+   * changement d'écran.
+   */
+  const p2 = rd(t, T.groupes - 0.5, T.groupes + 0.2);
+  const p3 = rd(t, T.barres - 0.5, T.barres + 0.2);
 
   // ── B6 ────────────────────────────────────────────────────────────────
   const haltere = rd(t, T.haltere, T.haltere + 0.5);
@@ -281,144 +389,179 @@ export const Animation: React.FC = () => {
 
   return (
     <AbsoluteFill>
-      {/* ══ B2 — d'où vient le mythe ═══════════════════════════════════ */}
+      {/* ══ B2 — ce que font les glucides ══════════════════════════════ */}
+      {/* Deux écrans. Le premier montre la cause — on mange, ça monte — avec le
+          personnage à gauche et la courbe à droite. Le second sort le
+          personnage, étale la courbe sur toute la largeur et fait entrer
+          l'insuline au-dessus : trois blocs maximum à tout instant. */}
       <Panneau e={b2}>
-        {/* Bonhomme : 11 x 15 pixels à 24 px, soit 264 x 360, centré en 1040 —
-            il occupe donc y 860..1220 et laisse la bande haute libre pour son
-            étiquette. Une première version à 3,2 le faisait monter jusqu'à 746
-            et la boîte GLUCIDES lui tombait sur la tête. */}
-        <Perso x={320} y={1040} k={2.4} opacity={rd(t, T.perso, T.perso + 0.5)} />
+        <EnTete opacity={riz * (1 - q2)}>TU MANGES DES GLUCIDES</EnTete>
+        <EnTete opacity={q2}>TON CORPS RÉPOND</EnTete>
+
+        {/* Écran 1 — le personnage et son assiette. Le bonhomme fait 11 × 15
+            pixels à 25,3 px, soit 278 × 380 centrés en 1010 : il occupe
+            y 820..1200 et laisse 130 px sous l'étiquette GLUCIDES. */}
+        {perso > 0 && <Perso x={300} y={1010} k={2.3} opacity={perso * (1 - q2)} />}
         {riz > 0 && (
-          <g opacity={riz} transform={`translate(0 ${melange(26, 0, riz)})`}>
-            <Case x={320} y={700} l={236} h={92} couleur={AMBRE} />
-            <Txt x={320} y={700} taille={30} couleur={AMBRE} espace={2}>
+          <g transform={`translate(0 ${melange(30, 0, riz)})`}>
+            <Etiquette x={300} y={640} l={290} h={108} couleur={AMBRE} vise={36} espace={3} opacity={riz * (1 - q2)}>
               GLUCIDES
-            </Txt>
+            </Etiquette>
           </g>
         )}
+
+        {/* La courbe traverse les deux écrans : c'est elle qui fait le lien. */}
         {courbe > 0 && (
           <>
-            <line x1={640} y1={1010} x2={990} y2={1010} stroke={M.noir} strokeWidth={4} />
-            <path d={chemin} fill="none" stroke={courbe > 0 ? NEON : NEON} strokeWidth={9} strokeLinecap="round" opacity={courbe} />
-            <Txt x={810} y={1082} taille={28} couleur={M.gris} espace={3} opacity={courbe}>
+            <line x1={cx0 - 24} y1={cbase} x2={cx0 + cw + 24} y2={cbase} stroke={M.noir} strokeWidth={4} />
+            <path d={chemin} fill="none" stroke={NEON} strokeWidth={10} strokeLinecap="round" opacity={courbe} />
+            <Txt x={cx0 + cw / 2} y={cbase + 74} taille={30} couleur={M.gris} espace={4} opacity={courbe}>
               GLYCÉMIE
             </Txt>
           </>
         )}
+
+        {/* Écran 2 — l'insuline, et le trait qui la relie à la descente. */}
         {insuline > 0 && (
-          <g opacity={insuline} transform={`translate(0 ${melange(-24, 0, insuline)})`}>
-            <Case x={810} y={640} l={186} h={86} couleur={CYAN} />
-            <Txt x={810} y={640} taille={30} couleur={CYAN} espace={2}>
+          <g transform={`translate(0 ${melange(-30, 0, insuline)})`}>
+            <Etiquette x={CX} y={620} l={330} h={112} couleur={CYAN} vise={40} espace={3} opacity={insuline}>
               INSULINE
-            </Txt>
+            </Etiquette>
+          </g>
+        )}
+        {descente > 0 && (
+          <g opacity={descente}>
+            <line x1={CX} y1={686} x2={CX} y2={melange(686, 754, descente)} stroke={CYAN} strokeWidth={6} strokeLinecap="round" />
+            <Pointe x={CX} y={766} couleur={CYAN} opacity={rd(descente, 0.6, 1)} />
           </g>
         )}
         {stockage > 0 && (
-          <g opacity={stockage}>
-            <Case x={CX} y={1380} l={330} h={96} couleur={M.texte} />
-            <Txt x={CX} y={1380} taille={34} couleur={M.texte} espace={3}>
+          <g transform={`translate(0 ${melange(26, 0, stockage)})`}>
+            <Etiquette x={CX} y={SOCLE - 10} l={400} h={120} couleur={M.texte} vise={42} espace={3} opacity={stockage}>
               STOCKAGE
-            </Txt>
+            </Etiquette>
           </g>
         )}
-        <Txt x={CX} y={BANDES.enTete.haut + 60} taille={40} couleur={M.gris} espace={5} opacity={riz}>
-          CE QU'ON T'A RACONTÉ
-        </Txt>
       </Panneau>
 
       {/* ══ B3 — le raccourci, puis sa réfutation ═════════════════════ */}
-      {/* Quatre temps, dans l'ordre où Robin les énonce. Le premier — « là est
+      {/* Quatre écrans, dans l'ordre où Robin les énonce. Le premier — « là est
           né le raccourci » — n'existait pas au brief : c'est une idée que Robin
           a ajoutée en tournant, et elle a besoin de sa propre image, sans quoi
           l'animation illustrerait une phrase qu'il ne dit pas. */}
       <Panneau e={b3}>
         {raccourci > 0.02 ? (
           <>
-            <Txt x={CX} y={BANDES.enTete.haut + 60} taille={40} couleur={M.gris} espace={5} opacity={raccourci}>
-              LÀ EST NÉ LE RACCOURCI
-            </Txt>
+            <EnTete opacity={raccourci}>LÀ EST NÉ LE RACCOURCI</EnTete>
             {plusInsuline > 0 && (
-              <g opacity={plusInsuline * raccourci} transform={`translate(0 ${melange(-30, 0, plusInsuline)})`}>
-                <Case x={CX} y={800} l={560} h={130} couleur={CYAN} />
-                <Txt x={CX} y={800} taille={44} couleur={CYAN} espace={2}>
+              <g transform={`translate(0 ${melange(-36, 0, plusInsuline)})`}>
+                <Etiquette
+                  x={CX}
+                  y={720}
+                  l={600}
+                  h={144}
+                  couleur={CYAN}
+                  vise={50}
+                  espace={3}
+                  opacity={plusInsuline * raccourci}
+                >
                   + D'INSULINE
-                </Txt>
+                </Etiquette>
               </g>
             )}
             {plusGraisse > 0 && (
               <g opacity={plusGraisse * raccourci}>
-                <path
-                  d={`M ${CX} 880 L ${CX} ${melange(880, 1020, plusGraisse)}`}
+                <line
+                  x1={CX}
+                  y1={812}
+                  x2={CX}
+                  y2={melange(812, 1006, plusGraisse)}
                   stroke={M.gris}
                   strokeWidth={7}
                   strokeLinecap="round"
                 />
-                <path
-                  d={`M ${CX - 20} 992 L ${CX} 1026 L ${CX + 20} 992`}
-                  fill="none"
-                  stroke={M.gris}
-                  strokeWidth={7}
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  opacity={rd(plusGraisse, 0.7, 1)}
-                />
-                <g transform={`translate(0 ${melange(30, 0, plusGraisse)})`}>
-                  <Case x={CX} y={1130} l={560} h={130} couleur={AMBRE} />
-                  <Txt x={CX} y={1130} taille={44} couleur={AMBRE} espace={2}>
+                <Pointe x={CX} y={1018} couleur={M.gris} opacity={rd(plusGraisse, 0.7, 1)} />
+                <g transform={`translate(0 ${melange(36, 0, plusGraisse)})`}>
+                  <Etiquette x={CX} y={1180} l={600} h={144} couleur={AMBRE} vise={50} espace={3}>
                     + DE GRAISSE
-                  </Txt>
+                  </Etiquette>
                 </g>
               </g>
             )}
           </>
         ) : vraiFacteur > 0.02 ? (
-          <Txt x={CX} y={960} taille={melange(96, 118, vraiFacteur)} couleur={NEON} espace={4} opacity={vraiFacteur}>
+          /* Un écran d'un seul mot : après trois écrans chargés, le blanc
+             typographique fait le travail. Le corps est mesuré, plus jamais
+             posé en dur — « LE VRAI FACTEUR » à 118 px demandait 1150 px de
+             large dans un cadre de 1080, et la dernière lettre sortait. */
+          <Txt
+            x={CX}
+            y={960}
+            taille={melange(corps("LE VRAI FACTEUR", 96, 4) - 8, corps("LE VRAI FACTEUR", 96, 4), vraiFacteur)}
+            couleur={NEON}
+            espace={4}
+            opacity={vraiFacteur}
+          >
             LE VRAI FACTEUR
           </Txt>
         ) : balance > 0.02 ? (
           <>
-            <Txt x={CX} y={BANDES.enTete.haut + 60} taille={40} couleur={M.gris} espace={5} opacity={balance}>
-              PEU IMPORTE LA SOURCE
-            </Txt>
+            <EnTete opacity={balance}>PEU IMPORTE LA SOURCE</EnTete>
             {[
-              { x: 250, l: "GLUCIDES", c: AMBRE },
+              { x: 245, l: "GLUCIDES", c: AMBRE },
               { x: CX, l: "LIPIDES", c: CYAN },
-              { x: 830, l: "PROTÉINES", c: NEON },
+              { x: 835, l: "PROTÉINES", c: NEON },
             ].map((p, i) => {
-              const e = rd(balance, i * 0.16, i * 0.16 + 0.45);
+              const e = rd(balance, i * 0.14, i * 0.14 + 0.45);
               return (
-                <g key={p.l} opacity={e} transform={`translate(0 ${melange(-160, 0, e)})`}>
-                  <Case x={p.x} y={760} l={220} h={92} couleur={p.c} />
-                  <Txt x={p.x} y={760} taille={28} couleur={p.c} espace={2}>
-                    {p.l}
-                  </Txt>
+                <g key={p.l}>
+                  <g transform={`translate(0 ${melange(-170, 0, e)})`}>
+                    <Etiquette x={p.x} y={720} l={220} h={104} couleur={p.c} vise={30} espace={2} opacity={e}>
+                      {p.l}
+                    </Etiquette>
+                  </g>
+                  {/* Les trois sources convergent vers le même total : le trait
+                      dit l'argument mieux qu'une ligne de texte de plus. */}
+                  <line
+                    x1={p.x}
+                    y1={772}
+                    x2={CX}
+                    y2={1090}
+                    stroke={M.noir}
+                    strokeWidth={4}
+                    opacity={rd(balance, 0.4, 0.85)}
+                  />
                 </g>
               );
             })}
-            <g opacity={rd(balance, 0.5, 0.9)}>
-              <Case x={CX} y={1080} l={720} h={120} couleur={M.texte} />
-              <Txt x={CX} y={1080} taille={40} couleur={M.texte} espace={3}>
+            <g opacity={rd(balance, 0.5, 0.95)}>
+              <Etiquette x={CX} y={1180} l={780} h={148} couleur={M.texte} vise={44} espace={3}>
                 BILAN CALORIQUE TOTAL
-              </Txt>
+              </Etiquette>
             </g>
           </>
         ) : (
           <>
-            <Txt x={CX} y={BANDES.enTete.haut + 60} taille={40} couleur={M.gris} espace={5} opacity={dedouble}>
-              SAUF QU'ELLE STOCKE LES DEUX
-            </Txt>
+            <EnTete opacity={dedouble}>ELLE STOCKE LES DEUX</EnTete>
             {[
-              { x: melange(CX, 300, dedouble), l: "GLYCOGÈNE", c: NEON },
-              { x: melange(CX, 780, dedouble), l: "GRAISSE", c: AMBRE },
+              { x: melange(CX, 280, dedouble), l: "GLYCOGÈNE", c: NEON },
+              { x: melange(CX, 800, dedouble), l: "GRAISSE", c: AMBRE },
             ].map((p) => (
-              <g key={p.l} opacity={dedouble}>
-                <Case x={p.x} y={960} l={380} h={190} couleur={p.c} />
-                <Txt x={p.x} y={960} taille={36} couleur={p.c} espace={2}>
-                  {p.l}
-                </Txt>
-              </g>
+              <Etiquette
+                key={p.l}
+                x={p.x}
+                y={980}
+                l={390}
+                h={210}
+                couleur={p.c}
+                vise={38}
+                espace={2}
+                opacity={dedouble}
+              >
+                {p.l}
+              </Etiquette>
             ))}
-            <Txt x={CX} y={1220} taille={34} couleur={M.gris} espace={4} opacity={rd(dedouble, 0.6, 1)}>
+            <Txt x={CX} y={1330} taille={36} couleur={M.gris} espace={4} opacity={rd(dedouble, 0.6, 1)}>
               À PARTS ÉGALES
             </Txt>
           </>
@@ -426,148 +569,225 @@ export const Animation: React.FC = () => {
       </Panneau>
 
       {/* ══ B4 — où vont tes glucides ══════════════════════════════════ */}
+      {/* Deux écrans, articulés par le déplacement de la jauge. Tant qu'elle se
+          remplit elle est seule et centrée ; quand elle déborde elle glisse à
+          gauche et libère la moitié droite pour le trop-plein. */}
       <Panneau e={b4}>
-        <Txt x={CX} y={BANDES.enTete.haut + 60} taille={40} couleur={M.gris} espace={5} opacity={jauge}>
-          D'ABORD LE RÉSERVOIR
-        </Txt>
+        <EnTete opacity={jauge * (1 - debordement)}>D'ABORD LE RÉSERVOIR</EnTete>
+        <EnTete opacity={debordement}>SEULEMENT ENSUITE L'EXCÈS</EnTete>
+
         {jauge > 0 && (
           <g opacity={jauge}>
-            <rect x={gx - 110} y={640} width={220} height={600} fill="none" stroke={M.noir} strokeWidth={5} />
-            <rect x={gx - 110} y={1240 - 600 * remplit} width={220} height={600 * remplit} fill={NEON} opacity={0.9} />
-            <Txt x={gx} y={1300} taille={32} couleur={NEON} espace={3}>
+            <rect x={gx - 115} y={620} width={230} height={620} fill="none" stroke={M.noir} strokeWidth={5} />
+            <rect x={gx - 115} y={1240 - 620 * remplit} width={230} height={620 * remplit} fill={NEON} opacity={0.9} />
+            <Txt x={gx} y={1320} taille={32} couleur={NEON} espace={3}>
               GLYCOGÈNE
             </Txt>
           </g>
         )}
         {dose > 0 && (
-          <Txt x={gx} y={melange(1372, 1362, dose)} taille={30} couleur={M.gris} espace={2} opacity={dose}>
-            8–12 G/KG/JOUR
+          <Txt
+            x={gx}
+            y={melange(1408, 1398, dose)}
+            taille={corps("TON CARBURANT À L'ENTRAÎNEMENT", 32, 3, 820)}
+            couleur={M.gris}
+            espace={3}
+            opacity={dose}
+          >
+            TON CARBURANT À L'ENTRAÎNEMENT
           </Txt>
         )}
+
+        {/* Le trop-plein : il sort par le haut de la jauge, passe au-dessus et
+            redescend vers l'icône graisse. Le tracé se dessine avec la
+            transition, il n'apparaît pas d'un coup. */}
         {debordement > 0 && (
           <g opacity={debordement}>
             <path
-              d={`M ${gx + 110} ${melange(700, 660, debordement)} L ${melange(gx + 110, 700, debordement)} 660 L ${melange(gx + 110, 700, debordement)} 900`}
+              d={`M ${gx + 115} ${melange(680, 640, debordement)} L ${melange(gx + 115, 800, debordement)} 640 L ${melange(gx + 115, 800, debordement)} 880`}
               fill="none"
               stroke={AMBRE}
               strokeWidth={7}
               strokeLinecap="round"
               strokeLinejoin="round"
             />
-            <path d="M 680 872 L 700 908 L 720 872" fill="none" stroke={AMBRE} strokeWidth={7} strokeLinecap="round" strokeLinejoin="round" opacity={rd(debordement, 0.7, 1)} />
+            <Pointe x={800} y={892} couleur={AMBRE} opacity={rd(debordement, 0.7, 1)} />
           </g>
         )}
         {graisse > 0 && (
           <g opacity={graisse}>
-            <Case x={790} y={980} l={melange(80, 128, graisse)} h={melange(56, 84, graisse)} couleur={AMBRE} />
-            <Txt x={790} y={1074} taille={26} couleur={AMBRE} espace={2}>
+            <Case
+              x={800}
+              y={1000}
+              l={melange(96, 156, graisse)}
+              h={melange(64, 104, graisse)}
+              couleur={AMBRE}
+            />
+            <Txt x={800} y={1110} taille={28} couleur={AMBRE} espace={2}>
               GRAISSE
             </Txt>
           </g>
         )}
         {marginal > 0 && (
-          <Txt x={CX} y={BANDES.socle.haut + melange(70, 60, marginal)} taille={44} couleur={M.texte} espace={2} opacity={marginal}>
+          <Txt
+            x={CX}
+            y={melange(SOCLE + 10, SOCLE, marginal)}
+            taille={corps("MARGINAL EN PRATIQUE", 46, 3)}
+            couleur={M.texte}
+            espace={3}
+            opacity={marginal}
+          >
             MARGINAL EN PRATIQUE
           </Txt>
         )}
       </Panneau>
 
       {/* ══ B5 — la preuve ═════════════════════════════════════════════ */}
+      {/* Trois écrans qui se succèdent, et non un empilement. La version
+          précédente montrait en même temps les deux chiffres, les deux groupes,
+          leurs étiquettes, la mention « calories égales », les deux barres et
+          la carte : sept blocs pour une bande de 680 px, avec des jours de
+          quarante pixels entre eux. Ici les chiffres montent en en-tête pour
+          libérer la scène, puis les groupes cèdent la place aux barres. */}
       <Panneau e={b5}>
-        <Txt x={CX} y={BANDES.enTete.haut - 46} taille={36} couleur={M.gris} espace={5} opacity={meta}>
+        {/* Temps 1 — les chiffres, seuls et en grand. */}
+        <Txt x={CX} y={700} taille={38} couleur={M.gris} espace={5} opacity={meta * (1 - p2)}>
           UNE MÉTA-ANALYSE
         </Txt>
-        <Txt x={CX} y={BANDES.enTete.haut + 34} taille={melange(66, 76, essais)} couleur={M.texte} espace={2} opacity={essais}>
+        <Txt
+          x={CX}
+          y={melange(890, 262, p2)}
+          taille={melange(96, 46, p2)}
+          couleur={M.texte}
+          espace={2}
+          opacity={essais}
+        >
           19 ESSAIS
         </Txt>
-        <Txt x={CX} y={BANDES.enTete.haut + 122} taille={44} couleur={M.gris} espace={3} opacity={personnes}>
+        <Txt
+          x={CX}
+          y={melange(1060, 336, p2)}
+          taille={melange(52, 32, p2)}
+          couleur={M.gris}
+          espace={3}
+          opacity={personnes}
+        >
           3200+ PERSONNES
         </Txt>
+
+        {/* Temps 2 — les deux groupes, chacun dans sa moitié. */}
         {[
-          { x: 300, c: NEON, l: "PAUVRE EN", l2: "GLUCIDES", h: 300 },
-          { x: 780, c: CYAN, l: "RÉGIME", l2: "ÉQUILIBRÉ", h: 288 },
+          { x: 285, c: NEON, l: "PAUVRE EN", l2: "GLUCIDES", h: 300 },
+          { x: 795, c: CYAN, l: "RÉGIME", l2: "ÉQUILIBRÉ", h: 288 },
         ].map((g, gi) => (
           <g key={g.l2}>
             {groupes > 0 &&
               [0, 1, 2, 3, 4, 5].map((i) => {
-                const e = rd(groupes, (gi * 6 + i) * 0.05, (gi * 6 + i) * 0.05 + 0.3);
+                const e = rd(groupes, (gi * 6 + i) * 0.05, (gi * 6 + i) * 0.05 + 0.32);
                 return e <= 0 ? null : (
-                  <g key={i} opacity={e * 0.8}>
-                    {/* Le même bonhomme, en miniature : c'est lui le repère
-                        central de la série, pas un rectangle anonyme. */}
-                    <Perso
-                      x={g.x - 82 + (i % 3) * 82}
-                      y={664 + Math.floor(i / 3) * 104}
-                      k={0.62}
-                      couleur={g.c}
-                    />
-                  </g>
+                  <Perso
+                    key={i}
+                    x={g.x - 96 + (i % 3) * 96}
+                    y={630 + Math.floor(i / 3) * 150}
+                    k={0.7}
+                    couleur={g.c}
+                    opacity={e * 0.85 * (1 - p3)}
+                  />
                 );
               })}
             {etiquettes > 0 && (
-              <g opacity={etiquettes}>
-                <Txt x={g.x} y={840} taille={28} couleur={g.c} espace={2}>
+              <g opacity={etiquettes * (1 - p3)}>
+                <Txt x={g.x} y={940} taille={30} couleur={g.c} espace={2}>
                   {g.l}
                 </Txt>
-                <Txt x={g.x} y={876} taille={28} couleur={g.c} espace={2}>
+                <Txt x={g.x} y={986} taille={30} couleur={g.c} espace={2}>
                   {g.l2}
                 </Txt>
               </g>
             )}
+
+            {/* Temps 3 — les barres, étiquetées au-dessus pour dégager le socle. */}
             {barres > 0 && (
-              <rect
-                x={g.x - 70}
-                y={1240 - g.h * barres}
-                width={140}
-                height={g.h * barres}
-                fill={g.c}
-                opacity={0.9}
-              />
+              <g opacity={barres}>
+                <Txt x={g.x} y={790} taille={30} couleur={g.c} espace={2}>
+                  {g.l}
+                </Txt>
+                <Txt x={g.x} y={838} taille={30} couleur={g.c} espace={2}>
+                  {g.l2}
+                </Txt>
+                <rect
+                  x={g.x - 78}
+                  y={1250 - g.h * barres}
+                  width={156}
+                  height={g.h * barres}
+                  fill={g.c}
+                  opacity={0.9}
+                />
+              </g>
             )}
           </g>
         ))}
+        {barres > 0 && (
+          <line x1={150} y1={1250} x2={930} y2={1250} stroke={M.noir} strokeWidth={4} opacity={barres} />
+        )}
+
+        {/* La mention qui porte tout l'argument de l'étude : elle sort avant que
+            la carte n'entre, les deux ne se croisent jamais dans le socle. */}
         {egales > 0 && (
-          <Txt x={CX} y={1284} taille={34} couleur={M.gris} espace={3} opacity={egales * (1 - rd(t, T.carte - 0.3, T.carte))}>
+          <Txt
+            x={CX}
+            y={1200}
+            taille={corps("À CALORIES STRICTEMENT ÉGALES", 36, 3, 880)}
+            couleur={M.texte}
+            espace={3}
+            opacity={egales * (1 - p3)}
+          >
             À CALORIES STRICTEMENT ÉGALES
           </Txt>
         )}
+
         {carte > 0 && (
-          <g opacity={carte}>
-            <Case x={CX} y={BANDES.socle.haut + 72} l={640} h={150} couleur={M.texte} />
-            {/* Le libellé suit ce que Robin DIT — « après 6 ou 2 ans
-                d'expérience » — et non ce que prévoyait le brief. Ses
-                sous-titres sont à l'écran : une carte qui les contredirait se
-                verrait immédiatement. */}
-            <Txt x={CX} y={BANDES.socle.haut + 44} taille={40} couleur={M.texte} espace={3}>
+          <g opacity={carte} transform={`translate(0 ${melange(24, 0, carte)})`}>
+            <Case x={CX} y={1470} l={720} h={230} couleur={M.texte} />
+            {/* Le libellé suit ce que Robin DIT — ses sous-titres sont
+                incrustés, une carte qui les contredirait se verrait. Il dit
+                « quasi identique… après 6 ou 2 ans » : ce sont bien SIX MOIS et
+                DEUX ANS, et les deux jalons sont marqués séparément pour que le
+                « six » ne se lise pas comme six ans. */}
+            <Txt x={CX} y={1404} taille={corps("QUASI IDENTIQUE", 44, 3, 660)} couleur={M.texte} espace={3}>
               QUASI IDENTIQUE
             </Txt>
-            <Txt x={CX} y={BANDES.socle.haut + 100} taille={34} couleur={M.gris} espace={3}>
-              APRÈS 6 OU 2 ANS
-            </Txt>
+            <Etiquette x={410} y={1512} l={244} h={78} couleur={M.texte} vise={30} espace={2} opacity={rd(carte, 0.3, 0.8)}>
+              6 MOIS
+            </Etiquette>
+            <Etiquette x={670} y={1512} l={244} h={78} couleur={M.texte} vise={30} espace={2} opacity={rd(carte, 0.5, 1)}>
+              2 ANS
+            </Etiquette>
           </g>
         )}
       </Panneau>
 
       {/* ══ B6 — la conséquence ════════════════════════════════════════ */}
       <Panneau e={b6}>
-        <Txt x={CX} y={BANDES.enTete.haut + 60} taille={40} couleur={M.gris} espace={5} opacity={haltere}>
-          MAIS LES COUPER TROP
-        </Txt>
+        <EnTete opacity={haltere}>MAIS LES COUPER TROP</EnTete>
         {haltere > 0 && (
           <g opacity={haltere}>
-            <g transform={`translate(360 960) scale(${melange(1, 0.86, chute)})`} opacity={melange(1, 0.4, chute)}>
-              <rect x={-70} y={-14} width={140} height={28} fill={NEON} />
-              <rect x={-118} y={-56} width={40} height={112} fill={NEON} />
-              <rect x={78} y={-56} width={40} height={112} fill={NEON} />
+            <g transform={`translate(300 940) scale(${melange(1, 0.84, chute)})`} opacity={melange(1, 0.38, chute)}>
+              <rect x={-76} y={-15} width={152} height={30} fill={NEON} />
+              <rect x={-128} y={-60} width={44} height={120} fill={NEON} />
+              <rect x={84} y={-60} width={44} height={120} fill={NEON} />
             </g>
+            <Txt x={300} y={1090} taille={28} couleur={M.gris} espace={3} opacity={melange(1, 0.5, chute)}>
+              À L'ENTRAÎNEMENT
+            </Txt>
           </g>
         )}
         {intensite > 0 && (
           <g opacity={intensite}>
-            <rect x={720} y={640} width={150} height={620} fill="none" stroke={M.noir} strokeWidth={5} />
+            <rect x={710} y={620} width={170} height={620} fill="none" stroke={M.noir} strokeWidth={5} />
             {(() => {
-              const h = melange(560, 190, chute);
-              return <rect x={720} y={1260 - h} width={150} height={h} fill={melange(0, 1, chute) > 0.5 ? AMBRE : NEON} opacity={0.9} />;
+              const h = melange(560, 180, chute);
+              return <rect x={710} y={1240 - h} width={170} height={h} fill={chute > 0.5 ? AMBRE : NEON} opacity={0.9} />;
             })()}
             <Txt x={795} y={1320} taille={30} couleur={M.gris} espace={3}>
               INTENSITÉ
@@ -575,7 +795,14 @@ export const Animation: React.FC = () => {
           </g>
         )}
         {duree > 0 && (
-          <Txt x={CX} y={BANDES.socle.haut + melange(80, 70, duree)} taille={46} couleur={AMBRE} espace={2} opacity={duree}>
+          <Txt
+            x={CX}
+            y={melange(SOCLE + 10, SOCLE, duree)}
+            taille={corps("ET TES RÉSULTATS AVEC", 46, 3)}
+            couleur={AMBRE}
+            espace={3}
+            opacity={duree}
+          >
             ET TES RÉSULTATS AVEC
           </Txt>
         )}
