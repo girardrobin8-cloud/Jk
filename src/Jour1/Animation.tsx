@@ -1,5 +1,23 @@
-import { AbsoluteFill, interpolate, useCurrentFrame, useVideoConfig } from "remotion";
-import { M, TITRE_FONT } from "../Muscle/Plan";
+import { useCurrentFrame, useVideoConfig } from "remotion";
+import { M } from "../Muscle/Plan";
+import {
+  AMBRE,
+  Case,
+  CYAN,
+  corps,
+  EnTete,
+  Etiquette,
+  faireFenetre,
+  melange,
+  NEON,
+  Panneau,
+  Perso,
+  Pointe,
+  rd,
+  SOCLE,
+  Txt,
+  CX,
+} from "../commun/Motion";
 import { BEATS, FONDU } from "./reperes";
 
 /**
@@ -11,6 +29,11 @@ import { BEATS, FONDU } from "./reperes";
  * s'efface sur le hook et le CTA. Chaque panneau est opaque et monte en fondu
  * de part et d'autre de sa borne — le brief interdit le cut sec entre caméra et
  * animation.
+ *
+ * Les règles de mise en page — bandes réservées, corps mesurés, respiration du
+ * panneau — vivent dans src/commun/Motion.tsx, partagées avec le Jour 2 pour
+ * qu'elles ne divergent pas d'une vidéo à l'autre. Ce qui reste ici est le
+ * contenu : quoi montrer, et à quelle seconde.
  *
  * Règles tenues par la structure :
  *  · JAMAIS plus de trois blocs à l'écran. Un beat de dix secondes se joue en
@@ -26,35 +49,7 @@ import { BEATS, FONDU } from "./reperes";
  *  · aucun bruitage — rien à faire ici, le montage ne porte que la voix.
  */
 
-const CL = { extrapolateLeft: "clamp", extrapolateRight: "clamp" } as const;
-const r = (t: number, a: number, b: number) => interpolate(t, [a, b], [0, 1], CL);
-const doux = (p: number) => p * p * (3 - 2 * p);
-const rd = (t: number, a: number, b: number) => doux(r(t, a, b));
-const melange = (a: number, b: number, p: number) => a + (b - a) * p;
-
-const CX = 540;
-const CYAN = "#5BD6E0"; // secondaire demandé par le brief, absent de la charte
-const NEON = M.bleuClair;
-const AMBRE = M.ambre;
-
-/**
- * Les bandes horizontales réservées. Rien ne les enjambe : un bloc appartient à
- * une bande et une seule, ce qui rend le non-chevauchement structurel plutôt que
- * vérifié à l'œil.
- */
-const BANDES = {
-  enTete: { haut: 250, bas: 430 },
-  scene: { haut: 560, bas: 1270 },
-  socle: { haut: 1360, bas: 1620 },
-};
-const EN_TETE = BANDES.enTete.haut + 50;
-const SOCLE = BANDES.socle.haut + 140;
-
-/** Fenêtre d'un beat, fondus compris. */
-const fenetre = (t: number, id: string) => {
-  const b = BEATS.find((x) => x.id === id)!;
-  return Math.min(rd(t, b.debut - FONDU, b.debut), 1 - rd(t, b.fin, b.fin + FONDU));
-};
+const fenetre = faireFenetre(BEATS, FONDU);
 
 // ── Repères internes, en secondes absolues ───────────────────────────────
 /**
@@ -107,184 +102,6 @@ const T = {
   duree: 58.0, // « tes résultats sur la durée »     58,5 → 59,2
 };
 
-/**
- * Largeur utile, marges comprises. Tout texte qui la dépasse est coupé à
- * l'écran — c'est ce qui est arrivé à « LE VRAI FACTEUR », posé à 118 px pour
- * quinze caractères, soit près de 1150 px dans un cadre de 1080.
- */
-const UTILE = 940;
-
-/**
- * Le plus grand corps auquel `texte` tient dans `large`, plafonné à `vise`.
- *
- * L'approximation — 0,62 em par capitale dans cette graisse — est volontairement
- * pessimiste : mieux vaut deux points de trop petit qu'une lettre mangée.
- */
-const corps = (texte: string, vise: number, espace = 0, large = UTILE) => {
-  const dispo = large - texte.length * espace;
-  return Math.min(vise, Math.floor(dispo / (texte.length * 0.62)));
-};
-
-const Txt: React.FC<{
-  x: number;
-  y: number;
-  children: React.ReactNode;
-  taille?: number;
-  couleur?: string;
-  opacity?: number;
-  espace?: number;
-  ancre?: "start" | "middle" | "end";
-}> = ({ x, y, children, taille = 34, couleur = M.gris, opacity = 1, espace = 0, ancre = "middle" }) => (
-  <text
-    x={x}
-    y={y}
-    fill={couleur}
-    fontSize={taille}
-    fontWeight={800}
-    letterSpacing={espace}
-    opacity={opacity}
-    textAnchor={ancre}
-    dominantBaseline="middle"
-    fontFamily={TITRE_FONT}
-  >
-    {children}
-  </text>
-);
-
-/**
- * L'en-tête d'un écran : une seule ligne, toujours à la même hauteur, toujours
- * mesurée. C'est elle qui dit au spectateur DE QUOI parle l'écran ; deux
- * en-têtes ne coexistent jamais, ils se croisent en fondu.
- */
-const EnTete: React.FC<{ children: string; opacity: number; couleur?: string }> = ({
-  children,
-  opacity,
-  couleur = M.gris,
-}) =>
-  opacity <= 0.01 ? null : (
-    <Txt x={CX} y={EN_TETE} taille={corps(children, 40, 5, 880)} couleur={couleur} espace={5} opacity={opacity}>
-      {children}
-    </Txt>
-  );
-
-/**
- * Le personnage pixel-art, repère central des séquences animées.
- *
- * Dessiné sur une grille de 11 × 15, un rectangle par pixel allumé. Le tracé
- * vectoriel serait plus lisse, mais c'est justement ce qu'on ne veut pas : la
- * marche d'escalier fait partie du style établi sur le carrousel.
- */
-const CORPS = [
-  "....###....",
-  "...#####...",
-  "...#o#o#...",
-  "...#####...",
-  "....###....",
-  "..#######..",
-  "###########",
-  "###########",
-  "..#######..",
-  "...#####...",
-  "...##.##...",
-  "...##.##...",
-  "...##.##...",
-  "..###.###..",
-  "..###.###..",
-];
-
-const Perso: React.FC<{ x: number; y: number; k?: number; opacity?: number; couleur?: string }> = ({
-  x,
-  y,
-  k = 1,
-  opacity = 1,
-  couleur = NEON,
-}) => {
-  const px = 11 * k;
-  return (
-    <g transform={`translate(${x - (11 * px) / 2} ${y - (15 * px) / 2})`} opacity={opacity}>
-      {CORPS.flatMap((ligne, j) =>
-        ligne.split("").map((c, i) =>
-          c === "." ? null : (
-            <rect
-              key={`${i}-${j}`}
-              x={i * px}
-              y={j * px}
-              width={px + 0.5}
-              height={px + 0.5}
-              fill={c === "o" ? M.fond : couleur}
-            />
-          ),
-        ),
-      )}
-    </g>
-  );
-};
-
-/** Encadré à coins nets, brique de base des icônes et des cartes. */
-const Case: React.FC<{
-  x: number;
-  y: number;
-  l: number;
-  h: number;
-  couleur: string;
-  plein?: boolean;
-  opacity?: number;
-}> = ({ x, y, l, h, couleur, plein = false, opacity = 1 }) => (
-  <rect
-    x={x - l / 2}
-    y={y - h / 2}
-    width={l}
-    height={h}
-    fill={plein ? couleur : M.fondCase}
-    stroke={couleur}
-    strokeWidth={4}
-    opacity={opacity}
-  />
-);
-
-/**
- * Une étiquette encadrée : le cadre, puis le mot dedans, au corps le plus grand
- * qui tient à l'intérieur avec une gouttière de 40 px. Passer par ce composant
- * plutôt que par un `Case` + un `Txt` posés à la main supprime la classe entière
- * des débordements de badge.
- */
-const Etiquette: React.FC<{
-  x: number;
-  y: number;
-  l: number;
-  h: number;
-  couleur: string;
-  vise?: number;
-  espace?: number;
-  opacity?: number;
-  children: string;
-}> = ({ x, y, l, h, couleur, vise = 40, espace = 2, opacity = 1, children }) => (
-  <g opacity={opacity}>
-    <Case x={x} y={y} l={l} h={h} couleur={couleur} />
-    <Txt x={x} y={y} taille={corps(children, vise, espace, l - 40)} couleur={couleur} espace={espace}>
-      {children}
-    </Txt>
-  </g>
-);
-
-/** Pointe de flèche verticale, dessinée à part pour ne pas la répéter. */
-const Pointe: React.FC<{ x: number; y: number; couleur: string; opacity?: number }> = ({
-  x,
-  y,
-  couleur,
-  opacity = 1,
-}) => (
-  <path
-    d={`M ${x - 20} ${y - 34} L ${x} ${y} L ${x + 20} ${y - 34}`}
-    fill="none"
-    stroke={couleur}
-    strokeWidth={7}
-    strokeLinecap="round"
-    strokeLinejoin="round"
-    opacity={opacity}
-  />
-);
-
 export const Animation: React.FC = () => {
   const frame = useCurrentFrame();
   const { fps } = useVideoConfig();
@@ -296,8 +113,6 @@ export const Animation: React.FC = () => {
   const b5 = fenetre(t, "B5");
   const b6 = fenetre(t, "B6");
   if (Math.max(b2, b3, b4, b5, b6) <= 0) return null;
-
-  const souffle = 1 + 0.005 * Math.sin(2 * Math.PI * t / 7);
 
   // ── B2 ────────────────────────────────────────────────────────────────
   const perso = rd(t, T.perso, T.perso + 0.5);
@@ -378,23 +193,14 @@ export const Animation: React.FC = () => {
   const chute = rd(t, T.chute, T.chute + 2.2);
   const duree = rd(t, T.duree, T.duree + 0.6);
 
-  const Panneau: React.FC<{ e: number; children: React.ReactNode }> = ({ e, children }) =>
-    e <= 0 ? null : (
-      <AbsoluteFill style={{ backgroundColor: M.fond, opacity: e }}>
-        <svg width="100%" height="100%" viewBox="0 0 1080 1920">
-          <g transform={`translate(${CX} 960) scale(${souffle}) translate(${-CX} -960)`}>{children}</g>
-        </svg>
-      </AbsoluteFill>
-    );
-
   return (
-    <AbsoluteFill>
+    <>
       {/* ══ B2 — ce que font les glucides ══════════════════════════════ */}
       {/* Deux écrans. Le premier montre la cause — on mange, ça monte — avec le
           personnage à gauche et la courbe à droite. Le second sort le
           personnage, étale la courbe sur toute la largeur et fait entrer
           l'insuline au-dessus : trois blocs maximum à tout instant. */}
-      <Panneau e={b2}>
+      <Panneau e={b2} t={t}>
         <EnTete opacity={riz * (1 - q2)}>TU MANGES DES GLUCIDES</EnTete>
         <EnTete opacity={q2}>TON CORPS RÉPOND</EnTete>
 
@@ -449,7 +255,7 @@ export const Animation: React.FC = () => {
           né le raccourci » — n'existait pas au brief : c'est une idée que Robin
           a ajoutée en tournant, et elle a besoin de sa propre image, sans quoi
           l'animation illustrerait une phrase qu'il ne dit pas. */}
-      <Panneau e={b3}>
+      <Panneau e={b3} t={t}>
         {raccourci > 0.02 ? (
           <>
             <EnTete opacity={raccourci}>LÀ EST NÉ LE RACCOURCI</EnTete>
@@ -572,7 +378,7 @@ export const Animation: React.FC = () => {
       {/* Deux écrans, articulés par le déplacement de la jauge. Tant qu'elle se
           remplit elle est seule et centrée ; quand elle déborde elle glisse à
           gauche et libère la moitié droite pour le trop-plein. */}
-      <Panneau e={b4}>
+      <Panneau e={b4} t={t}>
         <EnTete opacity={jauge * (1 - debordement)}>D'ABORD LE RÉSERVOIR</EnTete>
         <EnTete opacity={debordement}>SEULEMENT ENSUITE L'EXCÈS</EnTete>
 
@@ -649,7 +455,7 @@ export const Animation: React.FC = () => {
           la carte : sept blocs pour une bande de 680 px, avec des jours de
           quarante pixels entre eux. Ici les chiffres montent en en-tête pour
           libérer la scène, puis les groupes cèdent la place aux barres. */}
-      <Panneau e={b5}>
+      <Panneau e={b5} t={t}>
         {/* Temps 1 — les chiffres, seuls et en grand. */}
         <Txt x={CX} y={700} taille={38} couleur={M.gris} espace={5} opacity={meta * (1 - p2)}>
           UNE MÉTA-ANALYSE
@@ -768,7 +574,7 @@ export const Animation: React.FC = () => {
       </Panneau>
 
       {/* ══ B6 — la conséquence ════════════════════════════════════════ */}
-      <Panneau e={b6}>
+      <Panneau e={b6} t={t}>
         <EnTete opacity={haltere}>MAIS LES COUPER TROP</EnTete>
         {haltere > 0 && (
           <g opacity={haltere}>
@@ -807,6 +613,6 @@ export const Animation: React.FC = () => {
           </Txt>
         )}
       </Panneau>
-    </AbsoluteFill>
+    </>
   );
 };

@@ -16,6 +16,10 @@ import {
 import { Plage, PLAGE_FRAMES } from "./Plage/Plage";
 import { Carte, CARTE_FRAMES } from "./Carte/Carte";
 import {
+  Montage as Jour2Montage,
+  MONTAGE_FRAMES as JOUR2_FRAMES,
+} from "./Jour2/Montage";
+import {
   Montage as Jour1Montage,
   MONTAGE_FRAMES as JOUR1_FRAMES,
 } from "./Jour1/Montage";
@@ -52,6 +56,20 @@ import { Logo, myCompSchema2 } from "./HelloWorld/Logo";
 export const RemotionRoot: React.FC = () => {
   return (
     <>
+      {/* Reel Jour 2 « combien de séries par semaine » — 90,17 s.
+          Rush d'origine intact + motion design par-dessus sur B2..B12.
+          Bornes LUES sur les sous-titres incrustés (voir reperes.ts).
+          Média : public/rushes/jour2.mp4 (hors dépôt).
+          npx remotion render Jour2 */}
+      <Composition
+        id="Jour2"
+        component={Jour2Montage}
+        durationInFrames={JOUR2_FRAMES}
+        fps={30}
+        width={1080}
+        height={1920}
+      />
+
       {/* Reel Jour 1 « arrêter le riz pour sécher » — 56,84 s.
           Rush nettoyé + motion design par-dessus sur B2..B6.
           Bornes MESURÉES : python3 scripts/caler.py <wav> jour1
