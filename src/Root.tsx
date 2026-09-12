@@ -9,6 +9,45 @@ import { ANIM_FIN, s as sec } from "./Metabolisme/reperes";
 import { Montage as MuscleMontage, MONTAGE_FRAMES as MUSCLE_FRAMES } from "./Muscle/Montage";
 import { Montage as ProtMontage, MONTAGE_FRAMES as PROT_FRAMES } from "./Proteines/Montage";
 import { Montage as MontreMontage, MONTAGE_FRAMES as MONTRE_FRAMES } from "./Montre/Montage";
+import {
+  Montage as PresentationMontage,
+  MONTAGE_FRAMES as PRESENTATION_FRAMES,
+} from "./Presentation/Montage";
+import { Plage, PLAGE_FRAMES } from "./Plage/Plage";
+import { Carte, CARTE_FRAMES } from "./Carte/Carte";
+import {
+  Montage as Jour2Montage,
+  MONTAGE_FRAMES as JOUR2_FRAMES,
+} from "./Jour2/Montage";
+import {
+  Montage as Jour1Montage,
+  MONTAGE_FRAMES as JOUR1_FRAMES,
+} from "./Jour1/Montage";
+import {
+  Montage as NeatMontage,
+  MONTAGE_FRAMES as NEAT_FRAMES,
+} from "./Neat/Montage";
+import { Miniature as NeatMiniature } from "./Neat/Miniature";
+import {
+  Montage as AspartameMontage,
+  MONTAGE_FRAMES as ASPARTAME_FRAMES,
+} from "./Aspartame/Montage";
+import {
+  Montage as RecompMontage,
+  MONTAGE_FRAMES as RECOMP_FRAMES,
+} from "./Recomp/Montage";
+import {
+  Montage as SommeilMontage,
+  MONTAGE_FRAMES as SOMMEIL_FRAMES,
+} from "./Sommeil/Montage";
+import {
+  Montage as SucreMontage,
+  MONTAGE_FRAMES as SUCRE_FRAMES,
+} from "./Sucre/Montage";
+import {
+  Montage as SaintBarthMontage,
+  MONTAGE_FRAMES as SAINTBARTH_FRAMES,
+} from "./SaintBarth/Montage";
 import { HelloWorld, myCompSchema } from "./HelloWorld";
 import { Logo, myCompSchema2 } from "./HelloWorld/Logo";
 
@@ -17,6 +56,165 @@ import { Logo, myCompSchema2 } from "./HelloWorld/Logo";
 export const RemotionRoot: React.FC = () => {
   return (
     <>
+      {/* Reel Jour 2 « combien de séries par semaine » — 84,93 s.
+          Rush aux blancs resserrés + motion design par-dessus sur B2..B12.
+          Bornes LUES sur les sous-titres incrustés, puis transposées par
+          mappe() dans le temps du montage (voir reperes.ts).
+          Média : public/rushes/jour2_resserre.mp4, produit par
+          `python3 scripts/resserrer.py` (hors dépôt).
+          npx remotion render Jour2 */}
+      <Composition
+        id="Jour2"
+        component={Jour2Montage}
+        durationInFrames={JOUR2_FRAMES}
+        fps={30}
+        width={1080}
+        height={1920}
+      />
+
+      {/* Reel Jour 1 « arrêter le riz pour sécher » — 56,84 s.
+          Rush nettoyé + motion design par-dessus sur B2..B6.
+          Bornes MESURÉES : python3 scripts/caler.py <wav> jour1
+          Média : public/rushes/jour1.mp4 (hors dépôt, voir reperes.ts).
+          npx remotion render Jour1 */}
+      <Composition
+        id="Jour1"
+        component={Jour1Montage}
+        durationInFrames={JOUR1_FRAMES}
+        fps={30}
+        width={1080}
+        height={1920}
+      />
+
+      {/* Miniature 9:16 de la vidéo NEAT — image fixe.
+          npx remotion still NeatMiniature miniature.png */}
+      <Composition
+        id="NeatMiniature"
+        component={NeatMiniature}
+        durationInFrames={1}
+        fps={30}
+        width={1080}
+        height={1920}
+      />
+
+      {/* « NEAT / la dépense calorique cachée » — 64,8 s.
+          SANS VOIX : script original, prise pas encore enregistrée. Bornes
+          PRÉDITES d'après le débit horloge des trois prises mesurées — lire
+          l'avertissement en tête de src/Neat/reperes.ts. Quand la prise
+          arrivera : python3 scripts/caler.py <prise.wav> neat
+          npx remotion render Neat */}
+      <Composition
+        id="Neat"
+        component={NeatMontage}
+        durationInFrames={NEAT_FRAMES}
+        fps={30}
+        width={1080}
+        height={1920}
+      />
+
+      {/* « Aspartame / Coca Zero » — 39,82 s, calé sur la prise réelle.
+          Bornes MESURÉES : python3 scripts/caler.py <wav> aspartame.
+          Voix : public/voix/aspartame.mp4, copiée sans réencodage.
+          npx remotion render Aspartame */}
+      <Composition
+        id="Aspartame"
+        component={AspartameMontage}
+        durationInFrames={ASPARTAME_FRAMES}
+        fps={30}
+        width={1080}
+        height={1920}
+      />
+
+      {/* « Recomposition corporelle » — 57 s, calé sur la prise réelle.
+          Bornes MESURÉES : python3 scripts/caler.py <wav> recomp.
+          Voix : public/voix/recomp.mp4, copiée sans réencodage.
+          npx remotion render Recomp */}
+      <Composition
+        id="Recomp"
+        component={RecompMontage}
+        durationInFrames={RECOMP_FRAMES}
+        fps={30}
+        width={1080}
+        height={1920}
+      />
+
+      {/* « Le sommeil décide si tu perds du gras ou du muscle » — 55 s.
+          SANS VOIX : bornes du brief, à recaler (src/Sommeil/reperes.ts).
+          npx remotion render Sommeil */}
+      <Composition
+        id="Sommeil"
+        component={SommeilMontage}
+        durationInFrames={SOMMEIL_FRAMES}
+        fps={30}
+        width={1080}
+        height={1920}
+      />
+
+      {/* « Le sucre n'est pas (que) le problème » — 50 s, pixel-art sur fond
+          clair. SANS VOIX : bornes du brief, à recaler (src/Sucre/reperes.ts).
+          npx remotion render Sucre */}
+      <Composition
+        id="Sucre"
+        component={SucreMontage}
+        durationInFrames={SUCRE_FRAMES}
+        fps={30}
+        width={1080}
+        height={1920}
+      />
+
+      {/* « L'île la plus riche du monde » — Saint-Barthélemy, 32 s.
+          SANS VOIX : la prise n'est pas enregistrée, les bornes viennent du
+          brief et sont à recaler dessus (voir src/SaintBarth/reperes.ts).
+          Géographie préparée par `node scripts/antilles.mjs`.
+          npx remotion render SaintBarth */}
+      <Composition
+        id="SaintBarth"
+        component={SaintBarthMontage}
+        durationInFrames={SAINTBARTH_FRAMES}
+        fps={30}
+        width={1080}
+        height={1920}
+      />
+
+      {/* « Grande-Bretagne, Royaume-Uni, Îles Britanniques » — trois
+          définitions emboîtées sur une carte réelle (Natural Earth).
+          Tracés préparés par `node scripts/carte.mjs`.
+          npx remotion render Carte */}
+      <Composition
+        id="Carte"
+        component={Carte}
+        durationInFrames={CARTE_FRAMES}
+        fps={30}
+        width={1080}
+        height={1920}
+      />
+
+      {/* Une personne marche au bord de l'eau, au crépuscule. Entièrement
+          calculé : cycle de marche procédural, marée qui efface les empreintes.
+          npx remotion render Plage */}
+      <Composition
+        id="Plage"
+        component={Plage}
+        durationInFrames={PLAGE_FRAMES}
+        fps={30}
+        width={1080}
+        height={1920}
+      />
+
+      {/* « Bonjour, je m'appelle Robin » — présentation calée sur une voix
+          TÉMOIN synthétique (scripts/voix_hors_ligne.py), en attendant la
+          prise ElevenLabs. Voir src/Presentation/Montage.tsx pour la
+          substitution.
+          npx remotion render Presentation */}
+      <Composition
+        id="Presentation"
+        component={PresentationMontage}
+        durationInFrames={PRESENTATION_FRAMES}
+        fps={30}
+        width={1080}
+        height={1920}
+      />
+
       {/* « Ta montre surestime tes calories » — motion design en beats,
           sans audio (la voix n'est pas encore enregistrée).
           npx remotion render Montre */}

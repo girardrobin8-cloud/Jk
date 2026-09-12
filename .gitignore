@@ -4,9 +4,16 @@ build
 .DS_Store
 .env
 
+# Cache de compilation Python (scripts/)
+__pycache__/
+*.pyc
+
 # Ignore the output video from Git but not videos you import into src/.
 out
 
 # Rushes filmés : média source, hors dépôt (les remettre dans public/rushes/)
 public/rushes/*.mp4
 public/voix/*.mp4
+
+# Voix témoin : regénérable par scripts/voix_hors_ligne.py
+public/voix/*.wav
