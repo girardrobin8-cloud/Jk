@@ -8,7 +8,7 @@ import {
   CYAN,
   EnTete,
   Etiquette,
-  faireFenetre,
+  faireTransition,
   melange,
   NEON,
   Panneau,
@@ -18,7 +18,7 @@ import {
   SOCLE,
   Txt,
 } from "../commun/Motion";
-import { BEATS, FONDU } from "./reperes";
+import { BEATS, FONDU, mappe } from "./reperes";
 
 /**
  * Le motion design du reel Jour 2, en UN SEUL composant continu lisant le temps
@@ -36,7 +36,7 @@ import { BEATS, FONDU } from "./reperes";
  * Aucun bruitage : le montage ne porte que la voix de Robin.
  */
 
-const fenetre = faireFenetre(BEATS, FONDU);
+const transition = faireTransition(BEATS, FONDU);
 
 // ── Repères internes, en secondes absolues ───────────────────────────────
 /**
@@ -46,14 +46,22 @@ const fenetre = faireFenetre(BEATS, FONDU);
  *
  * Règle tenue partout : l'élément COMMENCE à monter deux à quatre dixièmes avant
  * son mot, pour être en place quand le spectateur le lit.
+ *
+ * Les valeurs sont en temps RUSH. `mappe()` les transpose dans le montage
+ * resserré, une fois pour toutes, juste en dessous — si bien qu'une nouvelle
+ * passe de coupe ne demande pas de retoucher une seule de ces secondes.
  */
-const T = {
+const RUSH = {
   // ── B2 — 7,15 → 17,70 : la méta-analyse
-  analyse: 7.4, // « par exemple une méthodologie »   7,3 → 7,9
-  n67: 10.6, // « 67 »                                10,8, « études » 11,4
+  analyse: 7.3, // « par exemple »                    7,3 → 7,4
+  methodo: 7.7, // « une méthodologie »               7,7 → 8,4
+  large: 8.7, // « récente et large »                 8,8 → 9,5
+  n67: 9.7, // le compteur remplace les deux lignes
+  compte: 9.9, // « a réanalysé 67 »                  9,9 → 10,8
+  etudes: 11.1, // « études »                         11,4
   participants: 12.1, // « plus de 2000 participants » 12,0 → 12,7
   precise: 13.3, // « une méthode plus précise »      13,3 → 14,3
-  ciblent: 15.5, // « que les séries qui ciblent »    14,7 → 16,2
+  ciblent: 14.6, // « pour ne compter que les séries » 14,7 → 16,2
   muscle: 16.2, // « vraiment chaque muscle »         16,7 → 17,2
 
   // ── B3 — 17,70 → 23,65 : le chiffre
@@ -87,8 +95,10 @@ const T = {
 
   // ── B7 — 44,15 → 54,20 : la fourchette
   zone: 44.3, // « la zone la plus étudiée »          44,3 → 45,2
+  axe: 44.6, // l'axe se trace, avant que la zone n'arrive
   fourchette: 46.6, // « entre 10 et 20 »             46,7 → 47,4
   parSemaine: 47.7, // « séries par muscle par semaine » 47,7 → 48,8
+  largeur: 49.5, // « alors oui, ça peut sembler large » 49,7 → 50,8
   depend: 51.1, // « mais elle dépend énormément »    51,4 → 52,3
   individuels: 52.6, // « de facteurs individuels »   52,7 → 53,4
 
@@ -116,6 +126,8 @@ const T = {
 
   // ── B11 — 76,75 → 85,20 : l'avis de Robin
   avis: 76.9, // « je serai plutôt d'avis »           76,9 → 77,3
+  rappelZone: 77.0, // l'axe du beat 7 revient
+  resserre: 78.9, // la zone étudiée se resserre sur sa recommandation
   dixDouze: 79.1, // « aux alentours de 10 à 12 »     78,7 → 79,8
   semaine: 79.9, // « séries par muscle et par semaine » 80,0 → 81,3
   pallier: 81.6, // « pour pallier au fait »          81,7 → 82,5
@@ -126,6 +138,9 @@ const T = {
   diminuer: 87.7, // « tu pourras diminuer le nombre » 87,9 → 89,5
   inversement: 89.2, // « de séries par semaine »     89,5 → 90,0
 };
+
+/** Les mêmes repères, transposés dans le montage aux blancs resserrés. */
+const T = Object.fromEntries(Object.entries(RUSH).map(([c, v]) => [c, mappe(v)])) as typeof RUSH;
 
 /**
  * Une jauge verticale : cadre, remplissage, et le libellé sous le cadre.
@@ -186,12 +201,32 @@ export const Animation: React.FC = () => {
   const { fps } = useVideoConfig();
   const t = frame / fps;
 
-  const b = Object.fromEntries(BEATS.map((x) => [x.id, fenetre(t, x.id)])) as Record<string, number>;
-  if (Math.max(...BEATS.map((x) => b[x.id])) <= 0) return null;
+  const b = Object.fromEntries(BEATS.map((x) => [x.id, transition(t, x.id)])) as Record<
+    string,
+    { e: number; dy: number; k: number }
+  >;
+  if (Math.max(...BEATS.map((x) => b[x.id].e)) <= 0) return null;
+
+  /**
+   * L'ouverture d'un beat : son en-tête monte AVEC le panneau, pas après.
+   *
+   * Les bornes tombent sur la reprise de la parole et le premier mot suit d'un
+   * dixième ou deux. L'en-tête calé sur ce mot laissait donc voir, à chaque
+   * borne, un écran noir vide le temps d'un battement — c'est ce qui faisait
+   * lire la transition comme une coupure plutôt que comme un enchaînement.
+   */
+  const ouverture = (id: string) => {
+    const d = BEATS.find((x) => x.id === id)!.debut;
+    return rd(t, d - FONDU, d + 0.25);
+  };
 
   // ── B2 ────────────────────────────────────────────────────────────────
-  const n67 = rd(t, T.n67, T.n67 + 0.6);
-  const etudes = rd(t, T.n67 + 0.5, T.n67 + 1.0);
+  const methodo = rd(t, T.methodo, T.methodo + 0.6);
+  const large = rd(t, T.large, T.large + 0.6);
+  const n67 = rd(t, T.n67, T.n67 + 0.45);
+  /** La valeur affichée par le compteur : elle monte, elle ne surgit pas. */
+  const compte = Math.round(67 * rd(t, T.compte, T.compte + 1.0));
+  const etudes = rd(t, T.etudes, T.etudes + 0.5);
   const participants = rd(t, T.participants, T.participants + 0.5);
   const precise = rd(t, T.precise, T.precise + 0.6);
   const ciblent = rd(t, T.ciblent, T.ciblent + 0.9);
@@ -200,7 +235,6 @@ export const Animation: React.FC = () => {
   const q2 = rd(t, T.precise - 0.5, T.precise + 0.2);
 
   // ── B3 ────────────────────────────────────────────────────────────────
-  const resultat = rd(t, T.resultat, T.resultat + 0.5);
   const chiffre = rd(t, T.chiffre, T.chiffre + 0.6);
   const parSerie = rd(t, T.parSerie, T.parSerie + 0.5);
   const vite = rd(t, T.vite, T.vite + 0.6);
@@ -208,7 +242,6 @@ export const Animation: React.FC = () => {
   const q3 = rd(t, T.rendements - 0.5, T.rendements + 0.2);
 
   // ── B4 ────────────────────────────────────────────────────────────────
-  const audela = rd(t, T.audela, T.audela + 0.5);
   const volume = rd(t, T.volume, T.volume + 2.6);
   const stimulus = rd(t, T.volume, T.volume + 1.3) * 0.66;
   const plafond = rd(t, T.plafond, T.plafond + 0.6);
@@ -216,7 +249,6 @@ export const Animation: React.FC = () => {
   const q4 = rd(t, T.recup - 0.5, T.recup + 0.2);
 
   // ── B5 ────────────────────────────────────────────────────────────────
-  const equation = rd(t, T.equation, T.equation + 0.6);
   const moitie = rd(t, T.moitie, T.moitie + 0.6);
   const autre = rd(t, T.autre, T.autre + 0.7);
   const echec = rd(t, T.echec, T.echec + 0.5);
@@ -225,21 +257,20 @@ export const Animation: React.FC = () => {
   const q5 = rd(t, T.pousses - 0.5, T.pousses + 0.2);
 
   // ── B6 ────────────────────────────────────────────────────────────────
-  const parceque = rd(t, T.parceque, T.parceque + 0.4);
   const uneSerie = rd(t, T.uneSerie, T.uneSerie + 0.6);
   const exercice = rd(t, T.exercice, T.exercice + 0.5);
   const mesurables = rd(t, T.mesurables, T.mesurables + 0.6);
   const q6 = rd(t, T.produire + 0.4, T.mesurables + 0.1);
 
   // ── B7 ────────────────────────────────────────────────────────────────
-  const zone = rd(t, T.zone, T.zone + 0.6);
+  const axe = rd(t, T.axe, T.axe + 1.1);
   const bande = rd(t, T.fourchette, T.fourchette + 0.9);
+  const largeur = rd(t, T.largeur, T.largeur + 0.7);
   const parSemaine = rd(t, T.parSemaine, T.parSemaine + 0.6);
   const individuels = rd(t, T.individuels, T.individuels + 0.6);
   const q7 = rd(t, T.depend - 0.4, T.depend + 0.3);
 
   // ── B8 ────────────────────────────────────────────────────────────────
-  const comparant = rd(t, T.comparant, T.comparant + 0.6);
   const modere = rd(t, T.modere, T.modere + 0.6);
   const eleve = rd(t, T.eleve, T.eleve + 0.6);
   const barres = rd(t, T.aucune, T.aucune + 1.1);
@@ -247,7 +278,6 @@ export const Animation: React.FC = () => {
   const q8 = rd(t, T.aucune - 0.5, T.aucune + 0.2);
 
   // ── B9 ────────────────────────────────────────────────────────────────
-  const conclure = rd(t, T.conclure, T.conclure + 0.5);
   const suffit = rd(t, T.suffit, T.suffit + 0.6);
   const mais = rd(t, T.mais, T.mais + 0.5);
   const facteurs = [
@@ -258,15 +288,17 @@ export const Animation: React.FC = () => {
   const q9 = rd(t, T.experience - 0.5, T.experience + 0.2);
 
   // ── B10 ───────────────────────────────────────────────────────────────
-  const programme = rd(t, T.programme, T.programme + 0.5);
   const mesure = rd(t, T.mesure, T.mesure + 0.6);
   const ecart = rd(t, T.ecart, T.ecart + 0.7);
+  /** Le second nombre monte au lieu de se poser — même procédé qu'au beat 2. */
+  const jusqua59 = Math.round(59 * rd(t, T.ecart + 0.2, T.ecart + 1.7));
   const selon = rd(t, T.selon, T.selon + 0.6);
   const chacun = rd(t, T.chacun, T.chacun + 0.6);
   const q10 = rd(t, T.ecart - 0.5, T.ecart + 0.2);
 
   // ── B11 ───────────────────────────────────────────────────────────────
-  const avis = rd(t, T.avis, T.avis + 0.5);
+  const rappelZone = rd(t, T.rappelZone, T.rappelZone + 0.8);
+  const resserre = rd(t, T.resserre, T.resserre + 0.9);
   const dixDouze = rd(t, T.dixDouze, T.dixDouze + 0.6);
   const semaine = rd(t, T.semaine, T.semaine + 0.6);
   const rappel = rd(t, T.pallier + 0.3, T.pasEchec + 0.9) * 0.45;
@@ -275,7 +307,7 @@ export const Animation: React.FC = () => {
 
   // ── B12 ───────────────────────────────────────────────────────────────
   const intensite = rd(t, T.intensite, T.intensite + 0.6);
-  const fleche = rd(t, T.diminuer - 0.5, T.diminuer + 0.2);
+  const fleche = rd(t, T.diminuer - 1.4, T.diminuer - 0.1);
   const diminuer = rd(t, T.diminuer, T.diminuer + 0.6);
   const inversement = rd(t, T.inversement, T.inversement + 0.5);
 
@@ -285,12 +317,42 @@ export const Animation: React.FC = () => {
       {/* Deux écrans. Le premier pose les chiffres de l'étude ; le second les
           range en en-tête — ils restent lisibles, ils cessent d'occuper la
           scène — pour montrer CE QU'ELLE COMPTE. */}
-      <Panneau e={b.B2} t={t}>
-        <EnTete opacity={rd(t, T.analyse, T.analyse + 0.5) * (1 - q2)}>UNE ANALYSE RÉCENTE</EnTete>
+      <Panneau {...b.B2} t={t}>
+        <EnTete opacity={ouverture("B2") * (1 - q2)}>UNE ANALYSE RÉCENTE</EnTete>
+
+        {/* Ce que dit Robin pendant les trois secondes qui précèdent le premier
+            chiffre. Sans elles, l'écran restait figé sur son seul en-tête —
+            c'est le plus long temps mort qu'avait le montage. */}
+        {methodo > 0 && (
+          <g opacity={1 - n67}>
+            <Txt
+              x={CX}
+              y={melange(920, 880, methodo)}
+              taille={corps("UNE MÉTHODOLOGIE", 78, 4)}
+              couleur={M.texte}
+              espace={4}
+              opacity={methodo}
+            >
+              UNE MÉTHODOLOGIE
+            </Txt>
+            <Txt
+              x={CX}
+              y={melange(1080, 1040, large)}
+              taille={corps("RÉCENTE ET LARGE", 78, 4)}
+              couleur={NEON}
+              espace={4}
+              opacity={large}
+            >
+              RÉCENTE ET LARGE
+            </Txt>
+          </g>
+        )}
 
         {/* Les deux chiffres de l'étude : d'abord seuls et grands, puis rangés
             côte à côte tout en haut. Une fois rangés ils TIENNENT LIEU
-            d'en-tête — en poser un second par-dessus les faisait se toucher. */}
+            d'en-tête — en poser un second par-dessus les faisait se toucher.
+            Le premier ROULE de 0 à 67 pendant que Robin dit « a réanalysé » :
+            un nombre qui monte occupe le temps qu'un nombre posé laisse vide. */}
         <Txt
           x={melange(CX, 260, q2)}
           y={melange(800, 250, q2)}
@@ -299,7 +361,7 @@ export const Animation: React.FC = () => {
           espace={2}
           opacity={n67}
         >
-          67
+          {compte}
         </Txt>
         <Txt
           x={melange(CX, 260, q2)}
@@ -381,8 +443,8 @@ export const Animation: React.FC = () => {
       </Panneau>
 
       {/* ══ B3 — le chiffre, puis sa pente ═════════════════════════════ */}
-      <Panneau e={b.B3} t={t}>
-        <EnTete opacity={resultat * (1 - q3)}>LE RÉSULTAT</EnTete>
+      <Panneau {...b.B3} t={t}>
+        <EnTete opacity={ouverture("B3") * (1 - q3)}>LE RÉSULTAT</EnTete>
         <EnTete opacity={q3}>ET ÇA S'APLATIT VITE</EnTete>
 
         <Txt
@@ -442,8 +504,8 @@ export const Animation: React.FC = () => {
       {/* Deux jauges côte à côte : le volume continue de monter, le stimulus
           plafonne. C'est l'écart entre les deux qui porte l'idée, donc elles
           partagent la même échelle et la même base. */}
-      <Panneau e={b.B4} t={t}>
-        <EnTete opacity={audela * (1 - q4)}>AU-DELÀ D'UN CERTAIN VOLUME</EnTete>
+      <Panneau {...b.B4} t={t}>
+        <EnTete opacity={ouverture("B4") * (1 - q4)}>AU-DELÀ D'UN CERTAIN VOLUME</EnTete>
 
         {volume > 0 && (
           <g opacity={1 - q4}>
@@ -481,8 +543,8 @@ export const Animation: React.FC = () => {
       </Panneau>
 
       {/* ══ B5 — l'autre moitié de l'équation ══════════════════════════ */}
-      <Panneau e={b.B5} t={t}>
-        <EnTete opacity={equation * (1 - q5)}>L'ÉQUATION</EnTete>
+      <Panneau {...b.B5} t={t}>
+        <EnTete opacity={ouverture("B5") * (1 - q5)}>L'ÉQUATION</EnTete>
         <EnTete opacity={q5}>À QUEL POINT TU POUSSES</EnTete>
 
         {/* Une barre coupée en deux : la moitié connue, puis la moitié oubliée.
@@ -537,8 +599,8 @@ export const Animation: React.FC = () => {
       {/* Le brief demande ici du plein écran, sans rien autour. C'est aussi la
           seule révélation du montage qui tienne en trois mots : on la laisse
           seule. */}
-      <Panneau e={b.B6} t={t}>
-        <EnTete opacity={parceque * (1 - q6)}>PARCE QUE</EnTete>
+      <Panneau {...b.B6} t={t}>
+        <EnTete opacity={ouverture("B6") * (1 - q6)}>PARCE QUE</EnTete>
         <EnTete opacity={q6}>SUFFIT À PRODUIRE</EnTete>
 
         {uneSerie > 0 && (
@@ -571,31 +633,75 @@ export const Animation: React.FC = () => {
       {/* ══ B7 — la fourchette ═════════════════════════════════════════ */}
       {/* L'axe reste à l'écran d'un écran à l'autre : c'est lui qui fait le lien
           entre « voilà la zone » et « et elle dépend de toi ». */}
-      <Panneau e={b.B7} t={t}>
-        <EnTete opacity={zone * (1 - q7)}>LA ZONE LA PLUS ÉTUDIÉE</EnTete>
+      <Panneau {...b.B7} t={t}>
+        <EnTete opacity={ouverture("B7") * (1 - q7)}>LA ZONE LA PLUS ÉTUDIÉE</EnTete>
         <EnTete opacity={q7}>MAIS ELLE DÉPEND DE TOI</EnTete>
 
+        {/* L'axe se trace d'abord, seul, pendant que Robin annonce la zone :
+            deux secondes qui étaient auparavant immobiles. La bande colorée ne
+            vient se poser dessus qu'au moment où il donne les chiffres. */}
+        {axe > 0 && (
+          <>
+            <line x1={120} y1={1110} x2={melange(120, 960, axe)} y2={1110} stroke={M.gris} strokeWidth={5} />
+            {axe < 1 && (
+              <rect x={melange(120, 960, axe) - 8} y={1094} width={16} height={32} fill={NEON} />
+            )}
+            {[
+              { x: 120, l: "0", vif: false },
+              { x: 400, l: "10", vif: true },
+              { x: 680, l: "20", vif: true },
+              { x: 960, l: "30", vif: false },
+            ].map((g) => {
+              const e = rd(melange(120, 960, axe), g.x - 30, g.x + 20) * (g.vif ? 1 : 0.45);
+              return e <= 0 ? null : (
+                <g key={g.l} opacity={e}>
+                  <line x1={g.x} y1={1110} x2={g.x} y2={1142} stroke={g.vif ? NEON : M.gris} strokeWidth={4} />
+                  <Txt x={g.x} y={1190} taille={g.vif ? 38 : 28} couleur={g.vif ? NEON : M.gris} espace={2}>
+                    {g.l}
+                  </Txt>
+                </g>
+              );
+            })}
+          </>
+        )}
         {bande > 0 && (
           <>
             <Txt x={CX} y={800} taille={corps("10 À 20 SÉRIES", 96, 4)} couleur={NEON} espace={4} opacity={bande * (1 - q7)}>
               10 À 20 SÉRIES
             </Txt>
             <rect x={400} y={1010} width={280 * bande} height={100} fill={NEON} opacity={0.9} />
-            <line x1={120} y1={1110} x2={960} y2={1110} stroke={M.gris} strokeWidth={4} />
-            {[
-              { v: 0, x: 120, l: "0", vif: false },
-              { v: 10, x: 400, l: "10", vif: true },
-              { v: 20, x: 680, l: "20", vif: true },
-              { v: 30, x: 960, l: "30", vif: false },
-            ].map((g) => (
-              <g key={g.l} opacity={bande * (g.vif ? 1 : 0.45)}>
-                <line x1={g.x} y1={1110} x2={g.x} y2={1142} stroke={g.vif ? NEON : M.gris} strokeWidth={4} />
-                <Txt x={g.x} y={1190} taille={g.vif ? 38 : 28} couleur={g.vif ? NEON : M.gris} espace={2}>
-                  {g.l}
-                </Txt>
-              </g>
-            ))}
           </>
+        )}
+
+        {/* « Alors oui, ça peut sembler large » : la double flèche mesure la
+            zone pendant qu'il le dit, et le socle enchaîne sur ses mots. */}
+        {largeur > 0 && (
+          <g opacity={largeur * (1 - q7)}>
+            <line
+              x1={melange(540, 400, largeur)}
+              y1={1270}
+              x2={melange(540, 680, largeur)}
+              y2={1270}
+              stroke={AMBRE}
+              strokeWidth={5}
+            />
+            <path
+              d={`M ${melange(540, 428, largeur)} 1246 L ${melange(540, 400, largeur)} 1270 L ${melange(540, 428, largeur)} 1294`}
+              fill="none"
+              stroke={AMBRE}
+              strokeWidth={5}
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            />
+            <path
+              d={`M ${melange(540, 652, largeur)} 1246 L ${melange(540, 680, largeur)} 1270 L ${melange(540, 652, largeur)} 1294`}
+              fill="none"
+              stroke={AMBRE}
+              strokeWidth={5}
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            />
+          </g>
         )}
         {parSemaine > 0 && (
           <Txt
@@ -604,9 +710,21 @@ export const Animation: React.FC = () => {
             taille={corps("PAR MUSCLE ET PAR SEMAINE", 44, 3)}
             couleur={M.texte}
             espace={3}
-            opacity={parSemaine * (1 - q7)}
+            opacity={parSemaine * (1 - largeur)}
           >
             PAR MUSCLE ET PAR SEMAINE
+          </Txt>
+        )}
+        {largeur > 0 && (
+          <Txt
+            x={CX}
+            y={SOCLE}
+            taille={corps("ÇA PEUT SEMBLER LARGE", 44, 3)}
+            couleur={AMBRE}
+            espace={3}
+            opacity={largeur * (1 - q7)}
+          >
+            ÇA PEUT SEMBLER LARGE
           </Txt>
         )}
         {q7 > 0 && (
@@ -631,8 +749,8 @@ export const Animation: React.FC = () => {
       {/* ══ B8 — modéré contre élevé ═══════════════════════════════════ */}
       {/* Reprise exacte de la structure qui a fonctionné au Jour 1 : les groupes
           d'abord, puis les barres qui les remplacent. */}
-      <Panneau e={b.B8} t={t}>
-        <EnTete opacity={comparant * (1 - q8)}>MODÉRÉ CONTRE ÉLEVÉ</EnTete>
+      <Panneau {...b.B8} t={t}>
+        <EnTete opacity={ouverture("B8") * (1 - q8)}>MODÉRÉ CONTRE ÉLEVÉ</EnTete>
         <EnTete opacity={q8}>LE RÉSULTAT</EnTete>
 
         {[
@@ -701,8 +819,8 @@ export const Animation: React.FC = () => {
       </Panneau>
 
       {/* ══ B9 — ce qui fait varier ton chiffre ════════════════════════ */}
-      <Panneau e={b.B9} t={t}>
-        <EnTete opacity={conclure * (1 - q9)}>ON POURRAIT CONCLURE</EnTete>
+      <Panneau {...b.B9} t={t}>
+        <EnTete opacity={ouverture("B9") * (1 - q9)}>ON POURRAIT CONCLURE</EnTete>
         <EnTete opacity={q9}>CE QUI FAIT VARIER TON CHIFFRE</EnTete>
 
         {suffit > 0 && (
@@ -745,8 +863,8 @@ export const Animation: React.FC = () => {
       </Panneau>
 
       {/* ══ B10 — la variabilité entre personnes ═══════════════════════ */}
-      <Panneau e={b.B10} t={t}>
-        <EnTete opacity={programme * (1 - q10)}>SUR LE MÊME PROGRAMME</EnTete>
+      <Panneau {...b.B10} t={t}>
+        <EnTete opacity={ouverture("B10") * (1 - q10)}>SUR LE MÊME PROGRAMME</EnTete>
         <EnTete opacity={q10}>LES GAINS MESURÉS</EnTete>
 
         {mesure > 0 && (
@@ -778,7 +896,7 @@ export const Animation: React.FC = () => {
               opacity={rd(ecart, 0.7, 1)}
             />
             <Txt x={650} y={900} taille={melange(80, 120, ecart)} couleur={AMBRE} espace={2} ancre="start">
-              59 %
+              {`${jusqua59} %`}
             </Txt>
           </g>
         )}
@@ -805,14 +923,14 @@ export const Animation: React.FC = () => {
       {/* La jauge du beat 5 revient ici, à la même place et à la même échelle,
           mais arrêtée bien avant le repère « ÉCHEC » : c'est le même dessin, et
           c'est ce qui fait comprendre l'écart sans une ligne de texte de plus. */}
-      <Panneau e={b.B11} t={t}>
-        <EnTete opacity={avis * (1 - q11)}>MON AVIS</EnTete>
+      <Panneau {...b.B11} t={t}>
+        <EnTete opacity={ouverture("B11") * (1 - q11)}>MON AVIS</EnTete>
         <EnTete opacity={q11}>POURQUOI PAS PLUS</EnTete>
 
         {dixDouze > 0 && (
           <Txt
             x={CX}
-            y={920}
+            y={820}
             taille={corps("10 À 12 SÉRIES", 104, 4)}
             couleur={NEON}
             espace={4}
@@ -821,13 +939,54 @@ export const Animation: React.FC = () => {
             10 À 12 SÉRIES
           </Txt>
         )}
+
+        {/* Le même axe qu'au beat 7, à la même échelle : la zone étudiée est
+            rappelée en pointillés, et la barre s'y resserre sur les 10 à 12
+            séries de Robin. C'est le rappel qui fait l'argument. */}
+        {rappelZone > 0 && (
+          <g opacity={rappelZone * (1 - q11)}>
+            <rect
+              x={400}
+              y={1010}
+              width={melange(280, 56, resserre) * rappelZone}
+              height={100}
+              fill={NEON}
+              opacity={0.9}
+            />
+            <rect
+              x={400}
+              y={1010}
+              width={280}
+              height={100}
+              fill="none"
+              stroke={M.gris}
+              strokeWidth={4}
+              strokeDasharray="14 10"
+              opacity={resserre * 0.8}
+            />
+            <line x1={120} y1={1110} x2={960} y2={1110} stroke={M.gris} strokeWidth={4} />
+            {[
+              { x: 120, l: "0", vif: false },
+              { x: 400, l: "10", vif: true },
+              { x: 680, l: "20", vif: false },
+              { x: 960, l: "30", vif: false },
+            ].map((g) => (
+              <g key={g.l} opacity={g.vif ? 1 : 0.45}>
+                <line x1={g.x} y1={1110} x2={g.x} y2={1142} stroke={g.vif ? NEON : M.gris} strokeWidth={4} />
+                <Txt x={g.x} y={1190} taille={g.vif ? 38 : 28} couleur={g.vif ? NEON : M.gris} espace={2}>
+                  {g.l}
+                </Txt>
+              </g>
+            ))}
+          </g>
+        )}
         {semaine > 0 && (
           <Txt
             x={CX}
-            y={1090}
-            taille={corps("PAR MUSCLE ET PAR SEMAINE", 42, 4)}
-            couleur={M.gris}
-            espace={4}
+            y={SOCLE}
+            taille={corps("PAR MUSCLE ET PAR SEMAINE", 44, 3)}
+            couleur={M.texte}
+            espace={3}
             opacity={semaine * (1 - q11)}
           >
             PAR MUSCLE ET PAR SEMAINE
@@ -858,8 +1017,8 @@ export const Animation: React.FC = () => {
       </Panneau>
 
       {/* ══ B12 — la conclusion ════════════════════════════════════════ */}
-      <Panneau e={b.B12} t={t}>
-        <EnTete opacity={intensite}>LES DEUX SE COMPENSENT</EnTete>
+      <Panneau {...b.B12} t={t}>
+        <EnTete opacity={ouverture("B12")}>LES DEUX SE COMPENSENT</EnTete>
 
         <g transform={`translate(0 ${melange(-36, 0, intensite)})`}>
           <Etiquette x={CX} y={780} l={700} h={160} couleur={AMBRE} vise={58} espace={3} opacity={intensite}>
@@ -873,11 +1032,14 @@ export const Animation: React.FC = () => {
               y1={876}
               x2={CX}
               y2={melange(876, 1060, fleche)}
-              stroke={M.gris}
-              strokeWidth={7}
+              stroke={AMBRE}
+              strokeWidth={9}
               strokeLinecap="round"
             />
-            <Pointe x={CX} y={1072} couleur={M.gris} opacity={rd(fleche, 0.7, 1)} />
+            <Pointe x={CX} y={1072} couleur={AMBRE} opacity={rd(fleche, 0.75, 1)} />
+            <Txt x={700} y={985} taille={34} couleur={M.gris} espace={4} ancre="start" opacity={rd(fleche, 0.35, 0.8)}>
+              PERMET
+            </Txt>
           </g>
         )}
         <g transform={`translate(0 ${melange(36, 0, diminuer)})`}>

@@ -7,7 +7,7 @@ import {
   corps,
   EnTete,
   Etiquette,
-  faireFenetre,
+  faireTransition,
   melange,
   NEON,
   Panneau,
@@ -49,7 +49,7 @@ import { BEATS, FONDU } from "./reperes";
  *  · aucun bruitage — rien à faire ici, le montage ne porte que la voix.
  */
 
-const fenetre = faireFenetre(BEATS, FONDU);
+const transition = faireTransition(BEATS, FONDU);
 
 // ── Repères internes, en secondes absolues ───────────────────────────────
 /**
@@ -107,12 +107,23 @@ export const Animation: React.FC = () => {
   const { fps } = useVideoConfig();
   const t = frame / fps;
 
-  const b2 = fenetre(t, "B2");
-  const b3 = fenetre(t, "B3");
-  const b4 = fenetre(t, "B4");
-  const b5 = fenetre(t, "B5");
-  const b6 = fenetre(t, "B6");
-  if (Math.max(b2, b3, b4, b5, b6) <= 0) return null;
+  const b2 = transition(t, "B2");
+  const b3 = transition(t, "B3");
+  const b4 = transition(t, "B4");
+  const b5 = transition(t, "B5");
+  const b6 = transition(t, "B6");
+  if (Math.max(b2.e, b3.e, b4.e, b5.e, b6.e) <= 0) return null;
+
+  /**
+   * L'ouverture d'un beat : son en-tête monte AVEC le panneau, pas après.
+   * Celui de B2 attendait « glucides », quatre dixièmes après la borne — le
+   * panneau opaque recouvrait donc la caméra sur un écran vide le temps d'un
+   * battement, ce qui faisait lire l'entrée comme une coupure au noir.
+   */
+  const ouverture = (id: string) => {
+    const d = BEATS.find((x) => x.id === id)!.debut;
+    return rd(t, d - FONDU, d + 0.25);
+  };
 
   // ── B2 ────────────────────────────────────────────────────────────────
   const perso = rd(t, T.perso, T.perso + 0.5);
@@ -200,8 +211,8 @@ export const Animation: React.FC = () => {
           personnage à gauche et la courbe à droite. Le second sort le
           personnage, étale la courbe sur toute la largeur et fait entrer
           l'insuline au-dessus : trois blocs maximum à tout instant. */}
-      <Panneau e={b2} t={t}>
-        <EnTete opacity={riz * (1 - q2)}>TU MANGES DES GLUCIDES</EnTete>
+      <Panneau {...b2} t={t}>
+        <EnTete opacity={ouverture("B2") * (1 - q2)}>TU MANGES DES GLUCIDES</EnTete>
         <EnTete opacity={q2}>TON CORPS RÉPOND</EnTete>
 
         {/* Écran 1 — le personnage et son assiette. Le bonhomme fait 11 × 15
@@ -255,7 +266,7 @@ export const Animation: React.FC = () => {
           né le raccourci » — n'existait pas au brief : c'est une idée que Robin
           a ajoutée en tournant, et elle a besoin de sa propre image, sans quoi
           l'animation illustrerait une phrase qu'il ne dit pas. */}
-      <Panneau e={b3} t={t}>
+      <Panneau {...b3} t={t}>
         {raccourci > 0.02 ? (
           <>
             <EnTete opacity={raccourci}>LÀ EST NÉ LE RACCOURCI</EnTete>
@@ -378,7 +389,7 @@ export const Animation: React.FC = () => {
       {/* Deux écrans, articulés par le déplacement de la jauge. Tant qu'elle se
           remplit elle est seule et centrée ; quand elle déborde elle glisse à
           gauche et libère la moitié droite pour le trop-plein. */}
-      <Panneau e={b4} t={t}>
+      <Panneau {...b4} t={t}>
         <EnTete opacity={jauge * (1 - debordement)}>D'ABORD LE RÉSERVOIR</EnTete>
         <EnTete opacity={debordement}>SEULEMENT ENSUITE L'EXCÈS</EnTete>
 
@@ -455,7 +466,7 @@ export const Animation: React.FC = () => {
           la carte : sept blocs pour une bande de 680 px, avec des jours de
           quarante pixels entre eux. Ici les chiffres montent en en-tête pour
           libérer la scène, puis les groupes cèdent la place aux barres. */}
-      <Panneau e={b5} t={t}>
+      <Panneau {...b5} t={t}>
         {/* Temps 1 — les chiffres, seuls et en grand. */}
         <Txt x={CX} y={700} taille={38} couleur={M.gris} espace={5} opacity={meta * (1 - p2)}>
           UNE MÉTA-ANALYSE
@@ -574,7 +585,7 @@ export const Animation: React.FC = () => {
       </Panneau>
 
       {/* ══ B6 — la conséquence ════════════════════════════════════════ */}
-      <Panneau e={b6} t={t}>
+      <Panneau {...b6} t={t}>
         <EnTete opacity={haltere}>MAIS LES COUPER TROP</EnTete>
         {haltere > 0 && (
           <g opacity={haltere}>

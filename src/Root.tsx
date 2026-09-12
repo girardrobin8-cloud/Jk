@@ -56,10 +56,12 @@ import { Logo, myCompSchema2 } from "./HelloWorld/Logo";
 export const RemotionRoot: React.FC = () => {
   return (
     <>
-      {/* Reel Jour 2 « combien de séries par semaine » — 90,17 s.
-          Rush d'origine intact + motion design par-dessus sur B2..B12.
-          Bornes LUES sur les sous-titres incrustés (voir reperes.ts).
-          Média : public/rushes/jour2.mp4 (hors dépôt).
+      {/* Reel Jour 2 « combien de séries par semaine » — 84,93 s.
+          Rush aux blancs resserrés + motion design par-dessus sur B2..B12.
+          Bornes LUES sur les sous-titres incrustés, puis transposées par
+          mappe() dans le temps du montage (voir reperes.ts).
+          Média : public/rushes/jour2_resserre.mp4, produit par
+          `python3 scripts/resserrer.py` (hors dépôt).
           npx remotion render Jour2 */}
       <Composition
         id="Jour2"

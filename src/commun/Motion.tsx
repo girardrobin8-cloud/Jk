@@ -241,16 +241,54 @@ export const faireFenetre =
   };
 
 /**
+ * Fabrique la transition d'un beat : opacité, décalage vertical et échelle.
+ *
+ * Le fondu seul donnait un enchaînement plat — deux images qui se traversent,
+ * sans direction. Ici le contenu du beat qui ARRIVE monte de `monte` pixels en
+ * se posant, et celui qui PART continue sa course vers le haut en s'agrandissant
+ * un peu. Le fond, lui, ne bouge pas : seul le contenu glisse, sinon la vidéo
+ * réapparaîtrait sur le bord.
+ *
+ * Comme un panneau est déjà opaque quand le précédent commence à s'effacer, ce
+ * qu'on voit à chaque borne est la POUSSÉE du nouveau par-dessus l'ancien. Le
+ * mouvement de sortie ne se voit que lorsque rien ne recouvre — retour caméra,
+ * ou fin de montage.
+ */
+export const faireTransition =
+  (beats: Borne[], fondu: number, monte = 90) =>
+  (t: number, id: string) => {
+    const b = beats.find((x) => x.id === id)!;
+    const entree = rd(t, b.debut - fondu, b.debut);
+    const sortie = rd(t, b.fin, b.fin + fondu);
+    return {
+      e: Math.min(entree, 1 - sortie),
+      dy: melange(monte, 0, entree) + melange(0, -monte, sortie),
+      k: melange(0.955, 1, entree) * melange(1, 1.045, sortie),
+    };
+  };
+
+/**
  * Un écran d'animation : fond opaque de la charte, et une respiration très lente
  * (±0,5 % sur sept secondes) pour qu'aucun plan ne soit jamais parfaitement figé.
+ *
+ * `dy` et `k` viennent de `faireTransition` et ne portent QUE le contenu — le
+ * fond reste plaqué sur le cadre.
  */
-export const Panneau: React.FC<{ e: number; t: number; children: React.ReactNode }> = ({ e, t, children }) => {
+export const Panneau: React.FC<{
+  e: number;
+  t: number;
+  dy?: number;
+  k?: number;
+  children: React.ReactNode;
+}> = ({ e, t, dy = 0, k = 1, children }) => {
   if (e <= 0) return null;
   const souffle = 1 + 0.005 * Math.sin((2 * Math.PI * t) / 7);
   return (
     <AbsoluteFill style={{ backgroundColor: M.fond, opacity: e }}>
       <svg width="100%" height="100%" viewBox="0 0 1080 1920">
-        <g transform={`translate(${CX} 960) scale(${souffle}) translate(${-CX} -960)`}>{children}</g>
+        <g transform={`translate(${CX} ${960 + dy}) scale(${souffle * k}) translate(${-CX} -960)`}>
+          {children}
+        </g>
       </svg>
     </AbsoluteFill>
   );

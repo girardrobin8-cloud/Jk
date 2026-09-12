@@ -31,23 +31,54 @@
  * dans la prise réelle. Les bornes ci-dessous tombent toutes dans un SILENCE
  * entre deux mots, relevé sur les sous-titres, jamais au milieu d'une phrase.
  *
- * ── Audio : rien touché, et pourquoi ────────────────────────────────────
+ * ── Les blancs sont resserrés ───────────────────────────────────────────
  *
- * La prise est mesurée à -13,9 LUFS pour 4,4 LU d'amplitude — déjà au niveau du
- * Jour 1 livré (-14,6) et déjà régulière. Une normalisation ne gagnerait rien
- * d'audible et coûterait un réencodage, donc la piste est copiée telle quelle.
+ * Seize blancs de plus de 0,36 s sont ramenés à 0,24 s : 5,24 s retirées,
+ * 90,17 s → 84,93 s. La coupe est faite par scripts/resserrer.py, appliquée à
+ * l'image ET au son par le même filtre — les sous-titres incrustés de Robin
+ * restent donc calés sur sa voix à l'image près.
  *
- * Les six respirations d'environ une seconde (6,2→7,3 · 17,4→18,0 · 29,4→30,6 ·
- * 53,9→54,6 · 68,3→69,3 · 85,1→85,4) ne sont pas rabotées : ce sont les
- * articulations du discours, et les sous-titres incrustés sont calés à l'image
- * près sur la voix — couper décalerait chaque mot de son image.
+ * Le niveau, lui, n'est pas retouché : la prise est à -13,9 LUFS pour 4,4 LU
+ * d'amplitude, soit le niveau du Jour 1 livré.
+ *
+ * ── Pourquoi les repères restent en temps RUSH ──────────────────────────
+ *
+ * Couper déplace tout ce qui suit. Les bornes et les repères d'animation ont
+ * été relevés sur les sous-titres du rush d'ORIGINE ; les réécrire à la main
+ * après chaque coupe serait le meilleur moyen de les désynchroniser sans s'en
+ * apercevoir. Ils restent donc écrits en temps rush, et passent par `mappe()`,
+ * qui lit la table produite par le script. Recouper ne demande qu'une
+ * régénération.
  *
  * Palette : la charte du dépôt (src/Muscle/Plan.tsx), plus un cyan secondaire.
  */
 
-export const FPS = 30;
-/** Durée de la prise livrée par Robin. */
-export const DUREE = 90.17;
+import { DUREE_MONTEE, FPS as FPS_COUPE, SEGMENTS } from "./coupes";
+
+export const FPS = FPS_COUPE;
+/** Durée du montage, blancs resserrés. */
+export const DUREE = DUREE_MONTEE;
+/** Durée de la prise brute livrée par Robin, pour mémoire. */
+export const DUREE_RUSH = 90.17;
+
+/**
+ * Convertit une seconde du rush d'origine en seconde du montage resserré.
+ *
+ * Un instant tombé DANS un blanc coupé est ramené à la fin de la tranche qui le
+ * précède — c'est-à-dire à l'instant où la parole reprend. C'est ce qu'on veut
+ * pour une borne de beat : elle se pose sur la première syllabe de la phrase
+ * suivante, pas sur du vide.
+ */
+export const mappe = (t: number) => {
+  let cumul = 0;
+  for (const [debut, images] of SEGMENTS) {
+    const fin = debut + images / FPS;
+    if (t < debut) return cumul / FPS;
+    if (t < fin) return (cumul + (t - debut) * FPS) / FPS;
+    cumul += images;
+  }
+  return cumul / FPS;
+};
 
 export type Beat = {
   id: string;
@@ -59,7 +90,7 @@ export type Beat = {
   dit: string;
 };
 
-export const BEATS: Beat[] = [
+const BEATS_RUSH: Beat[] = [
   {
     id: "B1",
     type: "cam",
@@ -141,10 +172,17 @@ export const BEATS: Beat[] = [
     id: "B12",
     type: "anim",
     debut: 85.2,
-    fin: DUREE,
+    fin: DUREE_RUSH,
     dit: "Plus tu augmenteras cette intensité à l'entraînement, plus tu pourras diminuer le nombre de séries par semaine.",
   },
 ];
+
+/** Les mêmes beats, exprimés dans le temps du montage resserré. */
+export const BEATS: Beat[] = BEATS_RUSH.map((b) => ({
+  ...b,
+  debut: mappe(b.debut),
+  fin: mappe(b.fin),
+}));
 
 /** Durée des fondus caméra ↔ animation. Le brief interdit le cut sec. */
 export const FONDU = 0.34;
