@@ -26,7 +26,6 @@ import sys
 
 import imageio_ffmpeg
 
-FPS = 30
 BRUIT = "-28dB"     # plancher de détection, calé sur le souffle de la pièce
 MINI = 0.30         # en deçà, ce n'est pas un blanc mais une articulation
 SEUIL = 0.36        # au-delà, on resserre
@@ -42,7 +41,7 @@ def silences(exe, entree):
     return [(float(f) - float(d), float(f)) for f, d in fins]
 
 
-def segments(entree, duree):
+def segments(entree, duree, FPS):
     """Les tranches à CONSERVER, bornes alignées sur l'image."""
     coupes = []
     for a, b in entree:
@@ -58,19 +57,26 @@ def segments(entree, duree):
 
 
 def duree_de(exe, chemin):
+    """Durée et cadence de la source.
+
+    La cadence est LUE et non supposée : le Jour 3 arrive en 24 i/s alors que
+    les deux précédents étaient en 30. Les coupes portent sur des numéros
+    d'image, donc se tromper de cadence décalerait tout le montage.
+    """
     sortie = subprocess.run([exe, "-i", chemin], capture_output=True, text=True).stderr
     h, m, s = re.search(r"Duration: (\d+):(\d+):([\d.]+)", sortie).groups()
-    return int(h) * 3600 + int(m) * 60 + float(s)
+    fps = float(re.search(r"([\d.]+) fps", sortie).group(1))
+    return int(h) * 3600 + int(m) * 60 + float(s), fps
 
 
 def main():
     entree, sortie, module = sys.argv[1], sys.argv[2], sys.argv[3]
     exe = imageio_ffmpeg.get_ffmpeg_exe()
-    duree = duree_de(exe, entree)
-    gardes = segments(silences(exe, entree), duree)
+    duree, FPS = duree_de(exe, entree)
+    gardes = segments(silences(exe, entree), duree, FPS)
     retire = duree - sum(b - a for a, b in gardes)
     print(f"{len(gardes)} tranches conservées, {retire:.2f} s retirées, "
-          f"{duree:.2f} s → {duree - retire:.2f} s")
+          f"{duree:.2f} s → {duree - retire:.2f} s, à {FPS:g} i/s")
 
     # La sélection image porte sur le NUMÉRO d'image, pas sur la seconde.
     # `between(t,…)` compare des flottants à des estampilles et gardait une

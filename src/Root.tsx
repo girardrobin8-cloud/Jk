@@ -16,6 +16,10 @@ import {
 import { Plage, PLAGE_FRAMES } from "./Plage/Plage";
 import { Carte, CARTE_FRAMES } from "./Carte/Carte";
 import {
+  Montage as Jour3Montage,
+  MONTAGE_FRAMES as JOUR3_FRAMES,
+} from "./Jour3/Montage";
+import {
   Montage as Jour2Montage,
   MONTAGE_FRAMES as JOUR2_FRAMES,
 } from "./Jour2/Montage";
@@ -56,6 +60,22 @@ import { Logo, myCompSchema2 } from "./HelloWorld/Logo";
 export const RemotionRoot: React.FC = () => {
   return (
     <>
+      {/* Reel Jour 3 « si tu dors 5h, ça ne sert à rien » — 51,54 s.
+          SANS TOURNAGE : Robin a livré un export audio sur fond noir, pas sa
+          vidéo. L'animation couvre donc toute la durée, hook et CTA compris ;
+          voir CAMERA dans reperes.ts pour les rendre à la caméra en une ligne.
+          Bornes LUES sur les sous-titres incrustés, transposées par mappe().
+          Média : public/rushes/jour3_resserre.mp4 (hors dépôt).
+          npx remotion render Jour3 */}
+      <Composition
+        id="Jour3"
+        component={Jour3Montage}
+        durationInFrames={JOUR3_FRAMES}
+        fps={30}
+        width={1080}
+        height={1920}
+      />
+
       {/* Reel Jour 2 « combien de séries par semaine » — 84,93 s.
           Rush aux blancs resserrés + motion design par-dessus sur B2..B12.
           Bornes LUES sur les sous-titres incrustés, puis transposées par

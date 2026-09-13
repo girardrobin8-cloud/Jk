@@ -205,6 +205,42 @@ export const Etiquette: React.FC<{
   </g>
 );
 
+/**
+ * Une jauge verticale : cadre, remplissage, et le libellé sous le cadre.
+ *
+ * Elle sert trois fois — le stimulus qui plafonne, la proximité à l'échec, puis
+ * le rappel de cette même proximité au beat 11. Les trois emplois partagent donc
+ * la même géométrie, ce qui fait du rappel une VRAIE reprise visuelle et non un
+ * dessin voisin.
+ */
+export const Jauge: React.FC<{
+  x: number;
+  l?: number;
+  haut?: number;
+  bas?: number;
+  part: number;
+  couleur: string;
+  opacity?: number;
+  libelle?: string;
+}> = ({ x, l = 220, haut = 640, bas = 1240, part, couleur, opacity = 1, libelle }) => (
+  <g opacity={opacity}>
+    <rect x={x - l / 2} y={haut} width={l} height={bas - haut} fill="none" stroke={M.noir} strokeWidth={5} />
+    <rect
+      x={x - l / 2}
+      y={bas - (bas - haut) * part}
+      width={l}
+      height={(bas - haut) * part}
+      fill={couleur}
+      opacity={0.9}
+    />
+    {libelle ? (
+      <Txt x={x} y={bas + 80} taille={corps(libelle, 30, 3, l + 180)} couleur={couleur} espace={3}>
+        {libelle}
+      </Txt>
+    ) : null}
+  </g>
+);
+
 /** Pointe de flèche verticale, dessinée à part pour ne pas la répéter. */
 export const Pointe: React.FC<{ x: number; y: number; couleur: string; opacity?: number }> = ({
   x,

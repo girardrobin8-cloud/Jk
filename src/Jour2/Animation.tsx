@@ -8,6 +8,7 @@ import {
   CYAN,
   EnTete,
   Etiquette,
+  Jauge,
   faireTransition,
   melange,
   NEON,
@@ -141,42 +142,6 @@ const RUSH = {
 
 /** Les mêmes repères, transposés dans le montage aux blancs resserrés. */
 const T = Object.fromEntries(Object.entries(RUSH).map(([c, v]) => [c, mappe(v)])) as typeof RUSH;
-
-/**
- * Une jauge verticale : cadre, remplissage, et le libellé sous le cadre.
- *
- * Elle sert trois fois — le stimulus qui plafonne, la proximité à l'échec, puis
- * le rappel de cette même proximité au beat 11. Les trois emplois partagent donc
- * la même géométrie, ce qui fait du rappel une VRAIE reprise visuelle et non un
- * dessin voisin.
- */
-const Jauge: React.FC<{
-  x: number;
-  l?: number;
-  haut?: number;
-  bas?: number;
-  part: number;
-  couleur: string;
-  opacity?: number;
-  libelle?: string;
-}> = ({ x, l = 220, haut = 640, bas = 1240, part, couleur, opacity = 1, libelle }) => (
-  <g opacity={opacity}>
-    <rect x={x - l / 2} y={haut} width={l} height={bas - haut} fill="none" stroke={M.noir} strokeWidth={5} />
-    <rect
-      x={x - l / 2}
-      y={bas - (bas - haut) * part}
-      width={l}
-      height={(bas - haut) * part}
-      fill={couleur}
-      opacity={0.9}
-    />
-    {libelle ? (
-      <Txt x={x} y={bas + 80} taille={corps(libelle, 30, 3, l + 180)} couleur={couleur} espace={3}>
-        {libelle}
-      </Txt>
-    ) : null}
-  </g>
-);
 
 /**
  * Une courbe de rendements décroissants, tracée progressivement.
