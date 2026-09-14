@@ -16,6 +16,10 @@ import {
 import { Plage, PLAGE_FRAMES } from "./Plage/Plage";
 import { Carte, CARTE_FRAMES } from "./Carte/Carte";
 import {
+  Montage as Jour4Montage,
+  MONTAGE_FRAMES as JOUR4_FRAMES,
+} from "./Jour4/Montage";
+import {
   Montage as Jour3Montage,
   MONTAGE_FRAMES as JOUR3_FRAMES,
 } from "./Jour3/Montage";
@@ -60,6 +64,22 @@ import { Logo, myCompSchema2 } from "./HelloWorld/Logo";
 export const RemotionRoot: React.FC = () => {
   return (
     <>
+      {/* Reel Jour 4 « tu n'as pas 30 minutes chrono » — 88,08 s.
+          SANS TOURNAGE, comme le Jour 3 : l'export livré est un fond noir avec
+          les sous-titres. L'animation couvre toute la durée ; voir CAMERA dans
+          reperes.ts pour rendre hook et CTA à la caméra en une ligne.
+          Bornes LUES sur les sous-titres incrustés, transposées par mappe().
+          Média : public/rushes/jour4_resserre.mp4 (hors dépôt).
+          npx remotion render Jour4 */}
+      <Composition
+        id="Jour4"
+        component={Jour4Montage}
+        durationInFrames={JOUR4_FRAMES}
+        fps={30}
+        width={1080}
+        height={1920}
+      />
+
       {/* Reel Jour 3 « si tu dors 5h, ça ne sert à rien » — 51,54 s.
           SANS TOURNAGE : Robin a livré un export audio sur fond noir, pas sa
           vidéo. L'animation couvre donc toute la durée, hook et CTA compris ;
