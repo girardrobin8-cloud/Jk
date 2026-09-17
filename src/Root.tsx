@@ -16,6 +16,10 @@ import {
 import { Plage, PLAGE_FRAMES } from "./Plage/Plage";
 import { Carte, CARTE_FRAMES } from "./Carte/Carte";
 import {
+  Montage as Jour5Montage,
+  MONTAGE_FRAMES as JOUR5_FRAMES,
+} from "./Jour5/Montage";
+import {
   Montage as Jour4Montage,
   MONTAGE_FRAMES as JOUR4_FRAMES,
 } from "./Jour4/Montage";
@@ -64,6 +68,22 @@ import { Logo, myCompSchema2 } from "./HelloWorld/Logo";
 export const RemotionRoot: React.FC = () => {
   return (
     <>
+      {/* Reel Jour 5 « stagner, c'est ce qui attend ton programme » — 49,96 s.
+          SANS TOURNAGE : l'export livré est un fond noir avec les sous-titres.
+          Le découpage du brief est respecté — deux blocs caméra (B1, B3), deux
+          animés, et la fin reste en motion design — mais les quatre sont animés
+          faute d'image ; voir CAMERA dans reperes.ts.
+          Média : public/rushes/jour5_resserre.mp4 (hors dépôt).
+          npx remotion render Jour5 */}
+      <Composition
+        id="Jour5"
+        component={Jour5Montage}
+        durationInFrames={JOUR5_FRAMES}
+        fps={30}
+        width={1080}
+        height={1920}
+      />
+
       {/* Reel Jour 4 « tu n'as pas 30 minutes chrono » — 88,08 s.
           SANS TOURNAGE, comme le Jour 3 : l'export livré est un fond noir avec
           les sous-titres. L'animation couvre toute la durée ; voir CAMERA dans
