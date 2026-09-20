@@ -16,6 +16,10 @@ import {
 import { Plage, PLAGE_FRAMES } from "./Plage/Plage";
 import { Carte, CARTE_FRAMES } from "./Carte/Carte";
 import {
+  Montage as Jour6Montage,
+  MONTAGE_FRAMES as JOUR6_FRAMES,
+} from "./Jour6/Montage";
+import {
   Montage as Jour5Montage,
   MONTAGE_FRAMES as JOUR5_FRAMES,
 } from "./Jour5/Montage";
@@ -68,6 +72,23 @@ import { Logo, myCompSchema2 } from "./HelloWorld/Logo";
 export const RemotionRoot: React.FC = () => {
   return (
     <>
+      {/* Reel Jour 6 « les courbatures » — 47,96 s.
+          Règle permanente du brief : les zones « tête parlante » sont des
+          ESPACES RÉSERVÉS, l'animation n'y dessine rien et le CTA reste en
+          caméra. L'animation ne couvre donc que B2 et B4 ; les trois autres
+          fenêtres laissent passer le rush tel quel.
+          Média : public/rushes/jour6_resserre.mp4 (hors dépôt), blancs
+          resserrés et niveau ramené de -8,9 à -14 LUFS — la prise écrêtait.
+          npx remotion render Jour6 */}
+      <Composition
+        id="Jour6"
+        component={Jour6Montage}
+        durationInFrames={JOUR6_FRAMES}
+        fps={30}
+        width={1080}
+        height={1920}
+      />
+
       {/* Reel Jour 5 « stagner, c'est ce qui attend ton programme » — 49,96 s.
           SANS TOURNAGE : l'export livré est un fond noir avec les sous-titres.
           Le découpage du brief est respecté — deux blocs caméra (B1, B3), deux

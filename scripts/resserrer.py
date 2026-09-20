@@ -12,13 +12,19 @@ passer par `mappe()` : une nouvelle coupe ne demande qu'une régénération, pas
 une relecture.
 
     python3 scripts/resserrer.py public/rushes/jour2.mp4 \
-        public/rushes/jour2_resserre.mp4 src/Jour2/coupes.ts
+        public/rushes/jour2_resserre.mp4 src/Jour2/coupes.ts [cible_LUFS]
+
+Le quatrième argument, facultatif, normalise le niveau au passage. Il ne sert
+que lorsque la prise sort de la fourchette de la série : le Jour 6 est arrivé à
+-8,9 LUFS avec un vrai crête à +0,7 dBFS, c'est-à-dire écrêté. Sans cet
+argument, la piste n'est pas touchée — c'est le cas par défaut, et le bon.
 
 Règle appliquée : tout silence de plus de SEUIL est ramené à GARDE, en
 conservant son DÉBUT — la respiration reste, l'attente disparaît. Les coupes
 tombent sur des frontières d'image, et sont appliquées à l'image ET au son par
 le même filtre, donc rien ne peut se désynchroniser.
 """
+import json
 import math
 import re
 import subprocess
@@ -56,6 +62,23 @@ def segments(entree, duree, FPS):
     return [(a, b) for a, b in gardes if b - a > 1 / FPS]
 
 
+def mesurer(exe, entree, expr_a, cible):
+    """Première passe de `loudnorm` : elle mesure ce qu'il faudra corriger.
+
+    La mesure porte sur l'audio DÉJÀ COUPÉ — sinon les blancs retirés
+    fausseraient la moyenne intégrée.
+    """
+    sortie = subprocess.run(
+        [exe, "-i", entree, "-af",
+         f"aselect='{expr_a}',asetpts=N/SR/TB,"
+         f"loudnorm=I={cible}:TP=-1.0:LRA=11:print_format=json",
+         "-f", "null", "-"],
+        capture_output=True, text=True,
+    ).stderr
+    bloc = sortie[sortie.rindex("{"):sortie.rindex("}") + 1]
+    return json.loads(bloc)
+
+
 def duree_de(exe, chemin):
     """Durée et cadence de la source.
 
@@ -71,6 +94,7 @@ def duree_de(exe, chemin):
 
 def main():
     entree, sortie, module = sys.argv[1], sys.argv[2], sys.argv[3]
+    cible = float(sys.argv[4]) if len(sys.argv) > 4 else None
     exe = imageio_ffmpeg.get_ffmpeg_exe()
     duree, FPS = duree_de(exe, entree)
     gardes = segments(silences(exe, entree), duree, FPS)
@@ -87,13 +111,27 @@ def main():
     bornes = [(math.ceil(a * FPS - 1e-6), math.floor(b * FPS + 1e-6) - 1) for a, b in gardes]
     vexpr = "+".join(f"between(n,{k0},{k1})" for k0, k1 in bornes)
     aexpr = "+".join(f"between(t,{k0 / FPS:.6f},{(k1 + 1) / FPS:.6f})" for k0, k1 in bornes)
+    if cible is None:
+        filtre_a = f"aselect='{aexpr}',asetpts=N/SR/TB"
+    else:
+        m = mesurer(exe, entree, aexpr, cible)
+        print(f"niveau mesuré {m['input_i']} LUFS, vrai crête {m['input_tp']} dBFS "
+              f"→ normalisé à {cible} LUFS, plafond -1 dBTP")
+        filtre_a = (
+            f"aselect='{aexpr}',asetpts=N/SR/TB,"
+            f"loudnorm=I={cible}:TP=-1.0:LRA=11:"
+            f"measured_I={m['input_i']}:measured_TP={m['input_tp']}:"
+            f"measured_LRA={m['input_lra']}:measured_thresh={m['input_thresh']}:"
+            f"offset={m['target_offset']}:linear=true"
+        )
+
     subprocess.run([
         exe, "-y", "-i", entree,
         # `FRAME_RATE` vaut ici la cadence DEVINÉE par le filtre, pas celle du
         # rush : sans la cadence écrite en clair, ffmpeg sortait du 25 i/s et
         # étirait tout le montage de 4 %.
         "-vf", f"select='{vexpr}',setpts=N/{FPS}/TB",
-        "-af", f"aselect='{aexpr}',asetpts=N/SR/TB",
+        "-af", filtre_a,
         "-r", str(FPS), "-fps_mode", "cfr",
         "-c:v", "libx264", "-crf", "20", "-preset", "medium", "-pix_fmt", "yuv420p",
         "-c:a", "aac", "-b:a", "192k",
