@@ -14,6 +14,11 @@ une relecture.
     python3 scripts/resserrer.py public/rushes/jour2.mp4 \
         public/rushes/jour2_resserre.mp4 src/Jour2/coupes.ts [cible_LUFS]
 
+Les arguments facultatifs, dans l'ordre : la cible de niveau en LUFS, puis le
+seuil au-delà duquel un blanc est resserré et ce qu'il doit en rester. Le brief
+du Jour 7 demandait de couper jusqu'aux hésitations de quelques dixièmes, d'où
+`-14 0.24 0.16` là où les autres vidéos s'en tiennent au défaut.
+
 Le quatrième argument, facultatif, normalise le niveau au passage. Il ne sert
 que lorsque la prise sort de la fourchette de la série : le Jour 6 est arrivé à
 -8,9 LUFS avec un vrai crête à +0,7 dBFS, c'est-à-dire écrêté. Sans cet
@@ -33,7 +38,7 @@ import sys
 import imageio_ffmpeg
 
 BRUIT = "-28dB"     # plancher de détection, calé sur le souffle de la pièce
-MINI = 0.30         # en deçà, ce n'est pas un blanc mais une articulation
+MINI = 0.18         # en deçà, ce n'est pas un blanc mais une articulation
 SEUIL = 0.36        # au-delà, on resserre
 GARDE = 0.24        # ce qu'il reste d'un blanc resserré
 
@@ -95,6 +100,9 @@ def duree_de(exe, chemin):
 def main():
     entree, sortie, module = sys.argv[1], sys.argv[2], sys.argv[3]
     cible = float(sys.argv[4]) if len(sys.argv) > 4 else None
+    global SEUIL, GARDE
+    if len(sys.argv) > 6:
+        SEUIL, GARDE = float(sys.argv[5]), float(sys.argv[6])
     exe = imageio_ffmpeg.get_ffmpeg_exe()
     duree, FPS = duree_de(exe, entree)
     gardes = segments(silences(exe, entree), duree, FPS)

@@ -16,6 +16,10 @@ import {
 import { Plage, PLAGE_FRAMES } from "./Plage/Plage";
 import { Carte, CARTE_FRAMES } from "./Carte/Carte";
 import {
+  Montage as Jour7Montage,
+  MONTAGE_FRAMES as JOUR7_FRAMES,
+} from "./Jour7/Montage";
+import {
   Montage as Jour6Montage,
   MONTAGE_FRAMES as JOUR6_FRAMES,
 } from "./Jour6/Montage";
@@ -72,6 +76,23 @@ import { Logo, myCompSchema2 } from "./HelloWorld/Logo";
 export const RemotionRoot: React.FC = () => {
   return (
     <>
+      {/* Reel Jour 7 « aucune diète ne marche sans ça » — 46,58 s.
+          Zones « tête parlante » jamais animées : seuls B2 et B4 ont un
+          panneau. Resserrement poussé à 0,24 s de seuil pour 0,16 s gardées,
+          comme le brief le demande — quinze coupes, 2,75 s retirées.
+          Échelle typographique fermée à cinq corps (consigne 5 du brief).
+          Média : public/rushes/jour7_resserre.mp4 (hors dépôt), normalisé à
+          -14 LUFS, plafond -1 dBTP.
+          npx remotion render Jour7 */}
+      <Composition
+        id="Jour7"
+        component={Jour7Montage}
+        durationInFrames={JOUR7_FRAMES}
+        fps={30}
+        width={1080}
+        height={1920}
+      />
+
       {/* Reel Jour 6 « les courbatures » — 47,96 s.
           Règle permanente du brief : les zones « tête parlante » sont des
           ESPACES RÉSERVÉS, l'animation n'y dessine rien et le CTA reste en
