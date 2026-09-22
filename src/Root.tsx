@@ -16,6 +16,10 @@ import {
 import { Plage, PLAGE_FRAMES } from "./Plage/Plage";
 import { Carte, CARTE_FRAMES } from "./Carte/Carte";
 import {
+  Montage as Jour9Montage,
+  MONTAGE_FRAMES as JOUR9_FRAMES,
+} from "./Jour9/Montage";
+import {
   Montage as Jour7Montage,
   MONTAGE_FRAMES as JOUR7_FRAMES,
 } from "./Jour7/Montage";
@@ -76,6 +80,23 @@ import { Logo, myCompSchema2 } from "./HelloWorld/Logo";
 export const RemotionRoot: React.FC = () => {
   return (
     <>
+      {/* Reel Jour 9 « immobile, c'est peut-être ta pire option » — 34,00 s.
+          Structure de rythme du brief : hook de 2,8 s, un seul retour caméra
+          entre les deux blocs animés, CTA en caméra. Seuls B2 et B4 ont un
+          panneau. La prise fait 36,6 s au lieu des 45 s visées, toutes les
+          bornes sont donc avancées.
+          Média : public/rushes/jour9_resserre.mp4 (hors dépôt), normalisé de
+          -8,9 à -14 LUFS — la prise écrêtait à +1,1 dBFS.
+          npx remotion render Jour9 */}
+      <Composition
+        id="Jour9"
+        component={Jour9Montage}
+        durationInFrames={JOUR9_FRAMES}
+        fps={30}
+        width={1080}
+        height={1920}
+      />
+
       {/* Reel Jour 7 « aucune diète ne marche sans ça » — 46,58 s.
           Zones « tête parlante » jamais animées : seuls B2 et B4 ont un
           panneau. Resserrement poussé à 0,24 s de seuil pour 0,16 s gardées,
