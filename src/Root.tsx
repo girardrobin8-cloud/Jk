@@ -16,6 +16,10 @@ import {
 import { Plage, PLAGE_FRAMES } from "./Plage/Plage";
 import { Carte, CARTE_FRAMES } from "./Carte/Carte";
 import {
+  Montage as Jour10Montage,
+  MONTAGE_FRAMES as JOUR10_FRAMES,
+} from "./Jour10/Montage";
+import {
   Montage as Jour9Montage,
   MONTAGE_FRAMES as JOUR9_FRAMES,
 } from "./Jour9/Montage";
@@ -80,6 +84,24 @@ import { Logo, myCompSchema2 } from "./HelloWorld/Logo";
 export const RemotionRoot: React.FC = () => {
   return (
     <>
+      {/* Reel Jour 10 « 3, c'est le seul nombre de compléments qui comptent
+          vraiment » — 54,42 s.
+          Bloc long assumé : B4 dure 33 s et se joue en sept écrans, un par
+          idée prononcée, dont les quatre temps visuels demandés par le brief —
+          créatine, caféine, whey, le reste. B1, B3 et B5 sont des espaces
+          réservés à la tête parlante, CTA compris, et ne portent rien.
+          Média : public/rushes/jour10_resserre.mp4 (hors dépôt), remonté de
+          -17,1 à -14 LUFS — la prise était trois décibels sous la série.
+          npx remotion render Jour10 */}
+      <Composition
+        id="Jour10"
+        component={Jour10Montage}
+        durationInFrames={JOUR10_FRAMES}
+        fps={30}
+        width={1080}
+        height={1920}
+      />
+
       {/* Reel Jour 9 « immobile, c'est peut-être ta pire option » — 34,00 s.
           Structure de rythme du brief : hook de 2,8 s, un seul retour caméra
           entre les deux blocs animés, CTA en caméra. Seuls B2 et B4 ont un
