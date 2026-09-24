@@ -118,6 +118,29 @@ def clic(duree=0.07):
     return [filtre[i] - grave[i] for i in range(total)]
 
 
+def impact(duree=0.75):
+    """
+    Coup grave, pour l'atterrissage d'un cartouche.
+
+    La banque n'avait que des sons d'interface, tous dans le médium : posés
+    sous un mouvement de caméra, ils ne pèsent rien. Il manquait un grave —
+    une sinusoïde qui descend vite, avec un transitoire bruité pour l'attaque,
+    sans quoi le coup sort mou sur un petit haut-parleur.
+    """
+    total = n(duree)
+    out, phase = [], 0.0
+    claque = n(0.012)
+    for i in range(total):
+        t = i / total
+        f = 105 * math.exp(-3.4 * t) + 38  # chute rapide vers le sub
+        phase += 2 * math.pi * f / SR
+        v = math.sin(phase) * decroissance(i, total, 0.20)
+        if i < claque:
+            v += random.uniform(-1, 1) * 0.6 * (1 - i / claque)
+        out.append(v * attaque(i, n(0.001)))
+    return out
+
+
 def carillon(duree=1.0):
     """Accord chaud et résolutif, pour le bandeau final."""
     total = n(duree)
@@ -140,4 +163,5 @@ if __name__ == "__main__":
     ecrire("pop.wav", blip(700, 560, 0.15, tau=0.2, harmonique=0.2))
     ecrire("marche.wav", marche())
     ecrire("clic.wav", clic(), crete=0.95)
+    ecrire("impact.wav", impact())
     ecrire("carillon.wav", carillon())
