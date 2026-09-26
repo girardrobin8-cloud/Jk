@@ -3,7 +3,7 @@ import { Composition } from "remotion";
 import { Cafeine, DUREE_TOTALE } from "./Cafeine";
 import { S1Titre } from "./Cafeine/scenes/S1Titre";
 import { S8Energisante } from "./Cafeine/scenes/S8Energisante";
-import { Adaptation } from "./Metabolisme/Adaptation";
+import { AnimationSonore } from "./Metabolisme/AnimationSonore";
 import { Montage, MONTAGE_FRAMES } from "./Metabolisme/Montage";
 import { ANIM_FIN, s as sec } from "./Metabolisme/reperes";
 import { Montage as MuscleMontage, MONTAGE_FRAMES as MUSCLE_FRAMES } from "./Muscle/Montage";
@@ -62,10 +62,12 @@ export const RemotionRoot: React.FC = () => {
         height={1920}
       />
 
-      {/* L'animation seule, pour la régler sans relire les rushes */}
+      {/* L'animation seule, avec ses bruitages et sans les rushes — pour la
+          régler, et pour la publier telle quelle.
+          npx remotion render MetabolismeAnimation */}
       <Composition
         id="MetabolismeAnimation"
-        component={Adaptation}
+        component={AnimationSonore}
         durationInFrames={sec(ANIM_FIN)}
         fps={30}
         width={1080}

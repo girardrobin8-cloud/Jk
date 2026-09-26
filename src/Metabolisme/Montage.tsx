@@ -7,7 +7,8 @@ import {
   staticFile,
   useCurrentFrame,
 } from "remotion";
-import { Adaptation, MARCHES } from "./Adaptation";
+import { Adaptation } from "./Adaptation";
+import { BRUITAGES_ANIMATION, BRUITAGES_BLOC3 } from "./bruitages";
 import {
   ANIM_FIN,
   BANDEAU_BLOC3,
@@ -37,22 +38,14 @@ const CLAMP = { extrapolateLeft: "clamp", extrapolateRight: "clamp" } as const;
  * Bruitages, en secondes depuis le début du rush B.
  *
  * Ils ne ponctuent que l'animation : la tête parlante reste sans habillage
- * sonore. Les volumes sont bas (0,16 à 0,34) pour que la voix passe toujours
+ * sonore. Les volumes sont bas (0,2 à 0,75) pour que la voix passe toujours
  * devant — ce sont des ponctuations, pas une couche sonore.
  *
- * Les fichiers sont synthétisés par `scripts/bruitages.py`.
+ * La table vit dans `bruitages.ts`, partagée avec la composition « animation
+ * seule » ; on y ajoute ici la seule ponctuation qui n'appartient pas au
+ * bloc 2. Les fichiers sont synthétisés par `scripts/bruitages.py`.
  */
-const BRUITAGES: { fichier: string; t: number; volume: number }[] = [
-  { fichier: "whoosh-in.wav", t: 0.0, volume: 0.3 }, // bascule vers l'animation
-  { fichier: "apparition.wav", t: 0.36, volume: 0.26 }, // le graphique se pose
-  { fichier: "pop.wav", t: 4.73, volume: 0.2 }, // silhouette
-  { fichier: "pop.wav", t: 6.0, volume: 0.2 }, // thermomètre
-  ...MARCHES.map((t) => ({ fichier: "marche.wav", t, volume: 0.34 })),
-  { fichier: "clic.wav", t: 7.2, volume: 0.75 }, // « Thermogenèse adaptative »
-  { fichier: "carillon.wav", t: 8.85, volume: 0.28 }, // bandeau final
-  { fichier: "whoosh-out.wav", t: 12.45, volume: 0.26 }, // retour au visage
-  { fichier: "clic.wav", t: 13.4, volume: 0.6 }, // incrustation du bloc 3
-];
+const BRUITAGES = [...BRUITAGES_ANIMATION, ...BRUITAGES_BLOC3];
 
 /** L'animation, fondue en entrée et en sortie pour éviter une bascule sèche. */
 const Surimpression: React.FC = () => {
