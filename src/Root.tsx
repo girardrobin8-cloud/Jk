@@ -4,6 +4,7 @@ import { Cafeine, DUREE_TOTALE } from "./Cafeine";
 import { S1Titre } from "./Cafeine/scenes/S1Titre";
 import { S8Energisante } from "./Cafeine/scenes/S8Energisante";
 import { AnimationSonore } from "./Metabolisme/AnimationSonore";
+import { Pointeur, POINTEUR_FRAMES } from "./Muscle/Pointeur";
 import { Montage, MONTAGE_FRAMES } from "./Metabolisme/Montage";
 import { ANIM_FIN, s as sec } from "./Metabolisme/reperes";
 import { Montage as MuscleMontage, MONTAGE_FRAMES as MUSCLE_FRAMES } from "./Muscle/Montage";
@@ -17,6 +18,17 @@ import { Logo, myCompSchema2 } from "./HelloWorld/Logo";
 export const RemotionRoot: React.FC = () => {
   return (
     <>
+      {/* Personnage qui pointe le muscle travaillé, dessiné en SVG.
+          npx remotion render Pointeur */}
+      <Composition
+        id="Pointeur"
+        component={Pointeur}
+        durationInFrames={POINTEUR_FRAMES}
+        fps={30}
+        width={1080}
+        height={1920}
+      />
+
       {/* « Ta montre surestime tes calories » — motion design en beats,
           sans audio (la voix n'est pas encore enregistrée).
           npx remotion render Montre */}
