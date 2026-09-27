@@ -16,6 +16,10 @@ import {
 import { Plage, PLAGE_FRAMES } from "./Plage/Plage";
 import { Carte, CARTE_FRAMES } from "./Carte/Carte";
 import {
+  Montage as RayonMontage,
+  MONTAGE_FRAMES as RAYON_FRAMES,
+} from "./Rayon/Montage";
+import {
   Montage as Jour10Montage,
   MONTAGE_FRAMES as JOUR10_FRAMES,
 } from "./Jour10/Montage";
@@ -84,6 +88,24 @@ import { Logo, myCompSchema2 } from "./HelloWorld/Logo";
 export const RemotionRoot: React.FC = () => {
   return (
     <>
+      {/* MAQUETTE — nouveau format « le rayon », 72,50 s provisoires.
+          Fond clair, produits en pixel art, encart caméra : inspiré d'un
+          explainer YouTube, adapté au vertical et à la charte de Robin.
+          Les huit produits sont un seul calque qui passe de la grille
+          d'ouverture à la frise du bas, puis au tri en trois colonnes.
+          Les bornes de src/Rayon/script.ts sont ESTIMÉES au débit mesuré de
+          Robin ; à remplacer par la sortie de scripts/caler.py dès que la
+          prise existe. L'encart affiche un gabarit d'ici là.
+          npx remotion render Rayon */}
+      <Composition
+        id="Rayon"
+        component={RayonMontage}
+        durationInFrames={RAYON_FRAMES}
+        fps={30}
+        width={1080}
+        height={1920}
+      />
+
       {/* Reel Jour 10 « 3, c'est le seul nombre de compléments qui comptent
           vraiment » — 54,42 s.
           Bloc long assumé : B4 dure 33 s et se joue en sept écrans, un par
