@@ -10,6 +10,8 @@ import { Montage as MuscleMontage, MONTAGE_FRAMES as MUSCLE_FRAMES } from "./Mus
 import { Montage as ProtMontage, MONTAGE_FRAMES as PROT_FRAMES } from "./Proteines/Montage";
 import { Montage as MontreMontage, MONTAGE_FRAMES as MONTRE_FRAMES } from "./Montre/Montage";
 import { HelloWorld, myCompSchema } from "./HelloWorld";
+import { ReelAuto, calculerDuree, reelSchema } from "./ReelAuto";
+import reel20261019 from "./ReelAuto/reels/2026-10-19-calories-masse.json";
 import { Logo, myCompSchema2 } from "./HelloWorld/Logo";
 
 // Each <Composition> is an entry in the sidebar!
@@ -17,6 +19,21 @@ import { Logo, myCompSchema2 } from "./HelloWorld/Logo";
 export const RemotionRoot: React.FC = () => {
   return (
     <>
+      {/* Modèle unique : chaque Reel est un fichier JSON dans
+          src/ReelAuto/reels/. Voir src/ReelAuto/LISEZMOI.md.
+          npx remotion render Reel-2026-10-19 */}
+      <Composition
+        id="Reel-2026-10-19"
+        component={ReelAuto}
+        schema={reelSchema}
+        defaultProps={reelSchema.parse(reel20261019)}
+        calculateMetadata={calculerDuree}
+        durationInFrames={300}
+        fps={30}
+        width={1080}
+        height={1920}
+      />
+
       {/* « Ta montre surestime tes calories » — motion design en beats,
           sans audio (la voix n'est pas encore enregistrée).
           npx remotion render Montre */}
