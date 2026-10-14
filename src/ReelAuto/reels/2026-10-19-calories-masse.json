@@ -1,0 +1,659 @@
+{
+ "titre": "Combien de calories pour prendre du muscle sans prendre de gras",
+ "voix": "reels/2026-10-19/voix.mp3",
+ "motsCles": [
+  "énorme",
+  "rien",
+  "quantité",
+  "calories",
+  "gras",
+  "muscle",
+  "PROGRAMME",
+  "mille",
+  "moyenne"
+ ],
+ "scenes": [
+  {
+   "debut": 0,
+   "type": "accroche",
+   "texte": "Tu manges énorme et tu ne prends rien ?",
+   "motsCles": [
+    "énorme",
+    "rien"
+   ]
+  },
+  {
+   "debut": 2.16,
+   "type": "titre",
+   "texte": "Le problème n'est pas la quantité",
+   "motsCles": [
+    "quantité"
+   ]
+  },
+  {
+   "debut": 4.08,
+   "type": "titre",
+   "texte": "Combien manger ?",
+   "sousTexte": "En 30 secondes",
+   "motsCles": [
+    "manger"
+   ]
+  },
+  {
+   "debut": 7.2,
+   "type": "point",
+   "numero": 1,
+   "texte": "Calcule ta dépense"
+  },
+  {
+   "debut": 9.36,
+   "type": "chiffre",
+   "valeur": 2640,
+   "unite": "kcal",
+   "legende": "Exemple : 80 kg × 33 = ton maintien (point de départ)"
+  },
+  {
+   "debut": 12.36,
+   "type": "point",
+   "numero": 2,
+   "texte": "+200 à +300 kcal",
+   "sousTexte": "pas plus"
+  },
+  {
+   "debut": 15.44,
+   "type": "barres",
+   "titre": "Ce que devient ton surplus",
+   "barres": [
+    {
+     "label": "+250 kcal par jour",
+     "valeur": 250,
+     "affichage": "surtout du muscle",
+     "ton": "vert"
+    },
+    {
+     "label": "+1 000 kcal par jour",
+     "valeur": 1000,
+     "affichage": "surtout du gras",
+     "ton": "rouge"
+    }
+   ]
+  },
+  {
+   "debut": 18.16,
+   "type": "point",
+   "numero": 3,
+   "texte": "Pèse-toi chaque matin",
+   "sousTexte": "et regarde la moyenne de la semaine"
+  },
+  {
+   "debut": 21.6,
+   "type": "etude",
+   "resultat": "Prise de masse : vise +0,25 à +0,5 % de ton poids par semaine",
+   "source": "Iraki et al., 2019",
+   "detail": "Revue sur la nutrition des pratiquants en prise de masse"
+  },
+  {
+   "debut": 25.92,
+   "type": "titre",
+   "texte": "Tu stagnes ? +100 kcal",
+   "motsCles": [
+    "+100"
+   ]
+  },
+  {
+   "debut": 27.57,
+   "type": "titre",
+   "texte": "Du muscle, pas du gras",
+   "motsCles": [
+    "muscle"
+   ]
+  },
+  {
+   "debut": 30.2,
+   "type": "cta",
+   "mot": "PROGRAMME"
+  }
+ ],
+ "mots": [
+  {
+   "text": "Tu",
+   "start": 0.0,
+   "end": 0.16
+  },
+  {
+   "text": "manges",
+   "start": 0.267,
+   "end": 0.48
+  },
+  {
+   "text": "énorme",
+   "start": 0.6,
+   "end": 0.907
+  },
+  {
+   "text": "et",
+   "start": 0.933,
+   "end": 0.96
+  },
+  {
+   "text": "tu",
+   "start": 1.04,
+   "end": 1.12
+  },
+  {
+   "text": "ne",
+   "start": 1.16,
+   "end": 1.2
+  },
+  {
+   "text": "prends",
+   "start": 1.28,
+   "end": 1.4
+  },
+  {
+   "text": "rien",
+   "start": 1.44,
+   "end": 1.68
+  },
+  {
+   "text": "?",
+   "start": 1.84,
+   "end": 2.0
+  },
+  {
+   "text": "Le",
+   "start": 2.16,
+   "end": 2.24
+  },
+  {
+   "text": "problème,",
+   "start": 2.32,
+   "end": 2.8
+  },
+  {
+   "text": "c'est",
+   "start": 2.853,
+   "end": 2.96
+  },
+  {
+   "text": "pas",
+   "start": 3.0,
+   "end": 3.04
+  },
+  {
+   "text": "la",
+   "start": 3.12,
+   "end": 3.2
+  },
+  {
+   "text": "quantité.",
+   "start": 3.32,
+   "end": 3.76
+  },
+  {
+   "text": "En",
+   "start": 4.08,
+   "end": 4.16
+  },
+  {
+   "text": "trente",
+   "start": 4.24,
+   "end": 4.4
+  },
+  {
+   "text": "secondes,",
+   "start": 4.48,
+   "end": 4.96
+  },
+  {
+   "text": "tu",
+   "start": 5.0,
+   "end": 5.04
+  },
+  {
+   "text": "sais",
+   "start": 5.12,
+   "end": 5.36
+  },
+  {
+   "text": "exactement",
+   "start": 5.56,
+   "end": 6.0
+  },
+  {
+   "text": "combien",
+   "start": 6.08,
+   "end": 6.32
+  },
+  {
+   "text": "manger.",
+   "start": 6.427,
+   "end": 6.92
+  },
+  {
+   "text": "Un",
+   "start": 7.2,
+   "end": 7.28
+  },
+  {
+   "text": ":",
+   "start": 7.68,
+   "end": 7.76
+  },
+  {
+   "text": "calcule",
+   "start": 7.84,
+   "end": 8.08
+  },
+  {
+   "text": "ce",
+   "start": 8.12,
+   "end": 8.16
+  },
+  {
+   "text": "que",
+   "start": 8.2,
+   "end": 8.24
+  },
+  {
+   "text": "tu",
+   "start": 8.32,
+   "end": 8.4
+  },
+  {
+   "text": "dépenses.",
+   "start": 8.48,
+   "end": 9.28
+  },
+  {
+   "text": "Ton",
+   "start": 9.36,
+   "end": 9.44
+  },
+  {
+   "text": "poids",
+   "start": 9.52,
+   "end": 9.68
+  },
+  {
+   "text": "multiplié",
+   "start": 9.8,
+   "end": 10.24
+  },
+  {
+   "text": "par",
+   "start": 10.28,
+   "end": 10.32
+  },
+  {
+   "text": "trente-trois,",
+   "start": 10.4,
+   "end": 11.12
+  },
+  {
+   "text": "c'est",
+   "start": 11.147,
+   "end": 11.2
+  },
+  {
+   "text": "une",
+   "start": 11.28,
+   "end": 11.36
+  },
+  {
+   "text": "bonne",
+   "start": 11.4,
+   "end": 11.52
+  },
+  {
+   "text": "base.",
+   "start": 11.68,
+   "end": 12.32
+  },
+  {
+   "text": "Deux",
+   "start": 12.36,
+   "end": 12.48
+  },
+  {
+   "text": ":",
+   "start": 12.88,
+   "end": 12.933
+  },
+  {
+   "text": "ajoute",
+   "start": 12.987,
+   "end": 13.2
+  },
+  {
+   "text": "seulement",
+   "start": 13.24,
+   "end": 13.52
+  },
+  {
+   "text": "deux",
+   "start": 13.68,
+   "end": 13.787
+  },
+  {
+   "text": "cents",
+   "start": 13.84,
+   "end": 14.0
+  },
+  {
+   "text": "à",
+   "start": 14.08,
+   "end": 14.24
+  },
+  {
+   "text": "trois",
+   "start": 14.28,
+   "end": 14.4
+  },
+  {
+   "text": "cents",
+   "start": 14.48,
+   "end": 14.56
+  },
+  {
+   "text": "calories.",
+   "start": 14.64,
+   "end": 15.36
+  },
+  {
+   "text": "Pas",
+   "start": 15.44,
+   "end": 15.52
+  },
+  {
+   "text": "mille.",
+   "start": 15.56,
+   "end": 16.08
+  },
+  {
+   "text": "Au-delà,",
+   "start": 16.12,
+   "end": 16.56
+  },
+  {
+   "text": "tu",
+   "start": 16.6,
+   "end": 16.64
+  },
+  {
+   "text": "stockes",
+   "start": 16.72,
+   "end": 16.96
+  },
+  {
+   "text": "surtout",
+   "start": 17.04,
+   "end": 17.28
+  },
+  {
+   "text": "du",
+   "start": 17.36,
+   "end": 17.44
+  },
+  {
+   "text": "gras.",
+   "start": 17.48,
+   "end": 18.08
+  },
+  {
+   "text": "Trois",
+   "start": 18.16,
+   "end": 18.44
+  },
+  {
+   "text": ":",
+   "start": 18.64,
+   "end": 18.667
+  },
+  {
+   "text": "pèse-toi",
+   "start": 18.693,
+   "end": 19.12
+  },
+  {
+   "text": "chaque",
+   "start": 19.16,
+   "end": 19.36
+  },
+  {
+   "text": "matin,",
+   "start": 19.44,
+   "end": 19.84
+  },
+  {
+   "text": "et",
+   "start": 19.92,
+   "end": 20.0
+  },
+  {
+   "text": "regarde",
+   "start": 20.12,
+   "end": 20.32
+  },
+  {
+   "text": "la",
+   "start": 20.36,
+   "end": 20.4
+  },
+  {
+   "text": "moyenne",
+   "start": 20.48,
+   "end": 20.72
+  },
+  {
+   "text": "de",
+   "start": 20.76,
+   "end": 20.8
+  },
+  {
+   "text": "la",
+   "start": 20.84,
+   "end": 20.88
+  },
+  {
+   "text": "semaine.",
+   "start": 20.96,
+   "end": 21.52
+  },
+  {
+   "text": "Tu",
+   "start": 21.6,
+   "end": 21.68
+  },
+  {
+   "text": "dois",
+   "start": 21.72,
+   "end": 21.84
+  },
+  {
+   "text": "prendre",
+   "start": 21.92,
+   "end": 22.08
+  },
+  {
+   "text": "entre",
+   "start": 22.16,
+   "end": 22.4
+  },
+  {
+   "text": "deux",
+   "start": 22.48,
+   "end": 22.56
+  },
+  {
+   "text": "cents",
+   "start": 22.64,
+   "end": 22.88
+  },
+  {
+   "text": "et",
+   "start": 22.96,
+   "end": 23.04
+  },
+  {
+   "text": "quatre",
+   "start": 23.12,
+   "end": 23.2
+  },
+  {
+   "text": "cents",
+   "start": 23.28,
+   "end": 23.36
+  },
+  {
+   "text": "grammes",
+   "start": 23.44,
+   "end": 23.68
+  },
+  {
+   "text": "par",
+   "start": 23.72,
+   "end": 23.76
+  },
+  {
+   "text": "semaine.",
+   "start": 23.84,
+   "end": 24.4
+  },
+  {
+   "text": "Plus",
+   "start": 24.48,
+   "end": 24.56
+  },
+  {
+   "text": "vite,",
+   "start": 24.64,
+   "end": 25.04
+  },
+  {
+   "text": "c'est",
+   "start": 25.093,
+   "end": 25.2
+  },
+  {
+   "text": "du",
+   "start": 25.24,
+   "end": 25.28
+  },
+  {
+   "text": "gras.",
+   "start": 25.36,
+   "end": 25.84
+  },
+  {
+   "text": "Moins,",
+   "start": 25.92,
+   "end": 26.32
+  },
+  {
+   "text": "ajoute",
+   "start": 26.4,
+   "end": 26.64
+  },
+  {
+   "text": "cent",
+   "start": 26.72,
+   "end": 26.8
+  },
+  {
+   "text": "calories.",
+   "start": 26.88,
+   "end": 27.52
+  },
+  {
+   "text": "Résultat",
+   "start": 27.573,
+   "end": 28.0
+  },
+  {
+   "text": ":",
+   "start": 28.32,
+   "end": 28.347
+  },
+  {
+   "text": "du",
+   "start": 28.373,
+   "end": 28.4
+  },
+  {
+   "text": "muscle,",
+   "start": 28.48,
+   "end": 28.96
+  },
+  {
+   "text": "sans",
+   "start": 29.08,
+   "end": 29.2
+  },
+  {
+   "text": "finir",
+   "start": 29.28,
+   "end": 29.52
+  },
+  {
+   "text": "tout",
+   "start": 29.6,
+   "end": 29.68
+  },
+  {
+   "text": "mou.",
+   "start": 29.707,
+   "end": 30.16
+  },
+  {
+   "text": "Écris",
+   "start": 30.2,
+   "end": 30.48
+  },
+  {
+   "text": "PROGRAMME",
+   "start": 30.64,
+   "end": 30.96
+  },
+  {
+   "text": "en",
+   "start": 31.0,
+   "end": 31.04
+  },
+  {
+   "text": "message",
+   "start": 31.2,
+   "end": 31.36
+  },
+  {
+   "text": "privé,",
+   "start": 31.48,
+   "end": 31.84
+  },
+  {
+   "text": "et",
+   "start": 31.88,
+   "end": 31.92
+  },
+  {
+   "text": "je",
+   "start": 31.96,
+   "end": 32.0
+  },
+  {
+   "text": "calcule",
+   "start": 32.12,
+   "end": 32.32
+  },
+  {
+   "text": "les",
+   "start": 32.4,
+   "end": 32.48
+  },
+  {
+   "text": "tiens.",
+   "start": 32.52,
+   "end": 32.96
+  }
+ ]
+}
